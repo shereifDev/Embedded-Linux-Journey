@@ -1,12 +1,12 @@
 # 🎓 Embedded Linux & Yocto - Course Summaries
 
-Welcome to the **Summaries** directory of the **Embedded Linux & Yocto Architect Course** (Golden Course) presented by **TechLeef** and instructed by **Eng. Salim Balhaj**. 
+Welcome to the **Summaries** directory of the **Embedded Linux & Yocto Architect Course** (Golden Course) presented by **TechLeef**. 
 
 This repository serves as a comprehensive, well-structured, and visually appealing documentation of my learning journey. Each lecture's summary is compiled into an interactive web page hosted via **GitHub Pages** for the best viewing experience.
 
 ---
 
-## 🚀 Lecture Directory (1 to 7)
+## Lecture Directory 
 
 | Lecture | Topic / Description | Status | Interactive Link |
 | :---: | :--- | :---: | :---: |
@@ -18,10 +18,3 @@ This repository serves as a comprehensive, well-structured, and visually appeali
 | **Lec 6** | Introduction to the Yocto Project & Poky Distribution | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddedLinuxAndYoctoGoldenCourse/Summaries/lec6/index.html) |
 | **Lec 7** | Writing Custom Layers, Recipes, and BitBake Basics | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddedLinuxAndYoctoGoldenCourse/Summaries/lec7/index.html) |
 
----
-
-## 🛠️ How to View Offline
-If you have cloned this repository locally, you can view any summary by navigating to its respective folder and opening the `index.html` file in any modern web browser:
-```bash
-cd EmbeddedLinuxAndYoctoGoldenCourse/Summaries/lec1/
-# Open index.html in your browser

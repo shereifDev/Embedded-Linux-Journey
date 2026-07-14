@@ -6,7 +6,7 @@ This repository serves as a comprehensive, well-structured, and visually appeali
 
 ---
 
-## Lecture Directory 
+## 🚀 Lecture Directory
 
 | Lecture | Topic / Description | Status | Interactive Link |
 | :---: | :--- | :---: | :---: |
@@ -18,3 +18,4 @@ This repository serves as a comprehensive, well-structured, and visually appeali
 | **Lec 6** | Introduction to the Yocto Project & Poky Distribution | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddedLinuxAndYoctoGoldenCourse/Summaries/lec6/index.html) |
 | **Lec 7** | Writing Custom Layers, Recipes, and BitBake Basics | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddedLinuxAndYoctoGoldenCourse/Summaries/lec7/index.html) |
 
+---

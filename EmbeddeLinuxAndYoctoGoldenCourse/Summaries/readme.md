@@ -1,12 +1,11 @@
-# 🎓 Embedded Linux & Yocto - Course Summaries
+#  Embedded Linux & Yocto - Course Summaries
 
 Welcome to the **Summaries** directory of the **Embedded Linux & Yocto Architect Course** (Golden Course) presented by **TechLeef**. 
 
-This repository serves as a comprehensive, well-structured, and visually appealing documentation of my learning journey. Each lecture's summary is compiled into an interactive web page hosted via **GitHub Pages** for the best viewing experience.
-
+This repository serves as a comprehensive, well-structured, and visually appealing documentation of my learning journey. 
 ---
 
-## 🚀 Lecture Directory
+##  Lecture Directory
 
 | Lecture | Topic / Description | Status | Interactive Link |
 | :---: | :--- | :---: | :---: |

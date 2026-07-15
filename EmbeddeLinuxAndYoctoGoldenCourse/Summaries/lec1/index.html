@@ -1,0 +1,4619 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embedded Linux &amp; Yocto — ملخص الدرس الأول</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #0F4C81;
+  --primary-light: #1a6bb5;
+  --primary-bg: #EBF2FA;
+  --secondary: #14B8A6;
+  --secondary-light: #2dd4bf;
+  --accent: #F59E0B;
+  --accent-light: #fbbf24;
+  --success: #16A34A;
+  --success-bg: #F0FDF4;
+  --warning: #EA580C;
+  --warning-bg: #FFF7ED;
+  --danger: #DC2626;
+  --danger-bg: #FEF2F2;
+  --bg: #F8FAFC;
+  --white: #FFFFFF;
+  --text: #1E293B;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --border: #E2E8F0;
+  --border-light: #F1F5F9;
+  --code-bg: #1E293B;
+  --code-text: #E2E8F0;
+  --purple: #7C3AED;
+  --purple-bg: #F5F3FF;
+  --gray-bg: #F8FAFC;
+  --dark-card: #0F172A;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12.5pt;
+  line-height: 1.7;
+  direction: rtl;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: var(--white);
+  padding: 2cm;
+  position: relative;
+  box-shadow: 0 0 40px rgba(0,0,0,0.08);
+}
+
+/* ===== HEADER & FOOTER ===== */
+.page-header {
+  position: absolute;
+  top: 0;
+  right: 2cm;
+  left: 2cm;
+  height: 1.2cm;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0.3cm;
+  font-size: 8pt;
+  color: var(--text-muted);
+  direction: rtl;
+}
+.page-header .course-name {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: var(--primary);
+  letter-spacing: 0.02em;
+}
+.page-header .chapter-name {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.page-footer {
+  position: absolute;
+  bottom: 0;
+  right: 2cm;
+  left: 2cm;
+  height: 1cm;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0.3cm;
+  font-size: 8pt;
+  color: var(--text-muted);
+}
+.page-footer .page-num {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-bg);
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+.page-footer .version {
+  font-family: 'Inter', sans-serif;
+  direction: ltr;
+}
+
+/* ===== TOC ===== */
+.toc-page { padding-top: 2.5cm; }
+.toc-title {
+  font-size: 28pt;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.5cm;
+  position: relative;
+  padding-bottom: 0.4cm;
+}
+.toc-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 80px;
+  height: 4px;
+  background: var(--secondary);
+  border-radius: 2px;
+}
+.toc-subtitle {
+  font-size: 11pt;
+  color: var(--text-secondary);
+  margin-bottom: 1cm;
+  font-weight: 400;
+}
+
+.toc-entry {
+  display: flex;
+  align-items: baseline;
+  padding: 6px 0;
+  border-bottom: 1px dotted var(--border);
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.toc-entry:hover {
+  background: var(--primary-bg);
+  padding-right: 8px;
+  border-radius: 4px;
+}
+.toc-entry.chapter-level {
+  font-weight: 700;
+  font-size: 12pt;
+  color: var(--primary);
+  padding-top: 12px;
+  border-bottom: 1px solid var(--border-light);
+  margin-top: 4px;
+}
+.toc-entry.section-level {
+  padding-right: 20px;
+  font-weight: 500;
+  font-size: 11pt;
+}
+.toc-entry.subsection-level {
+  padding-right: 40px;
+  font-weight: 400;
+  font-size: 10pt;
+  color: var(--text-secondary);
+}
+.toc-num {
+  font-family: 'Inter', sans-serif;
+  direction: ltr;
+  display: inline-block;
+  min-width: 36px;
+  margin-left: 8px;
+  color: var(--secondary);
+  font-weight: 600;
+}
+.toc-text { flex: 1; }
+.toc-dots {
+  flex: 1;
+  border-bottom: 1px dotted var(--border);
+  margin: 0 8px;
+  min-width: 30px;
+  align-self: flex-end;
+  margin-bottom: 3px;
+}
+.toc-page-num {
+  font-family: 'Inter', sans-serif;
+  direction: ltr;
+  font-weight: 600;
+  color: var(--primary);
+  min-width: 20px;
+  text-align: left;
+}
+
+/* ===== CHAPTER OPENING ===== */
+.chapter-opening {
+  text-align: center;
+  padding: 1cm 0 0.5cm;
+  position: relative;
+}
+.chapter-number {
+  font-family: 'Inter', sans-serif;
+  font-size: 14pt;
+  font-weight: 700;
+  color: var(--secondary);
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  direction: ltr;
+  margin-bottom: 0.3cm;
+}
+.chapter-icon-wrap {
+  width: 80px;
+  height: 80px;
+  margin: 0.4cm auto;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 30px rgba(15, 76, 129, 0.3);
+}
+.chapter-icon-wrap svg { width: 40px; height: 40px; fill: white; }
+.chapter-title-main {
+  font-size: 24pt;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.2cm;
+  line-height: 1.4;
+}
+.chapter-subtitle {
+  font-size: 12pt;
+  color: var(--text-secondary);
+  font-weight: 400;
+  max-width: 80%;
+  margin: 0 auto;
+}
+.chapter-divider {
+  width: 120px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--secondary), var(--accent));
+  margin: 0.6cm auto;
+  border-radius: 2px;
+}
+.chapter-intro {
+  font-size: 11pt;
+  color: var(--text-secondary);
+  max-width: 85%;
+  margin: 0 auto;
+  text-align: center;
+  line-height: 1.8;
+}
+
+/* ===== ANIMATED CHAPTER OVERVIEW ===== */
+.overview-section {
+  margin: 0.8cm 0;
+  padding: 0.6cm;
+  background: linear-gradient(135deg, var(--primary-bg), #F0FDFA);
+  border-radius: 16px;
+  border: 1px solid var(--border-light);
+  position: relative;
+  overflow: hidden;
+}
+.overview-section::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  left: -30px;
+  width: 100px;
+  height: 100px;
+  background: var(--secondary);
+  opacity: 0.06;
+  border-radius: 50%;
+}
+.overview-title {
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.5cm;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.overview-title svg { width: 20px; height: 20px; fill: var(--secondary); }
+
+.overview-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+.overview-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  position: relative;
+  padding-bottom: 0;
+}
+.overview-step:not(:last-child) { padding-bottom: 0; }
+.overview-step-line {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 36px;
+}
+.overview-step-dot {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-size: 11pt;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+  z-index: 1;
+}
+.overview-step-connector {
+  width: 2px;
+  flex: 1;
+  min-height: 12px;
+  background: linear-gradient(to bottom, var(--secondary), var(--accent));
+  opacity: 0.4;
+}
+.overview-step-content {
+  flex: 1;
+  background: var(--white);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.overview-step-label {
+  font-size: 10pt;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 2px;
+}
+.overview-step-desc {
+  font-size: 9.5pt;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.overview-step-desc .en {
+  font-family: 'Inter', sans-serif;
+  direction: ltr;
+  display: inline;
+}
+
+/* ===== SECTION HEADINGS ===== */
+.content-area { padding-top: 0.3cm; }
+.section-title {
+  font-size: 20pt;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 0.8cm 0 0.3cm;
+  padding-bottom: 0.2cm;
+  border-bottom: 2px solid var(--primary-bg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title .sec-num {
+  font-family: 'Inter', sans-serif;
+  direction: ltr;
+  background: var(--primary);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14pt;
+  flex-shrink: 0;
+}
+
+.subsection-title {
+  font-size: 17pt;
+  font-weight: 600;
+  color: var(--primary-light);
+  margin: 0.5cm 0 0.2cm;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.subsection-title::before {
+  content: '';
+  width: 4px;
+  height: 22px;
+  background: var(--secondary);
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.sub-subsection-title {
+  font-size: 14pt;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0.3cm 0 0.15cm;
+  padding-right: 14px;
+  border-right: 3px solid var(--accent);
+}
+
+/* ===== PARAGRAPHS ===== */
+p {
+  margin-bottom: 0.3cm;
+  text-align: justify;
+  direction: rtl;
+}
+.en-inline {
+  font-family: 'Inter', sans-serif;
+  direction: ltr;
+  display: inline;
+  unicode-bidi: embed;
+}
+
+/* ===== BULLET LISTS ===== */
+ul, ol {
+  margin: 0.2cm 0 0.3cm 0;
+  padding-right: 1.2cm;
+  padding-left: 0;
+}
+ul { list-style: none; }
+ul > li {
+  position: relative;
+  padding-right: 8px;
+  margin-bottom: 6px;
+}
+ul > li::before {
+  content: '';
+  position: absolute;
+  right: -14px;
+  top: 9px;
+  width: 6px;
+  height: 6px;
+  background: var(--secondary);
+  border-radius: 50%;
+}
+ol {
+  list-style: none;
+  counter-reset: arabic-ol;
+}
+ol > li {
+  counter-increment: arabic-ol;
+  position: relative;
+  padding-right: 8px;
+  margin-bottom: 6px;
+}
+ol > li::before {
+  content: counter(arabic-ol) '.';
+  position: absolute;
+  right: -22px;
+  top: 0;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 11pt;
+}
+
+/* ===== CALLOUT BOXES ===== */
+.callout {
+  margin: 0.4cm 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.callout-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 11pt;
+}
+.callout-body {
+  padding: 10px 16px 14px;
+  font-size: 11pt;
+  line-height: 1.7;
+}
+.callout-body p { margin-bottom: 0.2cm; }
+
+.callout-blue .callout-header { background: var(--primary); color: white; }
+.callout-blue { border-color: rgba(15,76,129,0.15); }
+
+.callout-green .callout-header { background: var(--success); color: white; }
+.callout-green { border-color: rgba(22,163,74,0.15); }
+
+.callout-orange .callout-header { background: var(--accent); color: white; }
+.callout-orange { border-color: rgba(245,158,11,0.15); }
+
+.callout-red .callout-header { background: var(--danger); color: white; }
+.callout-red { border-color: rgba(220,38,38,0.15); }
+
+.callout-gray .callout-header { background: #64748B; color: white; }
+.callout-gray { border-color: rgba(100,116,139,0.15); }
+
+.callout-purple .callout-header { background: var(--purple); color: white; }
+.callout-purple { border-color: rgba(124,58,237,0.15); }
+
+.callout-dark .callout-header { background: var(--dark-card); color: var(--secondary-light); }
+.callout-dark .callout-body { background: var(--dark-card); color: var(--code-text); }
+.callout-dark { border-color: rgba(15,23,42,0.3); }
+.callout-dark .callout-body .en-inline { color: var(--secondary-light); }
+
+/* ===== TABLES ===== */
+.table-wrap {
+  margin: 0.4cm 0;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10.5pt;
+}
+.table-wrap thead th {
+  background: var(--primary);
+  color: white;
+  padding: 10px 14px;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+.table-wrap tbody td {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border-light);
+  text-align: right;
+  vertical-align: top;
+}
+.table-wrap tbody tr:nth-child(even) { background: var(--bg); }
+.table-wrap tbody tr:hover { background: var(--primary-bg); }
+.table-wrap tbody tr:last-child td { border-bottom: none; }
+.table-wrap td.num-cell {
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  direction: ltr;
+}
+
+/* ===== CODE BLOCKS ===== */
+.code-block {
+  margin: 0.3cm 0;
+  background: var(--code-bg);
+  border-radius: 10px;
+  overflow: hidden;
+  direction: ltr;
+  text-align: left;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 16px;
+  background: rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.code-lang {
+  font-family: 'Inter', sans-serif;
+  font-size: 9pt;
+  color: var(--secondary-light);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.code-copy {
+  font-family: 'Inter', sans-serif;
+  font-size: 8pt;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.code-block pre {
+  padding: 14px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10pt;
+  line-height: 1.6;
+  color: var(--code-text);
+  overflow-x: auto;
+  margin: 0;
+}
+.code-block pre .kw { color: #C084FC; }
+.code-block pre .fn { color: #67E8F9; }
+.code-block pre .str { color: #86EFAC; }
+.code-block pre .cmt { color: #64748B; font-style: italic; }
+.code-block pre .num { color: #FBBF24; }
+.code-block pre .dir { color: #F472B6; }
+.code-block pre .type { color: #60A5FA; }
+
+.code-inline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10pt;
+  background: var(--primary-bg);
+  color: var(--primary);
+  padding: 1px 7px;
+  border-radius: 5px;
+  direction: ltr;
+  display: inline;
+  unicode-bidi: embed;
+}
+
+/* ===== DIAGRAMS ===== */
+.diagram-wrap {
+  margin: 0.5cm 0;
+  padding: 0.5cm;
+  background: var(--white);
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+.diagram-wrap svg { max-width: 100%; }
+.diagram-title {
+  font-size: 10pt;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.3cm;
+  text-align: center;
+}
+
+/* ===== COMPARISON TABLE ===== */
+.comp-table {
+  margin: 0.4cm 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.comp-table table { width: 100%; border-collapse: collapse; font-size: 10.5pt; }
+.comp-table thead th {
+  padding: 12px 14px;
+  font-weight: 700;
+  color: white;
+  text-align: center;
+}
+.comp-table thead th:first-child { background: var(--primary); text-align: right; }
+.comp-table thead th:nth-child(2) { background: var(--primary-light); }
+.comp-table thead th:nth-child(3) { background: var(--secondary); }
+.comp-table tbody td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-light);
+  vertical-align: top;
+}
+.comp-table tbody td:first-child {
+  font-weight: 600;
+  color: var(--primary);
+  background: var(--primary-bg);
+  text-align: right;
+}
+.comp-table tbody td:nth-child(2),
+.comp-table tbody td:nth-child(3) { text-align: right; }
+.comp-table tbody tr:nth-child(even) td:nth-child(2),
+.comp-table tbody tr:nth-child(even) td:nth-child(3) { background: var(--bg); }
+.comp-table tbody tr:last-child td { border-bottom: none; }
+
+/* ===== TIMELINE ===== */
+.timeline {
+  margin: 0.4cm 0;
+  position: relative;
+  padding-right: 30px;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, var(--primary), var(--secondary), var(--accent));
+  border-radius: 2px;
+}
+.timeline-item {
+  position: relative;
+  margin-bottom: 0.3cm;
+  padding-right: 24px;
+}
+.timeline-dot {
+  position: absolute;
+  right: -24px;
+  top: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 3px solid var(--primary);
+  background: var(--white);
+  z-index: 1;
+}
+.timeline-item:nth-child(2) .timeline-dot { border-color: var(--primary-light); }
+.timeline-item:nth-child(3) .timeline-dot { border-color: var(--secondary); }
+.timeline-item:nth-child(4) .timeline-dot { border-color: var(--accent); }
+.timeline-year {
+  font-family: 'Inter', sans-serif;
+  font-size: 10pt;
+  font-weight: 700;
+  color: var(--secondary);
+  direction: ltr;
+  display: inline-block;
+}
+.timeline-text {
+  font-size: 11pt;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+/* ===== QUICK REVIEW ===== */
+.quick-review {
+  margin: 0.6cm 0 0.3cm;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid var(--primary);
+  background: var(--white);
+}
+.quick-review-header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  padding: 12px 20px;
+  font-size: 16pt;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.quick-review-section {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-light);
+}
+.quick-review-section:last-child { border-bottom: none; }
+.quick-review-section-title {
+  font-size: 12pt;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.qr-concepts .quick-review-section-title { color: var(--primary); }
+.qr-defs .quick-review-section-title { color: #64748B; }
+.qr-mistakes .quick-review-section-title { color: var(--danger); }
+.qr-interview .quick-review-section-title { color: var(--purple); }
+.qr-memory .quick-review-section-title { color: var(--accent); }
+.qr-exam .quick-review-section-title { color: var(--success); }
+.qr-checklist .quick-review-section-title { color: var(--secondary); }
+
+.qr-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 10.5pt;
+}
+.qr-item .qr-bullet {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+.qr-checklist label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 10.5pt;
+  cursor: pointer;
+}
+.qr-checklist input[type="checkbox"] {
+  accent-color: var(--secondary);
+  width: 16px;
+  height: 16px;
+}
+
+/* ===== PAGE BREAKS ===== */
+.page-break { page-break-before: always; }
+
+/* ===== COMPONENT LIST CARDS ===== */
+.component-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0.3cm 0;
+}
+.component-card {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-light);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.component-card-num {
+  font-family: 'Inter', sans-serif;
+  background: var(--primary);
+  color: white;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11pt;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.component-card-text { font-size: 10.5pt; line-height: 1.6; }
+.component-card-name {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: var(--primary);
+  direction: ltr;
+  display: block;
+}
+.component-card-desc { color: var(--text-secondary); }
+
+/* ===== ROADMAP CARDS ===== */
+.roadmap-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0.3cm 0;
+}
+.roadmap-card {
+  background: var(--white);
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-right: 4px solid var(--secondary);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.roadmap-card-num {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  color: var(--secondary);
+  font-size: 16pt;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.roadmap-card-text { font-size: 9.5pt; line-height: 1.5; }
+.roadmap-card-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: var(--text);
+  direction: ltr;
+  display: block;
+}
+.roadmap-card-desc { color: var(--text-secondary); }
+
+/* ===== PRINT ===== */
+@media print {
+  body { background: white; }
+  .page {
+    box-shadow: none;
+    margin: 0;
+    page-break-after: always;
+  }
+  .callout { break-inside: avoid; }
+  .table-wrap { break-inside: avoid; }
+  .code-block { break-inside: avoid; }
+  .diagram-wrap { break-inside: avoid; }
+  .quick-review { break-inside: avoid; }
+}
+
+/* ===== RESPONSIVE ===== */
+@media screen and (max-width: 800px) {
+  .page {
+    width: 100%;
+    padding: 1.5cm;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .component-grid, .roadmap-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== TABLE OF CONTENTS ==================== -->
+<div class="page toc-page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">ملخص الدرس الأول</span>
+  </div>
+  <div class="page-footer">
+    <span class="page-num">i</span>
+    <span class="version">v1.0 — Golden Course</span>
+  </div>
+
+  <div class="toc-title">الفهرس</div>
+  <div class="toc-subtitle">Embedded Linux &amp; Yocto — ملخص الدرس الأول</div>
+
+  <div class="toc-entry chapter-level" onclick="document.getElementById('sec1').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">01</span>
+    <span class="toc-text">المتطلبات العتادية</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">1</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec1-1').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">1.1</span>
+    <span class="toc-text">اللوحة الرئيسية</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">1</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec1-2').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">1.2</span>
+    <span class="toc-text">المكونات الإضافية</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">1</</span>
+  </div>
+
+  <div class="toc-entry chapter-level" onclick="document.getElementById('sec2').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">02</span>
+    <span class="toc-text">ما هو نظام التشغيل؟</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">2</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec2-1').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">2.1</span>
+    <span class="toc-text">لماذا وُجد نظام التشغيل؟</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">2</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec2-2').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">2.2</span>
+    <span class="toc-text">كيف يعمل نظام التشغيل ومهامه؟</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">2</span>
+  </div>
+
+  <div class="toc-entry chapter-level" onclick="document.getElementById('sec3').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">03</span>
+    <span class="toc-text">تاريخ نظام Linux</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">4</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec3-1').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">3.1</span>
+    <span class="toc-text">من Multics إلى Unix</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">4</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec3-2').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">3.2</span>
+    <span class="toc-text">كيف تم بناء Unix؟</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">4</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec3-3').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">3.3</span>
+    <span class="toc-text">مشكلة تفتت Unix</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">4</span>
+  </div>
+
+  <div class="toc-entry chapter-level" onclick="document.getElementById('sec4').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">04</span>
+    <span class="toc-text">معيار POSIX وقابلية النقل</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">5</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec4-1').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">4.1</span>
+    <span class="toc-text">لماذا وُجد POSIX؟</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">5</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec4-2').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">4.2</span>
+    <span class="toc-text">ما هو POSIX؟</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">5</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec4-3').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">4.3</span>
+    <span class="toc-text">ميزة قابلية النقل</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">5</span>
+  </div>
+
+  <div class="toc-entry chapter-level" onclick="document.getElementById('sec5').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">05</span>
+    <span class="toc-text">مشروع GNU ورخصة GPL</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">6</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec5-1').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">5.1</span>
+    <span class="toc-text">المشكلة مع Unix</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">6</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec5-2').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">5.2</span>
+    <span class="toc-text">ظهور Richard Stallman ومشروع GNU</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">6</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec5-3').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">5.3</span>
+    <span class="toc-text">ماذا طوّر مشروع GNU؟</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">6</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec5-4').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">5.4</span>
+    <span class="toc-text">رخصة GPL</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">7</span>
+  </div>
+
+  <div class="toc-entry chapter-level" onclick="document.getElementById('sec6').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">06</span>
+    <span class="toc-text">نواة Linux وتكامل GNU/Linux</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">8</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec6-1').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">6.1</span>
+    <span class="toc-text">القطعة الناقصة في مشروع GNU</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">8</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec6-2').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">6.2</span>
+    <span class="toc-text">ظهور Linux (Linus Torvalds 1991)</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">8</span>
+  </div>
+  <div class="toc-entry section-level" onclick="document.getElementById('sec6-3').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">6.3</span>
+    <span class="toc-text">مقارنات تقنية</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">8</span>
+  </div>
+
+  <div class="toc-entry chapter-level" onclick="document.getElementById('sec7').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">07</span>
+    <span class="toc-text">خطة الدورة التدريبية</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">10</span>
+  </div>
+
+  <div class="toc-entry chapter-level" onclick="document.getElementById('sec8').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">08</span>
+    <span class="toc-text">أسئلة شائعة وإجاباتها</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">11</span>
+  </div>
+
+  <div class="toc-entry chapter-level" onclick="document.getElementById('review').scrollIntoView({behavior:'smooth'})">
+    <span class="toc-num">◆</span>
+    <span class="toc-text">مراجعة سريعة</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">12</span>
+  </div>
+</div>
+
+<!-- ==================== SECTION 1: HARDWARE REQUIREMENTS ==================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">المتطلبات العتادية</span>
+  </div>
+  <div class="page-footer">
+    <span class="page-num">1</span>
+    <span class="version">v1.0 — Golden Course</span>
+  </div>
+
+  <div class="chapter-opening" id="sec1">
+    <div class="chapter-number">CHAPTER 01</div>
+    <div class="chapter-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/></svg>
+    </div>
+    <div class="chapter-title-main">المتطلبات العتادية</div>
+    <div class="chapter-subtitle">Hardware Requirements — اختيار القطع بعناية لتكون متناولة للجميع مع تقديم أداء ممتاز للتعلم</div>
+    <div class="chapter-divider"></div>
+    <div class="chapter-intro">
+      المدرب: سالم بالحاج طلال — Embedded Linux Architect<br>
+      الدورة: تعلم نظام Embedded Linux وأداة Yocto من الصفر وحتى الاحتراف<br>
+      الهدف: من absolute beginner to advanced<br>
+      فلسفة TechLeef: توفير تعلم مجاني عالي الجودة لمهندسي الأنظمة المدمجة Embedded Systems في الوطن العربي مع مراعاة الكفاءات العربية.
+    </div>
+  </div>
+
+  <!-- Animated Chapter Overview -->
+  <div class="overview-section">
+    <div class="overview-title">
+      <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+      خريطة الدرس — نظرة سريعة
+    </div>
+    <div class="overview-flow">
+      <div class="overview-step">
+        <div class="overview-step-line">
+          <div class="overview-step-dot" style="background:var(--primary);">1</div>
+          <div class="overview-step-connector"></div>
+        </div>
+        <div class="overview-step-content">
+          <div class="overview-step-label">اختيار اللوحة الرئيسية — <span class="en">Raspberry Pi Zero 2 W</span></div>
+          <div class="overview-step-desc">لوحة تطوير بتكلفة حوالي 15 دولاراً مع معالج رباعي النواة وذاكرة 512MB RAM</div>
+        </div>
+      </div>
+      <div class="overview-step">
+        <div class="overview-step-line">
+          <div class="overview-step-dot" style="background:var(--primary-light);">2</div>
+          <div class="overview-step-connector"></div>
+        </div>
+        <div class="overview-step-content">
+          <div class="overview-step-label">توفير المكونات الإضافية والسنسورات</div>
+          <div class="overview-step-desc"><span class="en">MCP23017, ADXL345, FTDI Module, Micro SD Card, Breadboard, Jumper Wires</span></div>
+        </div>
+      </div>
+      <div class="overview-step">
+        <div class="overview-step-line">
+          <div class="overview-step-dot" style="background:var(--secondary);">3</div>
+          <div class="overview-step-connector"></div>
+        </div>
+        <div class="overview-step-content">
+          <div class="overview-step-label">فهم أساسيات نظام التشغيل</div>
+          <div class="overview-step-desc">دور الوسيط بين التطبيقات والموارد الصلبة: إدارة الذاكرة، الملفات، العمليات، الشبكات</div>
+        </div>
+      </div>
+      <div class="overview-step">
+        <div class="overview-step-line">
+          <div class="overview-step-dot" style="background:var(--accent);">4</div>
+          <div class="overview-step-connector"></div>
+        </div>
+        <div class="overview-step-content">
+          <div class="overview-step-label">التاريخ التقني: من <span class="en">Multics</span> إلى <span class="en">Linux</span></div>
+          <div class="overview-step-desc">ابتكار لغة C، معيار POSIX، مشروع GNU، رخصة GPL، ظهور نواة Linux</div>
+        </div>
+      </div>
+      <div class="overview-step">
+        <div class="overview-step-line">
+          <div class="overview-step-dot" style="background:var(--success);">5</div>
+        </div>
+        <div class="overview-step-content">
+          <div class="overview-step-label">خارطة طريق الدورة التدريبية — 12 مرحلة عملية</div>
+          <div class="overview-step-desc">من <span class="en">Shell Utilities</span> وصولاً إلى <span class="en">OTA Updates</span> باستخدام RAUC</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-area">
+    <div class="section-title" id="sec1-1">
+      <span class="sec-num">1.1</span>
+      اللوحة الرئيسية — The Board
+    </div>
+
+    <p>
+      لوحة التطوير: <span class="en-inline">Raspberry Pi Zero 2 W</span> — حوالي 15 دولاراً.
+    </p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>المواصفة</th>
+            <th>التفاصيل</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>المعالج</td>
+            <td>رباعي النواة <span class="en-inline">Quad-core 64-bit</span></td>
+          </tr>
+          <tr>
+            <td>الذاكرة العشوائية</td>
+            <td><span class="en-inline">512MB RAM</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout callout-red">
+      <div class="callout-header">⚠️ تحذير مهم</div>
+      <div class="callout-body">
+        <p>انتبه عند الشراء وتأكد أنها النسخة <span class="en-inline">Zero 2 W</span> وليست <span class="en-inline">Zero 1</span>، فالفرق جوهري.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-orange">
+      <div class="callout-header">💡 ملاحظة</div>
+      <div class="callout-body">
+        <p>يمكنك استخدام لوحات أخرى مثل <span class="en-inline">Raspberry Pi 3, 4, 5</span> أو <span class="en-inline">BeagleBone, STM32MP1</span> لأن %90 من المفاهيم مشتركة، ولكن سيتوجب عليك تكيف التطبيقات <span class="en-inline">Adaptation</span> لتعمل على لوحتك الخاصة.</p>
+      </div>
+    </div>
+
+    <div class="section-title" id="sec1-2">
+      <span class="sec-num">1.2</span>
+      المكونات الإضافية — Components &amp; Sensors
+    </div>
+
+    <div class="component-grid">
+      <div class="component-card">
+        <div class="component-card-num">1</div>
+        <div class="component-card-text">
+          <span class="component-card-name">MCP23017</span>
+          <span class="component-card-desc">موسع منافذ <span class="en-inline">GPIO Expander</span></span>
+        </div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-num">2</div>
+        <div class="component-card-text">
+          <span class="component-card-name">ADXL345</span>
+          <span class="component-card-desc">حساس تسارع <span class="en-inline">Accelerometer</span></span>
+        </div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-num">3</div>
+        <div class="component-card-text">
+          <span class="component-card-name">FTDI Module</span>
+          <span class="component-card-desc">قطعة أساسية جداً للوصول إلى واجهة الأوامر سطر <span class="en-inline">Terminal</span> باللوحة</span>
+        </div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-num">4</div>
+        <div class="component-card-text">
+          <span class="component-card-name">Micro SD Card</span>
+          <span class="component-card-desc">لتثبيت نظام التشغيل</span>
+        </div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-num">5</div>
+        <div class="component-card-text">
+          <span class="component-card-name">USB Micro-B</span>
+          <span class="component-card-desc">لتزويد اللوحة بالطاقة</span>
+        </div>
+      </div>
+      <div class="component-card">
+        <div class="component-card-num">6</div>
+        <div class="component-card-text">
+          <span class="component-card-name">Breadboard &amp; Jumper Wires</span>
+          <span class="component-card-desc">لوحة تجارب وأسلاك توصيل</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout callout-green">
+      <div class="callout-header">✅ تذكّر</div>
+      <div class="callout-body">
+        <p>احرص على توفير هذه القطع قبل الوصول إلى الدروس العملية الخاصة باللوحة.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-red">
+      <div class="callout-header">⚠️ أخطاء شائعة</div>
+      <div class="callout-body">
+        <p>شراء إصدار قدیم من <span class="en-inline">Raspberry Pi</span> (مثل النسخة الأولى) قد يسبب مشاكل في الأداء والتوافق أثناء الدورة، نظراً لقوتها ورخص ثمنها هي <span class="en-inline">Raspberry Pi Zero 2 W</span>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SECTION 2: OPERATING SYSTEM ==================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">ما هو نظام التشغيل؟</span>
+  </div>
+  <div class="page-footer">
+    <span class="page-num">2</span>
+    <span class="version">v1.0 — Golden Course</span>
+  </div>
+
+  <div class="chapter-opening" id="sec2">
+    <div class="chapter-number">CHAPTER 02</div>
+    <div class="chapter-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8zm17 0c-.83 0-1.5.67-1.5 1.5v7c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5v-7c0-.83-.67-1.5-1.5-1.5zm-4.97-5.84l1.3-1.3c.2-.2.2-.51 0-.71-.2-.2-.51-.2-.71 0l-1.48 1.48A5.84 5.84 0 0012 1c-.96 0-1.86.23-2.66.63L7.85.15c-.2-.2-.51-.2-.71 0-.2.2-.2.51 0 .71l1.31 1.31A5.983 5.983 0 006 7h12c0-2.02-1-3.8-2.47-4.84zM10 5H9V4h1v1zm5 0h-1V4h1v1z"/></svg>
+    </div>
+    <div class="chapter-title-main">ما هو نظام التشغيل؟</div>
+    <div class="chapter-subtitle">Operating System — فهم المبدأ الأساسي لأي نظام تشغيل قبل الغوص في Linux</div>
+    <div class="chapter-divider"></div>
+    <div class="chapter-intro">
+      يجب أولاً فهم المبدأ الأساسي لأي نظام تشغيل، وذلك لفهم Linux.
+    </div>
+  </div>
+
+  <div class="content-area">
+    <div class="section-title" id="sec2-1">
+      <span class="sec-num">2.1</span>
+      لماذا وُجد نظام التشغيل؟
+    </div>
+
+    <p>
+      أي حاسوب أو لوحة تطوير تحتوي على مكونات صلبة <span class="en-inline">Hardware</span> مثل <span class="en-inline">CPU, RAM, Storage</span>، لا يمكن للمستخدم أو التطبيقات التحدث مباشرة مع هذه المكونات. يأتي هنا دور نظام التشغيل <span class="en-inline">OS</span> ليكون الوسيط والمدیر للموارد.
+    </p>
+
+    <!-- OS Role Diagram -->
+    <div class="diagram-wrap">
+      <div class="diagram-title">دور نظام التشغيل كوسيط</div>
+      <svg width="460" height="280" viewBox="0 0 460 280">
+        <!-- Applications Layer -->
+        <rect x="40" y="10" width="380" height="55" rx="10" fill="#EBF2FA" stroke="#0F4C81" stroke-width="1.5"/>
+        <text x="230" y="42" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="600" fill="#0F4C81">Applications</text>
+        <!-- Arrow -->
+        <line x1="230" y1="65" x2="230" y2="95" stroke="#14B8A6" stroke-width="2" marker-end="url(#arrowTeal)"/>
+        <!-- OS Layer -->
+        <rect x="40" y="95" width="380" height="55" rx="10" fill="#F0FDFA" stroke="#14B8A6" stroke-width="2"/>
+        <text x="230" y="127" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#14B8A6">Operating System (OS)</text>
+        <!-- Arrow -->
+        <line x1="230" y1="150" x2="230" y2="180" stroke="#14B8A6" stroke-width="2" marker-end="url(#arrowTeal)"/>
+        <!-- Hardware Layer -->
+        <rect x="40" y="180" width="120" height="55" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+        <text x="100" y="212" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#475569">CPU</text>
+        <rect x="170" y="180" width="120" height="55" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+        <text x="230" y="212" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#475569">RAM</text>
+        <rect x="300" y="180" width="120" height="55" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+        <text x="360" y="212" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#475569">Storage</text>
+        <!-- Labels -->
+        <text x="420" y="42" text-anchor="start" font-family="IBM Plex Sans Arabic" font-size="9" fill="#94A3B8">التطبيقات</text>
+        <text x="420" y="127" text-anchor="start" font-family="IBM Plex Sans Arabic" font-size="9" fill="#94A3B8">الوسيط</text>
+        <text x="420" y="212" text-anchor="start" font-family="IBM Plex Sans Arabic" font-size="9" fill="#94A3B8">العتاد</text>
+        <defs>
+          <marker id="arrowTeal" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6" fill="#14B8A6"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="section-title" id="sec2-2">
+      <span class="sec-num">2.2</span>
+      كيف يعمل نظام التشغيل ومهامه؟ ⚙
+    </div>
+
+    <p>
+      في الأساس هو مجموعة من الأوامر. كل تطبيق <span class="en-inline">Application</span> وظيفته تنفيذ الأوامر <span class="en-inline">Instructions</span> التي يقوم المعالج <span class="en-inline">CPU</span> بتنفيذها. نظام التشغيل يقوم بالمهام التالية:
+    </p>
+
+    <!-- Task Cards -->
+    <div class="callout callout-blue">
+      <div class="callout-header">📘 المهمة 1: إدارة الذاكرة — Memory Management</div>
+      <div class="callout-body">
+        <p>النظام يوفر طريقة آمنة للقراءة والكتابة في الذاكرة.</p>
+        <p>مثال: وظيفة تخصيص مساحة في الذاكرة للمستخدم مثل دالة <span class="code-inline">malloc()</span>.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-blue">
+      <div class="callout-header">📘 المهمة 2: إدارة الملفات — File System Management</div>
+      <div class="callout-body">
+        <p>ينظم كيفية حفظ وقراءة الملفات والمجلدات <span class="en-inline">Files &amp; Directories</span> داخل وحدات التخزين <span class="en-inline">Storage</span>.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-blue">
+      <div class="callout-header">📘 المهمة 3: إدارة العمليات والمجدول — Process Management &amp; Scheduler</div>
+      <div class="callout-body">
+        <p>تعريف <span class="en-inline">Process</span>: هو تطبيق <span class="en-inline">Application</span> في حالة تشغيل <span class="en-inline">Running</span>.</p>
+        <p>المجدول <span class="en-inline">Scheduler</span>: هو جزء ذكي من نظام التشغيل ينظم وقت المعالج لتنفيذ أوامر عدة تطبيقات في الوقت نفسه، مما يجعلك تشعر أن كل شيء يعمل بالتوازي بسرعة فائقة.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-blue">
+      <div class="callout-header">📘 المهمة 4: الشبكات والحمایة — Networking &amp; Security</div>
+      <div class="callout-body">
+        <p>دعم بروتوكولات الاتصال وحمایة موارد النظام.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-green">
+      <div class="callout-header">✅ تذكّر</div>
+      <div class="callout-body">
+        <p>نظام التشغيل هو المنظم والمدیر لموارد الھاردویر <span class="en-inline">CPU, RAM, Storage</span>.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-gray">
+      <div class="callout-header">📌 مراجعة سريعة ⚡</div>
+      <div class="callout-body">
+        <ul>
+          <li><span class="en-inline">Process</span>: تطبيق قيد التشغيل.</li>
+          <li><span class="en-inline">Scheduler</span>: منظم وقت المعالج.</li>
+          <li><span class="en-inline">Memory Management</span>: مساحات الذاكرة العشوائية مدیر.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SECTION 3: LINUX HISTORY ==================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">تاريخ نظام Linux</span>
+  </div>
+  <div class="page-footer">
+    <span class="page-num">3</span>
+    <span class="version">v1.0 — Golden Course</span>
+  </div>
+
+  <div class="chapter-opening" id="sec3">
+    <div class="chapter-number">CHAPTER 03</div>
+    <div class="chapter-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0013 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>
+    </div>
+    <div class="chapter-title-main">تاريخ نظام Linux</div>
+    <div class="chapter-subtitle">من Multics إلى Unix — فهم سبب تصميم الأنظمة الحديثة بهذا الشكل والقيود التي حُلت بفضل هذا التاريخ</div>
+    <div class="chapter-divider"></div>
+    <div class="chapter-intro">
+      فهم التاريخ ليس ترفاً، بل هو المفتاح لفهم سبب تصميم الأنظمة الحديثة بهذا الشكل والقيود <span class="en-inline">Limitations</span> التي حُلت.
+    </div>
+  </div>
+
+  <div class="content-area">
+    <div class="section-title" id="sec3-1">
+      <span class="sec-num">3.1</span>
+      من Multics إلى Unix
+    </div>
+
+    <p>في البدايات تم تطوير نظام اسمه <span class="en-inline">Multics</span> كان لكنه معقداً.</p>
+    <p>بعد ذلك جاء نظام <span class="en-inline">Unix</span> تم تطويره بواسطة <span class="en-inline">Ken Thompson</span> و <span class="en-inline">Dennis Ritchie</span>.</p>
+
+    <!-- Timeline -->
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div>
+          <span class="timeline-year">1960s</span>
+          <div class="timeline-text">تطوير نظام <span class="en-inline">Multics</span> — نظام معقد جداً</div>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div>
+          <span class="timeline-year">1969</span>
+          <div class="timeline-text">ظهور <span class="en-inline">Unix</span> — <span class="en-inline">Ken Thompson</span> و <span class="en-inline">Dennis Ritchie</span></div>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div>
+          <span class="timeline-year">1972</span>
+          <div class="timeline-text">ابتكار لغة <span class="en-inline">C Programming Language</span> بواسطة <span class="en-inline">Dennis Ritchie</span></div>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div>
+          <span class="timeline-year">1973</span>
+          <div class="timeline-text">إعادة كتابة <span class="en-inline">Unix</span> بلغة <span class="en-inline">C</span> — بداية عصر قابلية النقل</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title" id="sec3-2">
+      <span class="sec-num">3.2</span>
+      كيف تم بناء Unix؟
+    </div>
+
+    <p>في البداية كُتب بلغة التجميع <span class="en-inline">Assembly</span>.</p>
+
+    <div class="callout callout-red">
+      <div class="callout-header">⚠️ المشكلة</div>
+      <div class="callout-body">
+        <p>لغة <span class="en-inline">Assembly</span> مرتبطة جداً بهيكلية المعالج <span class="en-inline">Architecture-specific</span>، الكود المكتوب لمعالج معين لا يعمل على معالج آخر.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-green">
+      <div class="callout-header">✅ الحل</div>
+      <div class="callout-body">
+        <p>قام <span class="en-inline">Dennis Ritchie</span> باختراع لغة <span class="en-inline">C Programming Language</span> وتمت إعادة كتابة نظام <span class="en-inline">Unix</span> بها.</p>
+        <p>الميزة: يمكن كتابة الكود مرة واحدة بلغة <span class="en-inline">C</span> ثم استخدام مترجم <span class="en-inline">Compiler</span> لتحويله إلى <span class="en-inline">Assembly</span> الخاص بأي معالج آخر. (هذه العملية تسمى <span class="en-inline">Compilation Process</span>).</p>
+      </div>
+    </div>
+
+    <!-- Compilation Pipeline Diagram -->
+    <div class="diagram-wrap">
+      <div class="diagram-title">عملية التجميع — Compilation Process</div>
+      <svg width="460" height="100" viewBox="0 0 460 100">
+        <rect x="10" y="30" width="80" height="40" rx="8" fill="#EBF2FA" stroke="#0F4C81" stroke-width="1.5"/>
+        <text x="50" y="55" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="#0F4C81">Source Code</text>
+        <line x1="90" y1="50" x2="120" y2="50" stroke="#14B8A6" stroke-width="2" marker-end="url(#arrowT2)"/>
+        <rect x="120" y="30" width="80" height="40" rx="8" fill="#F0FDFA" stroke="#14B8A6" stroke-width="1.5"/>
+        <text x="160" y="55" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="#14B8A6">Compiler</text>
+        <line x1="200" y1="50" x2="230" y2="50" stroke="#14B8A6" stroke-width="2" marker-end="url(#arrowT2)"/>
+        <rect x="230" y="30" width="80" height="40" rx="8" fill="#FFF7ED" stroke="#F59E0B" stroke-width="1.5"/>
+        <text x="270" y="55" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" font-weight="600" fill="#EA580C">Object File</text>
+        <line x1="310" y1="50" x2="340" y2="50" stroke="#14B8A6" stroke-width="2" marker-end="url(#arrowT2)"/>
+        <rect x="340" y="30" width="50" height="40" rx="8" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
+        <text x="365" y="55" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="600" fill="#7C3AED">Linker</text>
+        <line x1="390" y1="50" x2="400" y2="50" stroke="#14B8A6" stroke-width="2" marker-end="url(#arrowT2)"/>
+        <rect x="400" y="30" width="55" height="40" rx="8" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+        <text x="427" y="55" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" font-weight="600" fill="#16A34A">Executable</text>
+        <defs>
+          <marker id="arrowT2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6" fill="#14B8A6"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="section-title" id="sec3-3">
+      <span class="sec-num">3.3</span>
+      مشكلة تفتت Unix
+    </div>
+
+    <p>
+      بسبب نجاح <span class="en-inline">Unix</span> الكبير، بدأت الشركات بتطوير أنظمة مقلدة له، مما أدى إلى ظهور نسخ مختلفة كثيرة قليلاً، والتي هددت بضياع الميزة الكبيرة وهي "قابلية النقل" <span class="en-inline">Portability</span> وهي أساسية يحتاجها المطورون.
+    </p>
+
+    <div class="callout callout-green">
+      <div class="callout-header">✅ تذكّر</div>
+      <div class="callout-body">
+        <p>لغة <span class="en-inline">C</span> تم ابتكارها بالأساس لحل مشكلة كتابة أنظمة التشغيل بلغة <span class="en-inline">Assembly</span> لتسهيل نقل النظام بين المعالجات المختلفة.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-red">
+      <div class="callout-header">⚠️ أخطاء شائعة</div>
+      <div class="callout-body">
+        <p>الاعتقاد بأن <span class="en-inline">Linux</span> هو <span class="en-inline">Unix</span> نفسه (هذا خطأ فادح، سنفهم سببه لاحقاً).</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SECTION 4: POSIX ==================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">معيار POSIX وقابلية النقل</span>
+  </div>
+  <div class="page-footer">
+    <span class="page-num">4</span>
+    <span class="version">v1.0 — Golden Course</span>
+  </div>
+
+  <div class="chapter-opening" id="sec4">
+    <div class="chapter-number">CHAPTER 04</div>
+    <div class="chapter-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+    </div>
+    <div class="chapter-title-main">معيار POSIX وقابلية النقل</div>
+    <div class="chapter-subtitle">Portable Operating System Interface — القانون الذي وحّد واجهات الأنظمة وضمن قابلية النقل البرمجي</div>
+    <div class="chapter-divider"></div>
+    <div class="chapter-intro">
+      معيار POSIX هو المستند الذي يضمن أن الكود البرمجي سيعمل على أي نظام تشغيل يحترم هذا المعيار.
+    </div>
+  </div>
+
+  <div class="content-area">
+    <div class="section-title" id="sec4-1">
+      <span class="sec-num">4.1</span>
+      لماذا وُجد POSIX؟
+    </div>
+
+    <p>
+      لحل مشكلة اختلاف الأنظمة المقلدة لـ <span class="en-inline">Unix</span>، احتاج المطورون إلى "قانون" أو "تصميم هندسي" يوحد طريقة عمل هذه الأنظمة لضمان أن التطبيق المكتوب لنظام معين سيعمل على جميع الأنظمة الأخرى.
+    </p>
+
+    <div class="section-title" id="sec4-2">
+      <span class="sec-num">4.2</span>
+      ما هو POSIX؟ ⚙
+    </div>
+
+    <p>
+      ببساطة هو عن عبارة مستند نصي (قانون/معيار) يحتوي على فصول <span class="en-inline">Chapters</span> تشرح كيف يجب أن يتصرف ويتواصل نظام التشغيل مع التطبيقات.
+    </p>
+
+    <div class="callout callout-blue">
+      <div class="callout-header">📘 أهم فصول معيار POSIX</div>
+      <div class="callout-body">
+        <p><strong>1. واجهات النظام — System Interfaces:</strong> مجموعة الدوال <span class="en-inline">Functions</span> التي يجب أن يوفرها النظام للتطبيقات لتتحدث معه (مثل دوال القراءة والكتابة).</p>
+        <p><strong>2. ملفات الترويسة — Headers:</strong> أسماء الملفات التي تحتوي على هذه الدوال ويحددها <span class="en-inline">POSIX</span>.</p>
+        <p><strong>3. الأدوات — Utilities:</strong> التطبيقات الأساسية التي يجب أن تتواجد في واجهة سطر الأوامر <span class="en-inline">Shell</span>.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-dark">
+      <div class="callout-header">🚀 مثال عملي</div>
+      <div class="callout-body">
+        <p>بفضل <span class="en-inline">POSIX</span>، دالة الطباعة <span class="en-inline">printf()</span> موجودة دائماً داخل ملف <span class="code-inline">&lt;stdio.h&gt;</span> في أي نظام تشغيل يحترم هذا المعيار.</p>
+      </div>
+    </div>
+
+    <div class="sub-subsection-title">الأوامر الأساسية Linux — Utilities المذكورة كمثال</div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>الأمر</th>
+            <th>الوظیفة</th>
+            <th>الاستخدام</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="code-inline">ls</span></td>
+            <td>عرض محتوى المجلد <span class="en-inline">List directory contents</span></td>
+            <td>هذا الأمر يستعمل دوال من واجهة النظام للوصول إلى الديسك الھارد لجلب أسماء الملفات وعرضها</td>
+          </tr>
+          <tr>
+            <td><span class="code-inline">cd</span></td>
+            <td>تغییر المجلد الحالي <span class="en-inline">Change Directory</span></td>
+            <td>للانتقال من مسار إلى آخر</td>
+          </tr>
+          <tr>
+            <td><span class="code-inline">mkdir</span></td>
+            <td>إنشاء مجلد جدید <span class="en-inline">Make Directory</span></td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- POSIX Architecture Diagram -->
+    <div class="diagram-wrap">
+      <div class="diagram-title">بنية POSIX — كيف يوحّد المعيار الأنظمة</div>
+      <svg width="440" height="220" viewBox="0 0 440 220">
+        <rect x="80" y="10" width="280" height="50" rx="10" fill="#EBF2FA" stroke="#0F4C81" stroke-width="1.5"/>
+        <text x="220" y="40" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="600" fill="#0F4C81">Applications</text>
+        <line x1="220" y1="60" x2="220" y2="85" stroke="#14B8A6" stroke-width="2" marker-end="url(#arrowT3)"/>
+        <rect x="80" y="85" width="280" height="50" rx="10" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
+        <text x="220" y="115" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#7C3AED">POSIX Interface</text>
+        <line x1="120" y1="135" x2="100" y2="165" stroke="#14B8A6" stroke-width="2" marker-end="url(#arrowT3)"/>
+        <line x1="220" y1="135" x2="220" y2="165" stroke="#14B8A6" stroke-width="2" marker-end="url(#arrowT3)"/>
+        <line x1="320" y1="135" x2="340" y2="165" stroke="#14B8A6" stroke-width="2" marker-end="url(#arrowT3)"/>
+        <rect x="30" y="165" width="130" height="45" rx="8" fill="#F0FDFA" stroke="#14B8A6" stroke-width="1.5"/>
+        <text x="95" y="192" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="600" fill="#14B8A6">Linux</text>
+        <rect x="175" y="165" width="90" height="45" rx="8" fill="#FFF7ED" stroke="#F59E0B" stroke-width="1.5"/>
+        <text x="220" y="192" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="600" fill="#EA580C">macOS</text>
+        <rect x="280" y="165" width="130" height="45" rx="8" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5"/>
+        <text x="345" y="192" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="600" fill="#475569">Unix</text>
+        <defs>
+          <marker id="arrowT3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6" fill="#14B8A6"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="section-title" id="sec4-3">
+      <span class="sec-num">4.3</span>
+      ميزة قابلية النقل — "Portability"
+    </div>
+
+    <p>
+      إذا كتبت كوداً بلغة <span class="en-inline">C</span> يستخدم دالة <span class="en-inline">printf()</span> و <span class="en-inline">#include &lt;stdio.h&gt;</span>، أصبح الكود قابلاً للنقل <span class="en-inline">Portable</span> بفضل <span class="en-inline">POSIX</span>. فأنت ضامن %100 أن هذا الكود سيعمل على أي نظام تشغيل مبني على معيار <span class="en-inline">POSIX</span>.
+    </p>
+
+    <div class="callout callout-green">
+      <div class="callout-header">✅ تذكّر</div>
+      <div class="callout-body">
+        <p><span class="en-inline">POSIX</span> هو مجرد مستند قانون لتوحيد واجهات الأنظمة لضمان قابلية النقل <span class="en-inline">Portability</span> للكود البرمجي، وليس نظام تشغيل.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SECTION 5: GNU & GPL ==================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">مشروع GNU ورخصة GPL</span>
+  </div>
+  <div class="page-footer">
+    <span class="page-num">5</span>
+    <span class="version">v1.0 — Golden Course</span>
+  </div>
+
+  <div class="chapter-opening" id="sec5">
+    <div class="chapter-number">CHAPTER 05</div>
+    <div class="chapter-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+    </div>
+    <div class="chapter-title-main">مشروع GNU ورخصة GPL</div>
+    <div class="chapter-subtitle">Free Software Foundation — كيف وُلدت فلسفة البرمجيات الحرة وأدوات GNU التي تشكل العمود الفقري لنظام Linux</div>
+    <div class="chapter-divider"></div>
+    <div class="chapter-intro">
+      من أزمة "الثقة" في الأنظمة المغلقة إلى بناء بديل مفتوح المصدر بالكامل ومتوافق مع معيار POSIX.
+    </div>
+  </div>
+
+  <div class="content-area">
+    <div class="section-title" id="sec5-1">
+      <span class="sec-num">5.1</span>
+      المشكلة مع Unix
+    </div>
+
+    <p>
+      نظام <span class="en-inline">Unix</span> لم يكن مفتوح المصدر <span class="en-inline">Closed Source</span>، كمطور أو مستخدم لا يمكنك رؤية الكود البرمجي الخاص به، مما يخلق أزمة "ثقة" (مثلما يفعل نظام <span class="en-inline">Windows</span>) لا تستطيع التأكد %100.
+    </p>
+
+    <div class="section-title" id="sec5-2">
+      <span class="sec-num">5.2</span>
+      ظهور Richard Stallman ومشروع GNU
+    </div>
+
+    <p>
+      <span class="en-inline">Richard Stallman</span> رفض مبدأ البرمجيات المغلقة وأسّس فلسفة البرمجيات الحرة <span class="en-inline">Free Software</span>.
+    </p>
+    <p>
+      أطلق مشروعاً ضخماً اسمه <span class="en-inline">GNU</span> (وهي اختصار لـ <span class="en-inline">GNU's Not Unix</span> — أي ليس يونكس).
+    </p>
+    <p>
+      الهدف: بناء نظام تشغيل متوافق مع معيار <span class="en-inline">POSIX</span> لكنه مفتوح المصدر بالكامل.
+    </p>
+
+    <div class="section-title" id="sec5-3">
+      <span class="sec-num">5.3</span>
+      ماذا طوّر مشروع GNU؟
+    </div>
+
+    <p>
+      بما أن <span class="en-inline">POSIX</span> مجرد "قانون" نصي، فكان على <span class="en-inline">Stallman</span> كتابة كود برمجي يطبق هذا القانون <span class="en-inline">Implementation</span>.
+    </p>
+
+    <!-- GNU Components -->
+    <div class="callout callout-blue">
+      <div class="callout-header">📘 1. مكتبة C — C Library (glibc)</div>
+      <div class="callout-body">
+        <p>تطبيق فعلي <span class="en-inline">Implementation</span> لواجهات النظام والترويسة وملفات المذكورة في <span class="en-inline">POSIX</span> (وتعد <span class="en-inline">glibc</span> مكتبة مقدسة في عالم <span class="en-inline">Linux</span>).</p>
+      </div>
+    </div>
+
+    <div class="callout callout-blue">
+      <div class="callout-header">📘 2. Coreutils</div>
+      <div class="callout-body">
+        <p>تطبيق للأدوات <span class="en-inline">Utilities</span> مثل <span class="code-inline">ls</span>، <span class="code-inline">cd</span>، <span class="code-inline">mkdir</span>.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-blue">
+      <div class="callout-header">📘 3. المترجم GCC</div>
+      <div class="callout-body">
+        <p>كان في البداية <span class="en-inline">GNU C Compiler</span> ثم تطور ليصبح <span class="en-inline">GNU Compiler Collection</span> وأشهر وأقوى مترجم في التاريخ.</p>
+      </div>
+    </div>
+
+    <div class="section-title" id="sec5-4">
+      <span class="sec-num">5.4</span>
+      رخصة GPL — GNU General Public License
+    </div>
+
+    <p>
+      لماذا وُجدت؟ لحماية حق العمیل في الحصول على الكود المصدري المفتوح بقوة القانون.
+    </p>
+
+    <p>كيف تعمل؟ أي برنامج يُنشر تحت رخصة <span class="en-inline">GPL</span> يجب أن يكون كوده المصدري متاحاً لأي شخص يستخدمه، وإذا قام شخص بتعديله وبناء برنامج جديد عليه، يجب أن يكون البرنامج الجديد مفتوح المصدر أيضاً.</p>
+
+    <div class="callout callout-green">
+      <div class="callout-header">✅ تذكّر</div>
+      <div class="callout-body">
+        <p>مكتبة <span class="en-inline">glibc</span> هي مجرد <span class="en-inline">Implementation</span> واحد لمعيار <span class="en-inline">POSIX</span>، يوجد هناك مكتبات أخرى تطبق نفس المعيار مثل <span class="en-inline">musl</span> أو <span class="en-inline">micro libc</span>.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SECTION 6: LINUX KERNEL & GNU/LINUX ==================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">نواة Linux وتكامل GNU/Linux</span>
+  </div>
+  <div class="page-footer">
+    <span class="page-num">6</span>
+    <span class="version">v1.0 — Golden Course</span>
+  </div>
+
+  <div class="chapter-opening" id="sec6">
+    <div class="chapter-number">CHAPTER 06</div>
+    <div class="chapter-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M20.55 11.23l-4.86-2.85c-.18-.11-.4-.11-.58 0L9.55 11.6c-.18.1-.29.3-.29.51v5.35c0 .21.11.41.29.51l4.86 2.85c.09.05.19.08.29.08s.2-.03.29-.08l4.86-2.85c.18-.1.29-.3.29-.51v-5.35c.01-.21-.1-.41-.29-.52zM12 4.17l4.86 2.85-4.86 2.85L7.14 7.02 12 4.17zM6.29 12.11l4.86-2.85v5.35l-4.86 2.85v-5.35zm11.42 5.35L12.86 14.6V9.26l4.86 2.85v5.35z"/></svg>
+    </div>
+    <div class="chapter-title-main">نواة Linux وتكامل GNU/Linux</div>
+    <div class="chapter-subtitle">كيف اكتملت الصورة — من مشروع GNU الناقص إلى ولادة نظام التشغيل الأقوى في العالم</div>
+    <div class="chapter-divider"></div>
+    <div class="chapter-intro">
+      عندما اجتمعت النواة <span class="en-inline">Linux</span> مع تطبيقات ومكتبات <span class="en-inline">GNU</span> وُلد نظام التشغيل الكامل الذي نستخدمه اليوم.
+    </div>
+  </div>
+
+  <div class="content-area">
+    <div class="section-title" id="sec6-1">
+      <span class="sec-num">6.1</span>
+      القطعة الناقصة في مشروع GNU
+    </div>
+
+    <p>
+      مشروع <span class="en-inline">GNU</span> كان لديه كل شيء (المكتبات، الأدوات، المترجم) باستثناء الجزء الأهم: نواة نظام التشغيل <span class="en-inline">Kernel</span> (محاولتهم باءت بالفشل لبناء نواة اسمها <span class="en-inline">Hurd</span>).
+    </p>
+
+    <div class="section-title" id="sec6-2">
+      <span class="sec-num">6.2</span>
+      ظهور Linux (Linus Torvalds 1991)
+    </div>
+
+    <p>
+      قام الطالب الفنلندي <span class="en-inline">Linus Torvalds</span> بتطوير نواة نظام تشغيل <span class="en-inline">Kernel</span> واستخدم مترجم <span class="en-inline">GCC</span> لتطويرها ورخصها ورخصها وجعلها متوافقة مع <span class="en-inline">POSIX</span>. أطلق عليها اسم <span class="en-inline">Linux Kernel</span>.
+    </p>
+
+    <!-- GNU + Linux Architecture Diagram -->
+    <div class="diagram-wrap">
+      <div class="diagram-title">بنية GNU/Linux — كيف تكتمل الصورة</div>
+      <svg width="440" height="200" viewBox="0 0 440 200">
+        <!-- GNU Tools -->
+        <rect x="20" y="20" width="180" height="70" rx="10" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5"/>
+        <text x="110" y="48" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#7C3AED">GNU Tools</text>
+        <text x="110" y="68" text-anchor="middle" font-family="Inter, sans-serif" font-size="9" fill="#7C3AED">GCC, glibc, Coreutils</text>
+        <!-- Linux Kernel -->
+        <rect x="240" y="20" width="180" height="70" rx="10" fill="#F0FDFA" stroke="#14B8A6" stroke-width="2"/>
+        <text x="330" y="48" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="700" fill="#14B8A6">Linux Kernel</text>
+        <text x="330" y="68" text-anchor="middle" font-family="Inter, sans-serif" font-size="9" fill="#14B8A6">Process Mgmt, Drivers</text>
+        <!-- Plus sign -->
+        <text x="220" y="58" text-anchor="middle" font-family="Inter, sans-serif" font-size="24" font-weight="700" fill="#0F4C81">+</text>
+        <!-- Arrow down -->
+        <line x1="220" y1="95" x2="220" y2="125" stroke="#0F4C81" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+        <!-- Result -->
+        <rect x="90" y="130" width="260" height="55" rx="12" fill="#0F4C81" stroke="none"/>
+        <text x="220" y="158" text-anchor="middle" font-family="Inter, sans-serif" font-size="16" font-weight="800" fill="white">GNU/Linux</text>
+        <text x="220" y="176" text-anchor="middle" font-family="IBM Plex Sans Arabic" font-size="10" fill="#93C5FD">نظام التشغيل الكامل</text>
+        <defs>
+          <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+            <path d="M0,0 L10,3.5 L0,7" fill="#0F4C81"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <p>
+      عندما اجتمعت النواة <span class="en-inline">Linux</span> مع تطبيقات ومكتبات <span class="en-inline">GNU</span> وُلد نظام التشغيل الكامل الذي نستخدمه اليوم. السبب الذي يجعل <span class="en-inline">Stallman</span> يدافع بشراسة على تسمية النظام <span class="en-inline">GNU/Linux</span> وليس <span class="en-inline">Linux</span> فقط، لأن الجهد الأكبر من ناحیة الأدوات والمترجمات جاء من <span class="en-inline">GNU</span>.
+    </p>
+
+    <div class="section-title" id="sec6-3">
+      <span class="sec-num">6.3</span>
+      مقارنات تقنية
+    </div>
+
+    <div class="sub-subsection-title">مقارنة: Unix-Compliant مقابل Unix-like</div>
+
+    <div class="comp-table">
+      <table>
+        <thead>
+          <tr>
+            <th>المعيار</th>
+            <th>النظام المطابق لـ Unix</th>
+            <th>النظام الشبيه بـ Unix</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>تطبيق المعيار</td>
+            <td>يطبق معيار <span class="en-inline">POSIX</span> بحذافيره (%100)</td>
+            <td>يشبه نظام <span class="en-inline">Unix</span> ويطبق معيار <span class="en-inline">POSIX</span> بنسبة عالية (%95-98) لكن ليس كلياً</td>
+          </tr>
+          <tr>
+            <td>الاعتماد</td>
+            <td>مر بمراحل اختبار <span class="en-inline">Testing</span> واجتاز شھادة الاعتماد <span class="en-inline">Certification</span> الرسمية</td>
+            <td>لا يمتلك الشھادة لأنه لا يملك الحق في استخدام اسم <span class="en-inline">Unix</span> (<span class="en-inline">Trade mark</span>)</td>
+          </tr>
+          <tr>
+            <td>الميزات الإضافية</td>
+            <td>لا يضيف به خاصة ميزات غير موجودة في <span class="en-inline">POSIX</span></td>
+            <td>يضيف ميزات خاصة به</td>
+          </tr>
+          <tr>
+            <td>مثال</td>
+            <td><span class="en-inline">macOS</span></td>
+            <td><span class="en-inline">Linux</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="sub-subsection-title">مقارنة: Kernel Space مقابل User Space</div>
+
+    <div class="comp-table">
+      <table>
+        <thead>
+          <tr>
+            <th>الخاصية</th>
+            <th>مساحة النواة — Kernel Space</th>
+            <th>مساحة المستخدم — User Space</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>التعریف</td>
+            <td>المكان الذي تعیش وتعمل فیه النواة <span class="en-inline">Kernel</span></td>
+            <td>المكان الذي تعمل فیه تطبیقات المستخدم العادیة</td>
+          </tr>
+          <tr>
+            <td>الصلاحیات</td>
+            <td>صلاحیات كاملة ومطلقة للتحكم في العتاد <span class="en-inline">Hardware</span></td>
+            <td>لا یملك أي صلاحیة للتحكم أو للتحول مباشرة بالعتاد</td>
+          </tr>
+          <tr>
+            <td>طریقة العمل</td>
+            <td>ینفذ الحساسة الأوامر (إدارة ذاكرة، بروتوكولات، الخ)</td>
+            <td>إذا احتاج التطبيق لشيء من العتاد، يجب أن یطلب ذلك من <span class="en-inline">Kernel</span> عبر النظام واجھات</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Kernel Space vs User Space Diagram -->
+    <div class="diagram-wrap">
+      <div class="diagram-title">مساحة النواة مقابل مساحة المستخدم</div>
+      <svg width="440" height="240" viewBox="0 0 440 240">
+        <!-- User Space -->
+        <rect x="30" y="10" width="380" height="80" rx="10" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="6,3"/>
+        <text x="220" y="35" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="700" fill="#7C3AED">User Space</text>
+        <rect x="55" y="45" width="100" height="35" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+        <text x="105" y="67" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#475569">Applications</text>
+        <rect x="170" y="45" width="100" height="35" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+        <text x="220" y="67" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#475569">Libraries (glibc)</text>
+        <rect x="285" y="45" width="100" height="35" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+        <text x="335" y="67" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#475569">Shell / Utilities</text>
+        <!-- System Calls -->
+        <rect x="30" y="100" width="380" height="30" rx="6" fill="#FFF7ED" stroke="#F59E0B" stroke-width="1.5"/>
+        <text x="220" y="120" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="#EA580C">System Calls</text>
+        <!-- Arrow -->
+        <line x1="220" y1="130" x2="220" y2="150" stroke="#0F4C81" stroke-width="2" marker-end="url(#arrowB2)"/>
+        <!-- Kernel Space -->
+        <rect x="30" y="150" width="380" height="80" rx="10" fill="#EBF2FA" stroke="#0F4C81" stroke-width="2"/>
+        <text x="220" y="175" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="700" fill="#0F4C81">Kernel Space</text>
+        <rect x="55" y="185" width="100" height="35" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+        <text x="105" y="207" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#475569">Process Mgmt</text>
+        <rect x="170" y="185" width="100" height="35" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+        <text x="220" y="207" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#475569">Memory Mgmt</text>
+        <rect x="285" y="185" width="100" height="35" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+        <text x="335" y="207" text-anchor="middle" font-family="Inter, sans-serif" font-size="10" fill="#475569">Device Drivers</text>
+        <defs>
+          <marker id="arrowB2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6" fill="#0F4C81"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="callout callout-purple">
+      <div class="callout-header">🧠 فهم عميق</div>
+      <div class="callout-body">
+        <p>هل يمكن في العصر الحالي أن نقول "Linux" بدون "GNU"؟ نعم، خاصة في <span class="en-inline">Embedded Linux</span> يمكنك بناء نظام يتكون من:</p>
+        <ul>
+          <li><span class="en-inline">Kernel</span>: <span class="en-inline">Linux Kernel</span></li>
+          <li><span class="en-inline">Compiler</span>: <span class="en-inline">Clang</span> (بدلاً من <span class="en-inline">GCC</span>)</li>
+          <li><span class="en-inline">C Library</span>: <span class="en-inline">musl</span> (بدلاً من <span class="en-inline">glibc</span>)</li>
+          <li><span class="en-inline">Utilities</span>: <span class="en-inline">BusyBox</span> (بدلاً من <span class="en-inline">Coreutils</span>) — وهو أسرع وأخف جداً ومناسب للأنظمة المدمجة</li>
+        </ul>
+        <p>في هذه الحالة النظام لا يستخدم أجزاء <span class="en-inline">GNU</span> ويسمى <span class="en-inline">Linux</span> فقط.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-green">
+      <div class="callout-header">✅ تذكّر</div>
+      <div class="callout-body">
+        <p>تقنياً كلمة <span class="en-inline">Linux</span> تعني النواة <span class="en-inline">Kernel</span> فقط. نظام التشغيل الكامل يتكون من النواة مضافاً إلیھا مكتبات وأدوات ومساحة مستخدم <span class="en-inline">User Space</span>.</p>
+      </div>
+    </div>
+
+    <div class="callout callout-red">
+      <div class="callout-header">⚠️ أخطاء شائعة</div>
+      <div class="callout-body">
+        <p>الخلط بين <span class="en-inline">gcc</span> (كـ <span class="en-inline">Executable compiler</span>) و <span class="en-inline">GCC</span> (كـ <span class="en-inline">Compiler Collection</span>) — الكبیرة والأداة هي المشروع بأكمله، ولیست الصغیرة الكلمة.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== SECTION 7: COURSE ROADMAP ==================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">خطة الدورة التدريبية</span>
+  </div>
+  <div class="page-footer">
+    <span class="page-num">7</span>
+    <span class="version">v1.0 — Golden Course</span>
+  </div>
+
+  <div class="chapter-opening" id="sec7">
+    <div class="chapter-number">CHAPTER 07</div>
+    <div class="chapter-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
+    </div>
+    <div class="chapter-title-main">خطة الدورة التدريبية</div>
+    <div class="chapter-subtitle">Course Roadmap — ما سيتم تعلمه بشكل عملي مكثف (أكثر من 500 شريحة براكتيكال ستُنشر تباعاً)</div>
+    <div class="chapter-divider"></div>
+  </div>
+
+  <div class="content-area">
+    <div class="roadmap-grid">
+      <div class="roadmap-card">
+        <div class="roadmap-card-num">01</div>
+        <div class="roadmap-card-text">
+          <span class="roadmap-card-title">Shell Utilities &amp; Programming</span>
+          <span class="roadmap-card-desc">تعلم سطر الأوامر وكتابة سكربتات</span>
+        </div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-card-num">02</div>
+        <div class="roadmap-card-text">
+          <span class="roadmap-card-title">Linux File System Structure</span>
+          <span class="roadmap-card-desc">كيف ینظم لینكس ملفاته (عكس الویندوز C:/ و D:/)</span>
+        </div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-card-num">03</div>
+        <div class="roadmap-card-text">
+          <span class="roadmap-card-title">Compilation Process</span>
+          <span class="roadmap-card-desc">دورة حياة ملف C حتى يصبح ملفاً تنفیذیاً</span>
+        </div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-card-num">04</div>
+        <div class="roadmap-card-text">
+          <span class="roadmap-card-title">Libraries</span>
+          <span class="roadmap-card-desc">المكتبات الثابتة والدینامیكیة — Static vs Shared</span>
+        </div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-card-num">05</div>
+        <div class="roadmap-card-text">
+          <span class="roadmap-card-title">Build Systems</span>
+          <span class="roadmap-card-desc">التحكم بالبناء الآلي باستخدام Make و CMake</span>
+        </div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-card-num">06</div>
+        <div class="roadmap-card-text">
+          <span class="roadmap-card-title">Cross-Compilation &amp; Toolchains</span>
+          <span class="roadmap-card-desc">بناء أدوات (مترجم ومكتبة) مخصصة لمعالج مختلف عن معالج حاسوبك (مثل معالج ARM في لوحة Raspberry Pi)</span>
+        </div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-card-num">07</div>
+        <div class="roadmap-card-text">
+          <span class="roadmap-card-title">Kernel &amp; Device Drivers</span>
+          <span class="roadmap-card-desc">فهم بنیة النواة وكتابة برامج تعریف للتحكم بالعتاد</span>
+        </div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-card-num">08</div>
+        <div class="roadmap-card-text">
+          <span class="roadmap-card-title">Hardware Protocols (I2C, SPI, GPIO)</span>
+          <span class="roadmap-card-desc">كیفیة التحكم بھا من المستخدم مساحة ومن داخل النواة</span>
+        </div>
+      </div>
+      <div class="roadmap-card">
+        <div class="roadmap-card
+```html
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embedded Linux & Yocto — ملخص الدرس الأول</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===== CSS RESET & BASE ===== */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --primary: #0F4C81;
+    --primary-light: #1a6bb5;
+    --primary-pale: #e8f0fa;
+    --secondary: #14B8A6;
+    --secondary-pale: #e6f7f5;
+    --accent: #F59E0B;
+    --accent-pale: #fef3c7;
+    --success: #16A34A;
+    --success-pale: #dcfce7;
+    --warning: #EA580C;
+    --warning-pale: #ffedd5;
+    --danger: #DC2626;
+    --danger-pale: #fee2e2;
+    --bg: #F8FAFC;
+    --white: #ffffff;
+    --text: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --code-bg: #1e293b;
+    --code-text: #e2e8f0;
+    --purple: #7c3aed;
+    --purple-pale: #ede9fe;
+    --dark-card: #0f172a;
+    --dark-card-text: #f1f5f9;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  body {
+    font-family: 'IBM Plex Sans Arabic', 'Cairo', sans-serif;
+    font-size: 12.5pt;
+    line-height: 1.7;
+    color: var(--text);
+    background: #e2e8f0;
+    direction: rtl;
+    text-align: right;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== PAGE CONTAINER ===== */
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 20px auto;
+    background: var(--bg);
+    box-shadow: var(--shadow-lg);
+    padding: 2cm;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ===== HEADER & FOOTER ===== */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary);
+    margin-bottom: 24px;
+    direction: rtl;
+  }
+  .page-header .course-name {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--primary);
+    letter-spacing: 0.02em;
+  }
+  .page-header .chapter-name {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 9pt;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .page-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 32px;
+    direction: rtl;
+  }
+  .page-footer .page-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--primary-pale);
+    padding: 2px 12px;
+    border-radius: 20px;
+  }
+  .page-footer .version-info {
+    font-family: 'Inter', sans-serif;
+    font-size: 8pt;
+    color: var(--text-muted);
+  }
+
+  /* ===== TABLE OF CONTENTS ===== */
+  .toc-page { padding-top: 2cm; }
+  .toc-title {
+    font-size: 24pt;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+  .toc-subtitle {
+    font-size: 12pt;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 3px solid var(--primary);
+  }
+  .toc-list { list-style: none; }
+  .toc-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px dotted var(--border);
+    direction: rtl;
+    cursor: pointer;
+    transition: background 0.2s;
+    padding-right: 8px;
+    padding-left: 8px;
+    border-radius: 4px;
+  }
+  .toc-list li:hover { background: var(--primary-pale); }
+  .toc-list li.toc-chapter {
+    font-weight: 700;
+    font-size: 13pt;
+    color: var(--primary);
+    margin-top: 12px;
+    border-bottom: 1.5px solid var(--border);
+  }
+  .toc-list li.toc-section {
+    font-weight: 500;
+    font-size: 11.5pt;
+    color: var(--text);
+    padding-right: 24px;
+  }
+  .toc-list li.toc-subsection {
+    font-weight: 400;
+    font-size: 10.5pt;
+    color: var(--text-secondary);
+    padding-right: 48px;
+  }
+  .toc-list .toc-page-num {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 10pt;
+    color: var(--primary);
+    min-width: 30px;
+    text-align: left;
+    direction: ltr;
+  }
+
+  /* ===== CHAPTER OPENING ===== */
+  .chapter-opening {
+    text-align: center;
+    padding: 40px 0 32px;
+    border-bottom: 3px solid var(--primary);
+    margin-bottom: 32px;
+    position: relative;
+  }
+  .chapter-opening .ch-number {
+    font-family: 'Inter', sans-serif;
+    font-size: 13pt;
+    font-weight: 700;
+    color: var(--secondary);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+    direction: ltr;
+  }
+  .chapter-opening .ch-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .chapter-opening .ch-title {
+    font-size: 24pt;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+  .chapter-opening .ch-subtitle {
+    font-size: 13pt;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+  }
+  .chapter-opening .ch-intro {
+    font-size: 11pt;
+    color: var(--text-secondary);
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.8;
+  }
+  .chapter-divider {
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    margin: 16px auto;
+    border-radius: 2px;
+  }
+
+  /* ===== ANIMATED CHAPTER OVERVIEW ===== */
+  .chapter-overview {
+    background: var(--white);
+    border: 2px solid var(--primary-pale);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .chapter-overview::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+  }
+  .overview-title {
+    font-size: 14pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .overview-title .ov-icon {
+    width: 32px; height: 32px;
+    background: var(--primary);
+    color: white;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+  .overview-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    direction: rtl;
+  }
+  .overview-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    position: relative;
+    padding-bottom: 20px;
+  }
+  .overview-step:last-child { padding-bottom: 0; }
+  .overview-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 19px;
+    top: 44px;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, var(--primary), var(--secondary));
+    opacity: 0.3;
+  }
+  .step-icon {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+  }
+  .step-icon.blue { background: var(--primary-pale); color: var(--primary); }
+  .step-icon.teal { background: var(--secondary-pale); color: var(--secondary); }
+  .step-icon.amber { background: var(--accent-pale); color: var(--accent); }
+  .step-icon.green { background: var(--success-pale); color: var(--success); }
+  .step-icon.purple { background: var(--purple-pale); color: var(--purple); }
+  .step-icon.red { background: var(--danger-pale); color: var(--danger); }
+  .step-content { flex: 1; }
+  .step-content .step-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 8pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    direction: ltr;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .step-content .step-title {
+    font-size: 11.5pt;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .step-content .step-desc {
+    font-size: 10pt;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .step-content .step-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .step-tag {
+    font-family: 'Inter', 'JetBrains Mono', sans-serif;
+    font-size: 8pt;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--border-light);
+    color: var(--text-secondary);
+    direction: ltr;
+  }
+
+  /* ===== SECTION HEADINGS ===== */
+  h2.section-title {
+    font-size: 20pt;
+    font-weight: 800;
+    color: var(--primary);
+    margin-top: 36px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2.5px solid var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2.section-title .sec-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 11pt;
+    font-weight: 700;
+    background: var(--primary);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 6px;
+    direction: ltr;
+  }
+  h3.subsection-title {
+    font-size: 17pt;
+    font-weight: 700;
+    color: var(--primary-light);
+    margin-top: 28px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h3.subsection-title::before {
+    content: '';
+    width: 5px;
+    height: 24px;
+    background: var(--secondary);
+    border-radius: 3px;
+    flex-shrink: 0;
+  }
+  h4.sub-subsection {
+    font-size: 14pt;
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 20px;
+    margin-bottom: 8px;
+  }
+
+  /* ===== BODY TEXT ===== */
+  p.body-text {
+    margin-bottom: 12px;
+    text-align: justify;
+    text-justify: inter-word;
+  }
+
+  /* ===== ENGLISH INLINE ===== */
+  .en {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+  }
+  code.inline-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10pt;
+    background: var(--primary-pale);
+    color: var(--primary);
+    padding: 1px 6px;
+    border-radius: 4px;
+    direction: ltr;
+    unicode-bidi: embed;
+    white-space: nowrap;
+  }
+
+  /* ===== CALLOUT BOXES ===== */
+  .callout {
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin: 18px 0;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .callout .callout-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .callout .callout-body { flex: 1; }
+  .callout .callout-label {
+    font-size: 10pt;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .callout .callout-text {
+    font-size: 11pt;
+    line-height: 1.7;
+  }
+
+  /* Blue - Concept */
+  .callout-blue {
+    background: var(--primary-pale);
+    border: 1px solid rgba(15,76,129,0.15);
+    border-right: 4px solid var(--primary);
+  }
+  .callout-blue .callout-label { color: var(--primary); }
+
+  /* Green - Key Takeaway */
+  .callout-green {
+    background: var(--success-pale);
+    border: 1px solid rgba(22,163,74,0.15);
+    border-right: 4px solid var(--success);
+  }
+  .callout-green .callout-label { color: var(--success); }
+
+  /* Orange - Tip */
+  .callout-orange {
+    background: var(--accent-pale);
+    border: 1px solid rgba(245,158,11,0.15);
+    border-right: 4px solid var(--accent);
+  }
+  .callout-orange .callout-label { color: var(--accent); }
+
+  /* Red - Important */
+  .callout-red {
+    background: var(--danger-pale);
+    border: 1px solid rgba(220,38,38,0.15);
+    border-right: 4px solid var(--danger);
+  }
+  .callout-red .callout-label { color: var(--danger); }
+
+  /* Gray - Definition */
+  .callout-gray {
+    background: #f1f5f9;
+    border: 1px solid var(--border);
+    border-right: 4px solid #64748b;
+  }
+  .callout-gray .callout-label { color: #64748b; }
+
+  /* Purple - Deep Understanding */
+  .callout-purple {
+    background: var(--purple-pale);
+    border: 1px solid rgba(124,58,237,0.15);
+    border-right: 4px solid var(--purple);
+  }
+  .callout-purple .callout-label { color: var(--purple); }
+
+  /* Dark - Practical Example */
+  .callout-dark {
+    background: var(--dark-card);
+    border: 1px solid rgba(30,41,59,0.5);
+    border-right: 4px solid var(--secondary);
+  }
+  .callout-dark .callout-label { color: var(--secondary); }
+  .callout-dark .callout-text { color: var(--dark-card-text); }
+
+  /* ===== WARNING INLINE ===== */
+  .warning-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--danger-pale);
+    color: var(--danger);
+    font-size: 10pt;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 4px;
+    margin: 0 4px;
+  }
+
+  /* ===== LISTS ===== */
+  ul.styled-list, ol.styled-list {
+    margin: 10px 0 14px 0;
+    padding-right: 24px;
+  }
+  ul.styled-list li, ol.styled-list li {
+    margin-bottom: 6px;
+    padding-right: 4px;
+  }
+  ul.styled-list li::marker {
+    color: var(--secondary);
+    font-size: 14pt;
+  }
+  ol.styled-list li::marker {
+    color: var(--primary);
+    font-weight: 700;
+  }
+  .sub-list {
+    margin: 6px 0 6px 0;
+    padding-right: 20px;
+  }
+  .sub-list li {
+    margin-bottom: 4px;
+    font-size: 11.5pt;
+  }
+  .sub-list li::marker {
+    color: var(--accent);
+  }
+
+  /* ===== TABLES ===== */
+  .table-wrapper {
+    margin: 20px 0;
+    overflow-x: auto;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+  }
+  table.prof-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 11pt;
+    direction: rtl;
+  }
+  table.prof-table thead th {
+    background: var(--primary);
+    color: white;
+    font-weight: 700;
+    padding: 12px 16px;
+    text-align: right;
+    white-space: nowrap;
+  }
+  table.prof-table thead th:first-child {
+    border-radius: 0 var(--radius) 0 0;
+  }
+  table.prof-table thead th:last-child {
+    border-radius: var(--radius) 0 0 0;
+  }
+  table.prof-table tbody td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: top;
+  }
+  table.prof-table tbody tr:nth-child(even) {
+    background: var(--white);
+  }
+  table.prof-table tbody tr:nth-child(odd) {
+    background: #f8fafc;
+  }
+  table.prof-table tbody tr:last-child td:first-child {
+    border-radius: 0 0 var(--radius) 0;
+  }
+  table.prof-table tbody tr:last-child td:last-child {
+    border-radius: 0 0 0 var(--radius);
+  }
+  table.prof-table .td-center { text-align: center; }
+  table.prof-table .td-en {
+    font-family: 'Inter', 'JetBrains Mono', sans-serif;
+    direction: ltr;
+    text-align: left;
+  }
+
+  /* Comparison table variant */
+  table.comp-table thead th {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  }
+
+  /* ===== CODE BLOCKS ===== */
+  .code-block {
+    background: var(--code-bg);
+    border-radius: var(--radius);
+    margin: 16px 0;
+    overflow: hidden;
+    direction: ltr;
+    text-align: left;
+    box-shadow: var(--shadow-md);
+  }
+  .code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .code-header .code-lang {
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .code-header .code-dots {
+    display: flex; gap: 6px;
+  }
+  .code-header .code-dots span {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .code-header .code-dots span:nth-child(1) { background: #ff5f57; }
+  .code-header .code-dots span:nth-child(2) { background: #febc2e; }
+  .code-header .code-dots span:nth-child(3) { background: #28c840; }
+  .code-body {
+    padding: 16px 20px;
+    overflow-x: auto;
+  }
+  .code-body pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10pt;
+    line-height: 1.7;
+    color: var(--code-text);
+    margin: 0;
+    white-space: pre;
+  }
+  .code-body .line-num {
+    display: inline-block;
+    width: 30px;
+    color: #475569;
+    user-select: none;
+    text-align: right;
+    margin-right: 16px;
+    font-size: 9pt;
+  }
+  /* Syntax colors */
+  .syn-kw { color: #c084fc; }
+  .syn-fn { color: #60a5fa; }
+  .syn-str { color: #34d399; }
+  .syn-cm { color: #64748b; font-style: italic; }
+  .syn-num { color: #fbbf24; }
+  .syn-type { color: #2dd4bf; }
+  .syn-op { color: #f472b6; }
+  .syn-inc { color: #fb923c; }
+
+  /* ===== DIAGRAMS ===== */
+  .diagram-container {
+    background: var(--white);
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin: 24px 0;
+    text-align: center;
+    direction: ltr;
+  }
+  .diagram-title {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 12pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 20px;
+    direction: rtl;
+    text-align: right;
+  }
+  .diagram-box {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .diag-layer {
+    padding: 12px 40px;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 12pt;
+    min-width: 240px;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .diag-arrow {
+    font-size: 20px;
+    color: var(--primary);
+    line-height: 1;
+    padding: 4px 0;
+  }
+  .diag-layer.app { background: var(--accent-pale); color: #92400e; border: 1.5px solid var(--accent); }
+  .diag-layer.syscall { background: var(--secondary-pale); color: #115e59; border: 1.5px solid var(--secondary); }
+  .diag-layer.kernel { background: var(--primary-pale); color: var(--primary); border: 1.5px solid var(--primary); }
+  .diag-layer.hw { background: var(--danger-pale); color: var(--danger); border: 1.5px solid var(--danger); }
+  .diag-layer.gnu { background: var(--accent-pale); color: #92400e; border: 1.5px solid var(--accent); }
+  .diag-layer.linux { background: var(--primary-pale); color: var(--primary); border: 1.5px solid var(--primary); }
+  .diag-layer.gnulinux { background: var(--success-pale); color: var(--success); border: 1.5px solid var(--success); font-size: 14pt; }
+  .diag-layer.src { background: var(--purple-pale); color: var(--purple); border: 1.5px solid var(--purple); }
+  .diag-layer.compiler { background: var(--primary-pale); color: var(--primary); border: 1.5px solid var(--primary); }
+  .diag-layer.obj { background: var(--secondary-pale); color: #115e59; border: 1.5px solid var(--secondary); }
+  .diag-layer.linker { background: var(--accent-pale); color: #92400e; border: 1.5px solid var(--accent); }
+  .diag-layer.exe { background: var(--success-pale); color: var(--success); border: 1.5px solid var(--success); }
+  .diag-plus {
+    font-size: 24px;
+    color: var(--primary);
+    font-weight: 700;
+    padding: 4px 0;
+  }
+
+  /* Side-by-side diagram */
+  .diag-side {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+  }
+  .diag-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .diag-col-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 10pt;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  /* Kernel vs User space diagram */
+  .space-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    align-items: center;
+  }
+  .space-box {
+    padding: 14px 48px;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 11pt;
+    min-width: 220px;
+    text-align: center;
+  }
+  .space-box.kern-space {
+    background: var(--primary-pale);
+    color: var(--primary);
+    border: 2px solid var(--primary);
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .space-box.syscall-bar {
+    background: var(--secondary);
+    color: white;
+    font-size: 9pt;
+    letter-spacing: 1px;
+    padding: 8px 48px;
+    min-width: 220px;
+  }
+  .space-box.user-space {
+    background: var(--accent-pale);
+    color: #92400e;
+    border: 2px solid var(--accent);
+    border-radius: 0 0 var(--radius) var(--radius);
+  }
+
+  /* ===== TIMELINE ===== */
+  .timeline {
+    position: relative;
+    margin: 24px 0;
+    padding-right: 32px;
+    direction: rtl;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    right: 14px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--primary), var(--secondary), var(--accent));
+    border-radius: 2px;
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+    padding-right: 28px;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    right: -24px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: 3px solid var(--bg);
+    box-shadow: 0 0 0 2px var(--primary);
+  }
+  .timeline-item:nth-child(even)::before { background: var(--secondary); box-shadow: 0 0 0 2px var(--secondary); }
+  .timeline-item:last-child::before { background: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .timeline-year {
+    font-family: 'Inter', sans-serif;
+    font-size: 10pt;
+    font-weight: 700;
+    color: var(--primary);
+    direction: ltr;
+    display: inline-block;
+    margin-bottom: 2px;
+  }
+  .timeline-text {
+    font-size: 11pt;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* ===== ROADMAP CARDS ===== */
+  .roadmap-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+    direction: rtl;
+  }
+  .roadmap-card {
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .roadmap-card:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+  }
+  .roadmap-card .rm-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 11pt;
+    font-weight: 800;
+    color: var(--white);
+    background: var(--primary);
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    direction: ltr;
+  }
+  .roadmap-card .rm-content { flex: 1; }
+  .roadmap-card .rm-title {
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+    direction: rtl;
+  }
+  .roadmap-card .rm-en {
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    color: var(--text-muted);
+    direction: ltr;
+    text-align: left;
+  }
+  .roadmap-card .rm-desc {
+    font-size: 9.5pt;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-top: 2px;
+  }
+
+  /* ===== QUICK REVIEW ===== */
+  .quick-review {
+    background: var(--white);
+    border: 2px solid var(--primary);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    margin-top: 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  .quick-review::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0; left: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent), var(--success));
+  }
+  .qr-title {
+    font-size: 18pt;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .qr-section {
+    margin-bottom: 20px;
+  }
+  .qr-section:last-child { margin-bottom: 0; }
+  .qr-section-title {
+    font-size: 13pt;
+    font-weight: 700;
+    color: var(--primary-light);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1.5px solid var(--primary-pale);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .qr-list {
+    list-style: none;
+    padding: 0;
+  }
+  .qr-list li {
+    padding: 6px 0;
+    padding-right: 20px;
+    position: relative;
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+  .qr-list li::before {
+    content: '◆';
+    position: absolute;
+    right: 0;
+    color: var(--secondary);
+    font-size: 8pt;
+    top: 8px;
+  }
+  .qr-checklist {
+    list-style: none;
+    padding: 0;
+  }
+  .qr-checklist li {
+    padding: 8px 12px;
+    padding-right: 40px;
+    position: relative;
+    font-size: 11pt;
+    background: var(--border-light);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+  .qr-checklist li:hover { background: var(--primary-pale); }
+  .qr-checklist li::before {
+    content: '☐';
+    position: absolute;
+    right: 12px;
+    font-size: 14pt;
+    color: var(--text-muted);
+    top: 6px;
+  }
+  .qr-checklist li.checked::before {
+    content: '☑';
+    color: var(--success);
+  }
+  .qr-checklist li.checked {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+  .qr-mistake {
+    background: var(--danger-pale);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    font-size: 11pt;
+    border-right: 3px solid var(--danger);
+  }
+  .qr-tip {
+    background: var(--accent-pale);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    font-size: 11pt;
+    border-right: 3px solid var(--accent);
+  }
+  .qr-interview {
+    background: var(--purple-pale);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    font-size: 11pt;
+    border-right: 3px solid var(--purple);
+  }
+
+  /* ===== MISC ===== */
+  .section-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .note-separator {
+    border: none;
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+  .inline-bold { font-weight: 700; }
+  .inline-highlight {
+    background: var(--accent-pale);
+    padding: 0 4px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+
+  /* ===== PRINT ===== */
+  @media print {
+    body { background: white; }
+    .page {
+      margin: 0;
+      box-shadow: none;
+      width: 100%;
+      padding: 1.5cm;
+    }
+    .roadmap-card:hover { box-shadow: none; }
+    .callout { break-inside: avoid; }
+    .code-block { break-inside: avoid; }
+    .table-wrapper { break-inside: avoid; }
+    .quick-review { break-inside: avoid; }
+    .chapter-overview { break-inside: avoid; }
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 800px) {
+    .page { padding: 1cm; width: 100%; margin: 0; }
+    .roadmap-grid { grid-template-columns: 1fr; }
+    .diag-side { flex-direction: column; gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- PAGE 1: TABLE OF CONTENTS                                     -->
+<!-- ============================================================ -->
+<div class="page toc-page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto — Golden Course</span>
+    <span class="chapter-name">فهرس المحتويات</span>
+  </div>
+
+  <div class="toc-title">فهرس المحتويات</div>
+  <div class="toc-subtitle">Embedded Linux & Yocto — ملخص الدرس الأول</div>
+
+  <ul class="toc-list">
+    <li class="toc-chapter" onclick="document.getElementById('sec1').scrollIntoView({behavior:'smooth'})">
+      <span>المتطلبات العتادية <span class="en">Hardware Requirements</span></span>
+      <span class="toc-page-num">2</span>
+    </li>
+    <li class="toc-section">
+      <span>اللوحة الرئيسية <span class="en">The Board</span></span>
+      <span class="toc-page-num">2</span>
+    </li>
+    <li class="toc-section">
+      <span>المكونات الإضافية <span class="en">Components & Sensors</span></span>
+      <span class="toc-page-num">2</span>
+    </li>
+
+    <li class="toc-chapter" onclick="document.getElementById('sec2').scrollIntoView({behavior:'smooth'})">
+      <span>ما هو نظام التشغيل؟ <span class="en">Operating System</span></span>
+      <span class="toc-page-num">3</span>
+    </li>
+    <li class="toc-section">
+      <span>لماذا وُجد نظام التشغيل؟</span>
+      <span class="toc-page-num">3</span>
+    </li>
+    <li class="toc-section">
+      <span>كيف يعمل نظام التشغيل وما مهامه؟</span>
+      <span class="toc-page-num">3</span>
+    </li>
+
+    <li class="toc-chapter" onclick="document.getElementById('sec3').scrollIntoView({behavior:'smooth'})">
+      <span>تاريخ نظام <span class="en">Linux</span> (من <span class="en">Multics</span> إلى <span class="en">Unix</span>)</span>
+      <span class="toc-page-num">5</span>
+    </li>
+    <li class="toc-section">
+      <span>تطور الأنظمة</span>
+      <span class="toc-page-num">5</span>
+    </li>
+    <li class="toc-section">
+      <span>كيف تم بناء <span class="en">Unix</span>؟</span>
+      <span class="toc-page-num">5</span>
+    </li>
+    <li class="toc-section">
+      <span>مشكلة تفتت الـ <span class="en">Unix</span></span>
+      <span class="toc-page-num">5</span>
+    </li>
+
+    <li class="toc-chapter" onclick="document.getElementById('sec4').scrollIntoView({behavior:'smooth'})">
+      <span>معيار <span class="en">POSIX</span> وقابلية التوافق والنقل</span>
+      <span class="toc-page-num">6</span>
+    </li>
+    <li class="toc-section">
+      <span>لماذا وُجد <span class="en">POSIX</span>؟</span>
+      <span class="toc-page-num">6</span>
+    </li>
+    <li class="toc-section">
+      <span>ما هو <span class="en">POSIX</span>؟</span>
+      <span class="toc-page-num">6</span>
+    </li>
+    <li class="toc-section">
+      <span>أهم فصول معيار <span class="en">POSIX</span></span>
+      <span class="toc-page-num">6</span>
+    </li>
+    <li class="toc-section">
+      <span>ميزة قابلية النقل <span class="en">Portability</span></span>
+      <span class="toc-page-num">7</span>
+    </li>
+
+    <li class="toc-chapter" onclick="document.getElementById('sec5').scrollIntoView({behavior:'smooth'})">
+      <span>مشروع <span class="en">GNU</span> ورخصة <span class="en">GPL</span> للبرمجيات الحرة</span>
+      <span class="toc-page-num">8</span>
+    </li>
+    <li class="toc-section">
+      <span>المشكلة مع <span class="en">Unix</span></span>
+      <span class="toc-page-num">8</span>
+    </li>
+    <li class="toc-section">
+      <span>ظهور <span class="en">Richard Stallman</span> ومشروع <span class="en">GNU</span></span>
+      <span class="toc-page-num">8</span>
+    </li>
+    <li class="toc-section">
+      <span>ماذا طوّر مشروع <span class="en">GNU</span>؟</span>
+      <span class="toc-page-num">8</span>
+    </li>
+    <li class="toc-section">
+      <span>رخصة <span class="en">GPL</span></span>
+      <span class="toc-page-num">9</span>
+    </li>
+
+    <li class="toc-chapter" onclick="document.getElementById('sec6').scrollIntoView({behavior:'smooth'})">
+      <span>نواة <span class="en">Linux</span> وتكامل <span class="en">GNU/Linux</span></span>
+      <span class="toc-page-num">10</span>
+    </li>
+    <li class="toc-section">
+      <span>القطعة الناقصة في مشروع <span class="en">GNU</span></span>
+      <span class="toc-page-num">10</span>
+    </li>
+    <li class="toc-section">
+      <span>ظهور <span class="en">Linus Torvalds</span> (1991)</span>
+      <span class="toc-page-num">10</span>
+    </li>
+    <li class="toc-section">
+      <span>مقارنات: <span class="en">Kernel Space</span> مقابل <span class="en">User Space</span></span>
+      <span class="toc-page-num">10</span>
+    </li>
+    <li class="toc-section">
+      <span>هل يمكن أن نقول "Linux" بدون "GNU" في العصر الحالي؟</span>
+      <span class="toc-page-num">11</span>
+    </li>
+
+    <li class="toc-chapter" onclick="document.getElementById('sec7').scrollIntoView({behavior:'smooth'})">
+      <span>خطة الدورة التدريبية <span class="en">Course Roadmap</span></span>
+      <span class="toc-page-num">12</span>
+    </li>
+
+    <li class="toc-chapter" onclick="document.getElementById('sec8').scrollIntoView({behavior:'smooth'})">
+      <span>أسئلة شائعة وإجاباتها <span class="en">Q&A</span></span>
+      <span class="toc-page-num">13</span>
+    </li>
+
+    <li class="toc-chapter" style="border-bottom: none; margin-top: 16px;">
+      <span>مراجعة سريعة للدرس</span>
+      <span class="toc-page-num">14</span>
+    </li>
+  </ul>
+
+  <div class="page-footer">
+    <span class="version-info">Embedded Linux & Yocto — Golden Course v1.0</span>
+    <span class="page-num">1</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 2: CHAPTER 1 — HARDWARE REQUIREMENTS                     -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto — Golden Course</span>
+    <span class="chapter-name">المتطلبات العتادية</span>
+  </div>
+
+  <!-- CHAPTER OPENING -->
+  <div class="chapter-opening">
+    <span class="ch-number">SECTION 01</span>
+    <span class="ch-icon">🔧</span>
+    <div class="ch-title">المتطلبات العتادية</div>
+    <div class="ch-subtitle"><span class="en">Hardware Requirements</span></div>
+    <div class="chapter-divider"></div>
+    <div class="ch-intro">
+      تم اختيار القطع بعناية لتكون في متناول الجميع حيث التكلفة مع تقديم أداء ممتاز للتعلم
+    </div>
+  </div>
+
+  <!-- ANIMATED CHAPTER OVERVIEW -->
+  <div class="chapter-overview">
+    <div class="overview-title">
+      <span class="ov-icon">🗺️</span>
+      خريطة الدرس — نظرة سريعة
+    </div>
+    <div class="overview-flow">
+      <div class="overview-step">
+        <div class="step-icon blue">⚙️</div>
+        <div class="step-content">
+          <span class="step-num">Step 01</span>
+          <div class="step-title">اختيار لوحة التطوير</div>
+          <div class="step-desc">فهم المواصفات المطلوبة واختيار اللوحة المناسبة</div>
+          <div class="step-tags"><span class="step-tag">Raspberry Pi Zero 2 W</span><span class="step-tag">Quad-core 64-bit</span><span class="step-tag">512MB RAM</span></div>
+        </div>
+      </div>
+      <div class="overview-step">
+        <div class="step-icon teal">🔌</div>
+        <div class="step-content">
+          <span class="step-num">Step 02</span>
+          <div class="step-title">توفير المكونات الإضافية</div>
+          <div class="step-desc">الحساسات وموسع المنافذ ووحدة الاتصال التسلسلي</div>
+          <div class="step-tags"><span class="step-tag">MCP23017</span><span class="step-tag">ADXL345</span><span class="step-tag">FTDI Module</span></div>
+        </div>
+      </div>
+      <div class="overview-step">
+        <div class="step-icon amber">📦</div>
+        <div class="step-content">
+          <span class="step-num">Step 03</span>
+          <div class="step-title">التجهيز للعمل العملي</div>
+          <div class="step-desc">بطاقة الذاكرة وأسلاك التوصيل ولوحة التجارب</div>
+          <div class="step-tags"><span class="step-tag">Micro SD Card</span><span class="step-tag">Jumper Wires</span><span class="step-tag">Breadboard</span></div>
+        </div>
+      </div>
+      <div class="overview-step">
+        <div class="step-icon green">✅</div>
+        <div class="step-content">
+          <span class="step-num">Step 04</span>
+          <div class="step-title">التحقق من التوافق</div>
+          <div class="step-desc">التأكد من النسخة الصحيحة وتوافق القطع قبل البدء</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: THE BOARD -->
+  <h2 class="section-title" id="sec1">
+    <span class="section-icon">📟</span>
+    اللوحة الرئيسية <span class="en">The Board</span>
+  </h2>
+
+  <p class="body-text">
+    لوحة التطوير: <span class="en">Raspberry Pi Zero 2 W</span> (حوالي 15 دولاراً).
+  </p>
+
+  <p class="body-text">المواصفات:</p>
+  <ul class="styled-list">
+    <li>معالج رباعي النواة <span class="en">Quad-core 64-bit</span></li>
+    <li>ذاكرة عشوائية <span class="en">512MB RAM</span></li>
+  </ul>
+
+  <div class="callout callout-red">
+    <span class="callout-icon">⚠️</span>
+    <div class="callout-body">
+      <span class="callout-label">تحذير مهم</span>
+      <div class="callout-text">
+        انتبه عند الشراء وتأكد أنها النسخة <span class="en">Zero 2 W</span> وليست <span class="en">Zero 1</span>، فالفرق جوهري.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-orange">
+    <span class="callout-icon">💡</span>
+    <div class="callout-body">
+      <span class="callout-label">ملاحظة</span>
+      <div class="callout-text">
+        يمكنك استخدام لوحات أخرى مثل <span class="en">Raspberry Pi 3, 4, 5</span> أو <span class="en">BeagleBone, STM32MP1</span>، لأن المفاھم المشتركة من <span class="en">90%</span>، ولكن سیتوجب علیك تكیيف التطبیقات <span class="en">Adaptation</span> لتعمل على لوحتك الخاصة.
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2: COMPONENTS -->
+  <h2 class="section-title">
+    <span class="section-icon">🧩</span>
+    المكونات الإضافية <span class="en">Components & Sensors</span>
+  </h2>
+
+  <div class="table-wrapper">
+    <table class="prof-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>المكون</th>
+          <th>الوصف بالإنجليزية</th>
+          <th>الوظيفة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-center">1</td>
+          <td><span class="en">MCP23017</span></td>
+          <td class="td-en">GPIO Expander</td>
+          <td>موسع منافذ</td>
+        </tr>
+        <tr>
+          <td class="td-center">2</td>
+          <td><span class="en">ADXL345</span></td>
+          <td class="td-en">Accelerometer</td>
+          <td>حساس تسارع</td>
+        </tr>
+        <tr>
+          <td class="td-center">3</td>
+          <td><span class="en">FTDI Module</span></td>
+          <td class="td-en">USB to Serial</td>
+          <td>قطعة أساسية جداً للوصول إلى واجهة الأوامر سطر <span class="en">Terminal</span> باللوحة</td>
+        </tr>
+        <tr>
+          <td class="td-center">4</td>
+          <td><span class="en">Micro SD Card</span></td>
+          <td class="td-en">Storage</td>
+          <td>لتثبيت نظام التشغيل</td>
+        </tr>
+        <tr>
+          <td class="td-center">5</td>
+          <td><span class="en">USB Micro-B</span></td>
+          <td class="td-en">Power Supply</td>
+          <td>لتزويد اللوحة بالطاقة</td>
+        </tr>
+        <tr>
+          <td class="td-center">6</td>
+          <td>أسلاك توصيل <span class="en">Jumper Wires</span> ولوحة تجارب <span class="en">Breadboard</span></td>
+          <td class="td-en">Wiring & Prototyping</td>
+          <td>للتوصيل والتجارب</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-green">
+    <span class="callout-icon">✅</span>
+    <div class="callout-body">
+      <span class="callout-label">تتذكر؟ ماذا يجب أن</span>
+      <div class="callout-text">
+        احرص على توفير هذه القطع قبل الوصول إلى الدروس العملية.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-green">
+    <span class="callout-icon">✅</span>
+    <div class="callout-body">
+      <span class="callout-label">تتذكر؟ ماذا يجب أن</span>
+      <div class="callout-text">
+        <span class="en">Raspberry Pi Zero 2 W</span> هي اللوحة التي يجب أن تكون بها بسبب قوتها ورخص ثمنها.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-red">
+    <span class="callout-icon">⚠️</span>
+    <div class="callout-body">
+      <span class="callout-label">أخطاء شائعة</span>
+      <div class="callout-text">
+        شراء إصدار قدیم من <span class="en">Raspberry Pi</span> (مثل النسخة الأولى) قد يسبب مشاكل في الأداء والتوافق أثناء الدورة.
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="version-info">Embedded Linux & Yocto — Golden Course v1.0</span>
+    <span class="page-num">2</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 3: CHAPTER 2 — OPERATING SYSTEM                          -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto — Golden Course</span>
+    <span class="chapter-name">نظام التشغيل</span>
+  </div>
+
+  <div class="chapter-opening">
+    <span class="ch-number">SECTION 02</span>
+    <span class="ch-icon">🖥️</span>
+    <div class="ch-title">ما هو نظام التشغيل؟</div>
+    <div class="ch-subtitle"><span class="en">Operating System</span></div>
+    <div class="chapter-divider"></div>
+    <div class="ch-intro">
+      لفهم Linux يجب أولاً فهم المبدأ الأساسي لأي نظام تشغيل
+    </div>
+  </div>
+
+  <!-- OVERVIEW DIAGRAM: OS Architecture -->
+  <div class="chapter-overview">
+    <div class="overview-title">
+      <span class="ov-icon">🏗️</span>
+      بنية نظام التشغيل — نظرة معمارية
+    </div>
+    <div class="diagram-container" style="border: none; padding: 16px; background: transparent;">
+      <div class="diagram-box">
+        <div class="diag-layer app">Applications — التطبيقات</div>
+        <div class="diag-arrow">▼</div>
+        <div class="diag-layer syscall">System Calls — استدعاءات النظام</div>
+        <div class="diag-arrow">▼</div>
+        <div class="diag-layer kernel">Kernel — النواة</div>
+        <div class="diag-arrow">▼</div>
+        <div class="diag-layer hw">Hardware — العتاد (CPU, RAM, Storage)</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title" id="sec2">
+    <span class="section-icon">❓</span>
+    لماذا وُجد نظام التشغيل؟
+  </h2>
+
+  <p class="body-text">
+    أي حاسوب أو لوحة تطوير تحتوي على مكونات صلبة <span class="en">Hardware</span> مثل <span class="en">CPU, RAM, Storage</span>، لا يمكن للمستخدم أو التطبيقات التحدث مباشرة مع هذه المكونات. يأتي هنا دور نظام التشغيل <span class="en">OS</span> ليكون الوسيط والمدیر لهذه الموارد.
+  </p>
+
+  <h2 class="section-title">
+    <span class="section-icon">⚙️</span>
+    كيف يعمل نظام التشغيل وما مهامه؟
+  </h2>
+
+  <p class="body-text">
+    في الأساس كل تطبيق <span class="en">Application</span> وظیفته تنفیذ الأوامر <span class="en">Instructions</span>، المعالج <span class="en">CPU</span> يقوم بنظام من مجموعة الأوامر. نظام التشغيل يقوم بالمهام التالية:
+  </p>
+
+  <!-- Task 1 -->
+  <h3 class="subsection-title">1. إدارة الذاكرة <span class="en">Memory Management</span></h3>
+  <p class="body-text">
+    النظام یوفر طریقة آمنة للقراءة والكتابة في الذاكرة.
+  </p>
+  <div class="callout callout-dark">
+    <span class="callout-icon">🚀</span>
+    <div class="callout-body">
+      <span class="callout-label">مثال عملي</span>
+      <div class="callout-text">
+        وظیفة تخصیص مساحة في الذاكرة للمستخدم مثل دالة <code class="inline-code" style="background:rgba(255,255,255,0.1);color:var(--secondary);">malloc()</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- Task 2 -->
+  <h3 class="subsection-title">2. إدارة الملفات <span class="en">File System Management</span></h3>
+  <p class="body-text">
+    ینظم كیفیة حفظ وقراءة الملفات والمجلدات <span class="en">Files & Directories</span> داخل وحدات التخزین <span class="en">Storage</span>.
+  </p>
+
+  <!-- Task 3 -->
+  <h3 class="subsection-title">3. إدارة العملیات والمجدول <span class="en">Process Management & Scheduler</span></h3>
+
+  <div class="callout callout-gray">
+    <span class="callout-icon">📌</span>
+    <div class="callout-body">
+      <span class="callout-label">تعريف</span>
+      <div class="callout-text">
+        <span class="inline-bold">Process</span>: تطبیق <span class="en">Application</span> هو في حالة تشغیل <span class="en">Running</span>.
+      </div>
+    </div>
+  </div>
+
+  <p class="body-text">
+    <span class="inline-bold">المجدول <span class="en">Scheduler</span></span>: هو جزء ذكي من نظام التشغیل ینظم وقت المعالج لتنفیذ أوامر عدة تطبیقات في نفس الوقت، مما یجعلك تشعر أن كل شيء یعمل بالتوازي بسرعة فائقة.
+  </p>
+
+  <!-- Task 4 -->
+  <h3 class="subsection-title">4. الشبكات والحمایة <span class="en">Networking & Security</span></h3>
+  <p class="body-text">
+    دعم بروتوكولات الاتصال وحمایة موارد النظام.
+  </p>
+
+  <div class="callout callout-green">
+    <span class="callout-icon">✅</span>
+    <div class="callout-body">
+      <span class="callout-label">تتذكر؟ ماذا يجب أن</span>
+      <div class="callout-text">
+        نظام التشغیل هو المنظم والمدیر لموارد الھاردویر <span class="en">CPU, RAM, Storage</span>.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-blue">
+    <span class="callout-icon">📘</span>
+    <div class="callout-body">
+      <span class="callout-label">مراجعة سريعة</span>
+      <div class="callout-text">
+        <ul class="styled-list" style="margin: 4px 0;">
+          <li><span class="en">Process</span>: تطبیق قید التشغیل.</li>
+          <li><span class="en">Scheduler</span>: منظم وقت المعالج.</li>
+          <li><span class="en">Memory Management</span>: مساحات الذاكرة العشوائیة مدیر.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="version-info">Embedded Linux & Yocto — Golden Course v1.0</span>
+    <span class="page-num">3</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 4: CHAPTER 3 — HISTORY OF LINUX                          -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto — Golden Course</span>
+    <span class="chapter-name">تاريخ Linux</span>
+  </div>
+
+  <div class="chapter-opening">
+    <span class="ch-number">SECTION 03</span>
+    <span class="ch-icon">📜</span>
+    <div class="ch-title">تاريخ نظام Linux</div>
+    <div class="ch-subtitle">من <span class="en">Multics</span> إلى <span class="en">Unix</span></div>
+    <div class="chapter-divider"></div>
+    <div class="ch-intro">
+      فهم التاريخ هو المفتاح لفهم سبب تصميم الأنظمة الحدیثة بهذا الشكل، بل هو ليس ترفاً بل بفضل هذا التاریخ تم حلت التي القیود <span class="en">Limitations</span>.
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="chapter-overview">
+    <div class="overview-title">
+      <span class="ov-icon">📅</span>
+      الخط الزمني — تطور الأنظمة
+    </div>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-year">1960s</div>
+        <div class="timeline-text">تم تطویر نظام اسمه <span class="en">Multics</span> في البدایات، لكنه كان معقداً جداً.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">1969</div>
+        <div class="timeline-text">جاء بعد ذلك نظام <span class="en">Unix</span> تم تطویره بواسطة <span class="en">Ken Thompson</span> و <span class="en">Dennis Ritchie</span>.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">Early 1970s</div>
+        <div class="timeline-text">في البدایة كُتب <span class="en">Unix</span> بلغة التجمیع <span class="en">Assembly</span>.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">1972</div>
+        <div class="timeline-text">قام <span class="en">Dennis Ritchie</span> باختراع لغة <span class="en">C Programming Language</span>، وأُعيدت كتابة نظام <span class="en">Unix</span> بها.</div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-year">Late 1970s–80s</div>
+        <div class="timeline-text">بدأت الشركات بتطویر أنظمة مقلدة لـ <span class="en">Unix</span>، مما أدى إلى ظھور نسخ مختلفة كثیرة قلیلاً.</div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title" id="sec3">
+    <span class="section-icon">🔄</span>
+    تطور الأنظمة
+  </h2>
+
+  <p class="body-text">
+    في البدایات تم تطویر نظام اسمه <span class="en">Multics</span> لكنه كان معقداً جداً.
+  </p>
+  <p class="body-text">
+    جاء بعد ذلك نظام <span class="en">Unix</span> تم تطویره بواسطة <span class="en">Ken Thompson</span> و <span class="en">Dennis Ritchie</span>.
+  </p>
+
+  <h2 class="section-title">
+    <span class="section-icon">🛠️</span>
+    كيف تم بناء <span class="en">Unix</span>؟
+  </h2>
+
+  <p class="body-text">
+    في البدایة كُتب <span class="en">Unix</span> بلغة التجمیع <span class="en">Assembly</span>.
+  </p>
+
+  <div class="callout callout-red">
+    <span class="callout-icon">⚠️</span>
+    <div class="callout-body">
+      <span class="callout-label">المشكلة</span>
+      <div class="callout-text">
+        لغة <span class="en">Assembly</span> مرتبطة جداً بھیكلیة المعالج <span class="en">Architecture-specific</span>، الكود المكتوب للعمل على معالج معین لا يعمل على معالج آخر.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-green">
+    <span class="callout-icon">✅</span>
+    <div class="callout-body">
+      <span class="callout-label">الحل</span>
+      <div class="callout-text">
+        قام <span class="en">Dennis Ritchie</span> باختراع لغة <span class="en">C Programming Language</span>، وتم إعادة كتابة نظام <span class="en">Unix</span> بها.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-blue">
+    <span class="callout-icon">📘</span>
+    <div class="callout-body">
+      <span class="callout-label">الميزة</span>
+      <div class="callout-text">
+        یمكن كتابة الكود مرة واحدة بلغة <span class="en">C</span>، ثم استخدام مترجم <span class="en">Compiler</span> لتحویلھ إلى <span class="en">Assembly</span> الخاص بأي معالج آخر. ھذه العملیة تسمى <span class="en">Compilation Process</span>.
+      </div>
+    </div>
+  </div>
+
+  <!-- Compilation Pipeline Diagram -->
+  <div class="diagram-container">
+    <div class="diagram-title">عملیة الترجمة <span class="en">Compilation Process</span></div>
+    <div class="diagram-box">
+      <div class="diag-layer src">Source Code — الكود المصدري (C)</div>
+      <div class="diag-arrow">▼</div>
+      <div class="diag-layer compiler">Compiler — المترجم (GCC)</div>
+      <div class="diag-arrow">▼</div>
+      <div class="diag-layer obj">Object File — ملف الهدف</div>
+      <div class="diag-arrow">▼</div>
+      <div class="diag-layer linker">Linker — الرابط</div>
+      <div class="diag-arrow">▼</div>
+      <div class="diag-layer exe">Executable — الملف التنفيذي</div>
+    </div>
+  </div>
+
+  <h2 class="section-title">
+    <span class="section-icon">💥</span>
+    مشكلة تفتت الـ <span class="en">Unix</span>
+  </h2>
+
+  <p class="body-text">
+    بسبب نجاح <span class="en">Unix</span> الكبیر، بدأت الشركات بتطویر أنظمة مقلدة لھ. أدى ھذا التقلید إلى ظھور نسخ مختلفة كثیرة قلیلاً، مما ھدد بضیاع میزة كبیرة ھي "قابلیة النقل" <span class="en">Portability</span> والتي یحتاجھا المطورون أساسیاً.
+  </p>
+
+  <div class="callout callout-green">
+    <span class="callout-icon">✅</span>
+    <div class="callout-body">
+      <span class="callout-label">تتذكر؟ ماذا يجب أن</span>
+      <div class="callout-text">
+        لغة <span class="en">C</span> تم ابتكارها بالأساس لحل مشكلة كتابة أنظمة التشغیل بلغة <span class="en">Assembly</span> لتسهیل نقل النظام بین المعالجات المختلفة.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-red">
+    <span class="callout-icon">⚠️</span>
+    <div class="callout-body">
+      <span class="callout-label">أخطاء شائعة</span>
+      <div class="callout-text">
+        الاعتقاد بأن <span class="en">Linux</span> هو <span class="en">Unix</span> نفسه (هذا خطأ فادح، سنفهم سببه لاحقاً).
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="version-info">Embedded Linux & Yocto — Golden Course v1.0</span>
+    <span class="page-num">4</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 5: CHAPTER 4 — POSIX STANDARD                           -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto — Golden Course</span>
+    <span class="chapter-name">معيار POSIX</span>
+  </div>
+
+  <div class="chapter-opening">
+    <span class="ch-number">SECTION 04</span>
+    <span class="ch-icon">📋</span>
+    <div class="ch-title">معيار POSIX وقابلية التوافق والنقل</div>
+    <div class="ch-subtitle"><span class="en">POSIX Standard & Portability</span></div>
+    <div class="chapter-divider"></div>
+    <div class="ch-intro">
+      المعيار الذي وحّد طريقة عمل الأنظمة الشبيهة بـ Unix وضمن نقل الكود البرمجي بنسبة 100%
+    </div>
+  </div>
+
+  <!-- POSIX Architecture Diagram -->
+  <div class="chapter-overview">
+    <div class="overview-title">
+      <span class="ov-icon">🏛️</span>
+      معمارية <span class="en">POSIX</span> — كيف يوحّد المعيار
+    </div>
+    <div class="diagram-container" style="border: none; padding: 16px; background: transparent;">
+      <div class="diagram-box">
+        <div class="diag-layer app">Applications — التطبيقات</div>
+        <div class="diag-arrow">▼</div>
+        <div class="diag-layer syscall">POSIX Interface — واجهة POSIX الموحّدة</div>
+        <div class="diag-arrow">▼</div>
+        <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+          <div class="diag-layer kernel" style="min-width: 100px;">Linux</div>
+          <div class="diag-layer kernel" style="min-width: 100px;">macOS</div>
+          <div class="diag-layer kernel" style="min-width: 100px;">Unix</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title" id="sec4">
+    <span class="section-icon">❓</span>
+    لماذا وُجد <span class="en">POSIX</span>؟
+  </h2>
+
+  <p class="body-text">
+    لحل مشكلة اختلاف الأنظمة المقلدة لـ <span class="en">Unix</span>، احتاج المطورون إلى "قانون" أو "تصمیم ھندسي" یوحد طریقة عمل ھذه الأنظمة لضمان أن التطبیق المكتوب لنظام معین سیعمل على جمیع الأنظمة الأخرى.
+  </p>
+
+  <h2 class="section-title">
+    <span class="section-icon">⚙️</span>
+    ما هو <span class="en">POSIX</span>؟
+  </h2>
+
+  <p class="body-text">
+    ببساطة ھو عبارة عن مستند نصي (قانون/معیار) یحتوي على فصول <span class="en">Chapters</span> تشرح كیف یجب أن یتصرف ویتواصل نظام التشغیل مع التطبیقات.
+  </p>
+
+  <div class="callout callout-purple">
+    <span class="callout-icon">🧠</span>
+    <div class="callout-body">
+      <span class="callout-label">فهم عميق</span>
+      <div class="callout-text">
+        <span class="en">POSIX</span> هو مستند مجرد وليس نظام تشغیل ولا كود برمجي، مجرد قانون لضمان قابلية النقل <span class="en">Portability</span> للكود البرمجي.
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">
+    <span class="section-icon">📖</span>
+    أهم فصول معيار <span class="en">POSIX</span>
+  </h2>
+
+  <h3 class="subsection-title">1. واجھات النظام <span class="en">System Interfaces</span></h3>
+  <p class="body-text">
+    مجموعة من الدوال <span class="en">Functions</span> یجب أن یوفرھا النظام للتطبیقات لتتحدث معھ (مثل دوال القراءة والكتابة).
+  </p>
+
+  <h3 class="subsection-title">2. ملفات الترویسة <span class="en">Headers</span></h3>
+  <p class="body-text">
+    أسماء الملفات التي تحتوي على الدوال ھذه. <span class="en">POSIX</span> یحدد.
+  </p>
+
+  <div class="callout callout-dark">
+    <span class="callout-icon">🚀</span>
+    <div class="callout-body">
+      <span class="callout-label">مثال عملي</span>
+      <div class="callout-text">
+        بفضل <span class="en">POSIX</span>، دالة الطباعة <span class="en">printf</span> موجودة دائماً داخل ملف <code class="inline-code" style="background:rgba(255,255,255,0.1);color:var(--secondary);">&lt;stdio.h&gt;</code> في أي نظام تشغیل یحترم ھذا المعیار.
+      </div>
+    </div>
+  </div>
+
+  <h3 class="subsection-title">3. الأدوات <span class="en">Utilities</span></h3>
+  <p class="body-text">
+    التطبیقات الأساسیة التي یجب أن تتواجد في واجهة الأوامر سطر <span class="en">Shell</span>.
+  </p>
+
+  <h4 class="sub-subsection">الأوامر الأساسیة في <span class="en">Linux</span> (التی ذكرت كأدوات <span class="en">Utilities</span>):</h4>
+
+  <!-- Commands Table -->
+  <div class="table-wrapper">
+    <table class="prof-table">
+      <thead>
+        <tr>
+          <th>الأمر</th>
+          <th>الوظیفة بالإنجليزية</th>
+          <th>الوصف</th>
+          <th>الاستخدام</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code class="inline-code">ls</code></td>
+          <td class="td-en">List directory contents</td>
+          <td>عرض محتوى المجلد</td>
+          <td>یستعمل الأمر ھذا دوال من واجھة النظام للوصول إلى الھارد دیسك وجلب أسماء الملفات وعرضھا</td>
+        </tr>
+        <tr>
+          <td><code class="inline-code">cd</code></td>
+          <td class="td-en">Change Directory</td>
+          <td>تغییر المجلد الحالي</td>
+          <td>للانتقال من مسار إلى آخر</td>
+        </tr>
+        <tr>
+          <td><code class="inline-code">mkdir</code></td>
+          <td class="td-en">Make Directory</td>
+          <td>إنشاء مجلد جدید</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="section-title">
+    <span class="section-icon">🚀</span>
+    ميزة قابلية النقل <span class="en">Portability</span>
+  </h2>
+
+  <p class="body-text">
+    إذا كتبت كوداً بلغة <span class="en">C</span> یستخدم دالة <span class="en">printf</span> و <code class="inline-code">#include &lt;stdio.h&gt;</code>، أصبح الكود قابلاً للنقل <span class="en">Portable</span> بفضل <span class="en">POSIX</span>. فأنت ضامن <span class="en">%100</span> أن ھذا الكود سیعمل على أي نظام تشغیل مبني على معیار <span class="en">POSIX</span>.
+  </p>
+
+  <!-- Code Example -->
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">C</span>
+    </div>
+    <div class="code-body">
+<pre><span class="syn-inc">#include</span> <span class="syn-str">&lt;stdio.h&gt;</span>
+
+<span class="syn-type">int</span> <span class="syn-fn">main</span>() {
+    <span class="syn-fn">printf</span>(<span class="syn-str">"Hello, Embedded Linux!\n"</span>);
+    <span class="syn-kw">return</span> <span class="syn-num">0</span>;
+}</pre>
+    </div>
+  </div>
+
+  <div class="callout callout-green">
+    <span class="callout-icon">✅</span>
+    <div class="callout-body">
+      <span class="callout-label">تتذكر؟ ماذا يجب أن</span>
+      <div class="callout-text">
+        <span class="en">POSIX</span> ھو مجرد مستند قانون لضمان قابلية النقل للكود البرمجي، وليس نظام تشغیل ولا كود برمجي.
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="version-info">Embedded Linux & Yocto — Golden Course v1.0</span>
+    <span class="page-num">5</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 6: CHAPTER 5 — GNU PROJECT & GPL                        -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto — Golden Course</span>
+    <span class="chapter-name">مشروع GNU ورخصة GPL</span>
+  </div>
+
+  <div class="chapter-opening">
+    <span class="ch-number">SECTION 05</span>
+    <span class="ch-icon">🦏</span>
+    <div class="ch-title">مشروع GNU ورخصة GPL للبرمجيات الحرة</div>
+    <div class="ch-subtitle"><span class="en">GNU Project & GPL License</span></div>
+    <div class="chapter-divider"></div>
+    <div class="ch-intro">
+      الفلسفة التي أسست لبرمجيات مفتوحة المصدر حرة وحلت أزمة "الثقة" في البرمجيات المغلقة
+    </div>
+  </div>
+
+  <!-- GNU+Linux Architecture Diagram -->
+  <div class="chapter-overview">
+    <div class="overview-title">
+      <span class="ov-icon">🧩</span>
+      معماریة <span class="en">GNU + Linux</span> — كيف تجمّعت القطع
+    </div>
+    <div class="diagram-container" style="border: none; padding: 16px; background: transparent;">
+      <div class="diag-side">
+        <div class="diag-col">
+          <div class="diag-col-label">GNU Components</div>
+          <div class="diag-layer gnu" style="min-width: 200px;">GCC — المترجم</div>
+          <div class="diag-layer gnu" style="min-width: 200px;">glibc — المكتبة</div>
+          <div class="diag-layer gnu" style="min-width: 200px;">Coreutils — الأدوات</div>
+          <div class="diag-layer gnu" style="min-width: 200px;">Bash — الـ Shell</div>
+        </div>
+        <div style="display: flex; align-items: center; padding-bottom: 60px;">
+          <div class="diag-plus">+</div>
+        </div>
+        <div class="diag-col">
+          <div class="diag-col-label">Kernel</div>
+          <div class="diag-layer linux" style="min-width: 200px; padding: 20px 40px;">Linux Kernel — النواة</div>
+        </div>
+        <div style="display: flex; align-items: center; padding-bottom: 60px;">
+          <div class="diag-arrow" style="font-size: 28px;">▼</div>
+        </div>
+        <div class="diag-col">
+          <div class="diag-col-label">Result</div>
+          <div class="diag-layer gnulinux" style="min-width: 200px; padding: 20px 48px;">GNU/Linux — النظام الكامل</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title" id="sec5">
+    <span class="section-icon">🔒</span>
+    المشكلة مع <span class="en">Unix</span>
+  </h2>
+
+  <p class="body-text">
+    نظام <span class="en">Unix</span> لم یكن مفتوح المصدر <span class="en">Closed Source</span>، لا يمكنك رؤیة الكود البرمجي الخاص بھ كمطور أو مستخدم، لا تستطیع التأكد <span class="en">%100</span> (مثلما یفعلھ نظام <span class="en">Windows</span> في الخلفیة) مما یخلق أزمة "ثقة".
+  </p>
+
+  <h2 class="section-title">
+    <span class="section-icon">👤</span>
+    ظهور <span class="en">Richard Stallman</span> ومشروع <span class="en">GNU</span>
+  </h2>
+
+  <p class="body-text">
+    <span class="en">Richard Stallman</span> رفض مبدأ البرمجیات المغلقة وأسس فلسفة البرمجیات الحرة <span class="en">Free Software</span>.
+  </p>
+  <p class="body-text">
+    أطلق مشروعاً ضخماً اسمه <span class="en">GNU</span> (وهي اختصار لـ <span class="en">GNU's Not Unix</span> — أي أن <span class="en">GNU</span> لیس یونكس).
+  </p>
+
+  <div class="callout callout-blue">
+    <span class="callout-icon">📘</span>
+    <div class="callout-body">
+      <span class="callout-label">الهدف</span>
+      <div class="callout-text">
+        بناء نظام تشغیل متوافق مع معیار <span class="en">POSIX</span> لكنه مفتوح المصدر بالكامل.
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title">
+    <span class="section-icon">🛠️</span>
+    ماذا طوّر مشروع <span class="en">GNU</span>؟
+  </h2>
+
+  <p class="body-text">
+    بما أن <span class="en">POSIX</span> مجرد "قانون" نصي، كان على <span class="en">Stallman</span> كتابة كود برمجي یطبق ھذا القانون <span class="en">Implementation</span>.
+  </p>
+
+  <h3 class="subsection-title">1. مكتبة <span class="en">C Library (glibc)</span></h3>
+  <p class="body-text">
+    تطبیق فعلي <span class="en">Implementation</span> لواجھات النظام والترویسة وملفات المذكورة في <span class="en">POSIX</span> (وتعد <span class="en">glibc</span> مكتبة مقدسة في عالم <span class="en">Linux</span>).
+  </p>
+
+  <h3 class="subsection-title">2. <span class="en">Coreutils</span></h3>
+  <p class="body-text">
+    تطبیق للأدوات <span class="en">Utilities</span> مثل <span class="en">ls</span>، <span class="en">cd</span>، <span class="en">mkdir</span>.
+  </p>
+
+  <h3 class="subsection-title">3. المترجم <span class="en">GCC</span></h3>
+  <p class="body-text">
+    كان في البدایة <span class="en">GNU C Compiler</span> ثم تطور لیصبح <span class="en">GNU Compiler Collection</span> وأشھر وأقوى مترجم في التاریخ.
+  </p>
+
+  <h2 class="section-title">
+    <span class="section-icon">📜</span>
+    رخصة <span class="en">GPL</span> (<span class="en">GNU General Public License</span>)
+  </h2>
+
+  <p class="body-text">
+    <span class="inline-bold">لماذا وُجدت؟</span> لحمایة حق العمیل في الحصول على الكود المصدري المفتوح بقوة القانون.
+  </p>
+
+  <p class="body-text">
+    <span class="inline-bold">كیف تعمل؟</span> أي برنامج یُنشر تحت رخصة <span class="en">GPL</span> یجب أن یكون كوده المصدري متاحاً لأي شخص یستخدمھ، وإذا قام شخص بتعدیلھ وبناء برنامج جدید علیھ، یجب أن یكون البرنامج الجدید أیضاً مفتوح المصدر.
+  </p>
+
+  <div class="callout callout-green">
+    <span class="callout-icon">✅</span>
+    <div class="callout-body">
+      <span class="callout-label">تتذكر؟ ماذا يجب أن</span>
+      <div class="callout-text">
+        مكتبة <span class="en">glibc</span> هی مجرد <span class="en">Implementation</span> واحد لمعیار <span class="en">POSIX</span>، یوجد ھناك مكتبات أخرى تطبق نفس المعیار مثل <span class="en">musl libc</span> أو <span class="en">micro libc</span>.
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="version-info">Embedded Linux & Yocto — Golden Course v1.0</span>
+    <span class="page-num">6</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 7: CHAPTER 6 — LINUX KERNEL & GNU/LINUX                  -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto — Golden Course</span>
+    <span class="chapter-name">نواة Linux وتكامل GNU/Linux</span>
+  </div>
+
+  <div class="chapter-opening">
+    <span class="ch-number">SECTION 06</span>
+    <span class="ch-icon">🐧</span>
+    <div class="ch-title">نواة Linux وتكامل GNU/Linux</div>
+    <div class="ch-subtitle"><span class="en">Linux Kernel & GNU/Linux Integration</span></div>
+    <div class="chapter-divider"></div>
+    <div class="ch-intro">
+      كيف وُلد النظام الكامل الذي نستخدمه اليوم من التقاء نواة Linux مع أدوات GNU
+    </div>
+  </div>
+
+  <!-- Kernel Space vs User Space Diagram -->
+  <div class="chapter-overview">
+    <div class="overview-title">
+      <span class="ov-icon">🏗️</span>
+      <span class="en">Kernel Space</span> مقابل <span class="en">User Space</span> — التقسيم المعماري
+    </div>
+    <div class="diagram-container" style="border: none; padding: 16px; background: transparent;">
+      <div class="diag-side" style="gap: 48px;">
+        <div class="diag-col">
+          <div class="space-diagram">
+            <div class="space-box kern-space">
+              <div style="font-size: 14pt; margin-bottom: 4px;">Kernel Space</div>
+              <div style="font-size: 9pt; font-weight: 400;">النواة — صلاحیات مطلقة وكاملة للتحكم في العتاد</div>
+            </div>
+            <div class="space-box syscall-bar">SYSTEM CALLS</div>
+            <div class="space-box user-space">
+              <div style="font-size: 14pt; margin-bottom: 4px;">User Space</div>
+              <div style="font-size: 9pt; font-weight: 400;">المستخدم — التطبیقات العادیة تعمل فیھ</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2 class="section-title" id="sec6">
+    <span class="section-icon">❓</span>
+    القطعة الناقصة في مشروع <span class="en">GNU</span>
+  </h2>
+
+  <p class="body-text">
+    مشروع <span class="en">GNU</span> لدیه كل شيء إلا أھم جزء: نواة نظام التشغیل <span class="en">Kernel</span> (المكتبات، الأدوات، المترجم، الرخصة)، باستثناء محاولتھم لبناء نواة اسمھا <span class="en">Hurd</span> التي باءت بالفشل.
+  </p>
+
+  <h2 class="section-title">
+    <span class="section-icon">🌟</span>
+    ظهور <span class="en">Linus Torvalds</span> (1991)
+  </h2>
+
+  <p class="body-text">
+    قام الطالب الفنلندي <span class="en">Linus Torvalds</span> بتطویر نواة نظام تشغیل <span class="en">Kernel</span> واستخدم مترجم <span class="en">GCC</span> لتطویرھا ورخصھا تحت <span class="en">GPL</span> وجعلھا متوافقة مع <span class="en">POSIX</span>. أطلق علیھا اسم <span class="en">Linux Kernel</span>.
+  </p>
+
+  <p class="body-text">
+    عندما اجتمعت النواة <span class="en">Linux</span> مع تطبیقات ومكتبات <span class="en">GNU</span>، وُلد النظام التشغیل الكامل الذي نستخدمھ الیوم.
+  </p>
+
+  <div class="callout callout-purple">
+    <span class="callout-icon">🧠</span>
+    <div class="callout-body">
+      <span class="callout-label">فهم عميق</span>
+      <div class="callout-text">
+        السبب لھذا أن <span class="en">Stallman</span> یدافع بشراسة على تسمیة النظام <span class="en">GNU/Linux</span> ولیس <span class="en">Linux</span> فقط، لأن الجھد الأكبر من ناحیة الأدوات والمترجمات والمكتبات جاء من <span class="en">GNU</span>.
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARISON TABLES -->
+  <h2 class="section-title">
+    <span class="section-icon">⚖️</span>
+    مقارنات تقنية
+  </h2>
+
+  <!-- Unix-Compliant vs Unix-like -->
+  <h3 class="subsection-title">مقارنة: <span class="en">Unix-Compliant</span> مقابل <span class="en">Unix-like</span></h3>
+
+  <div class="table-wrapper">
+    <table class="prof-table comp-table">
+      <thead>
+        <tr>
+          <th>المعيار</th>
+          <th><span class="en">Unix-Compliant</span> — لیونكس المطابق</th>
+          <th><span class="en">Unix-like</span> — بیونكس الشبیھ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>التعريف</td>
+          <td>نظام یطبق معیار <span class="en">POSIX</span> بحذافیره (<span class="en">%100</span> عالیة بنسبة)</td>
+          <td>نظام یشبھ <span class="en">Unix</span> ویطبق معیار <span class="en">POSIX</span> لكنه لیس كلیاً (<span class="en">%95-98</span>)</td>
+        </tr>
+        <tr>
+          <td>الاعتماد</td>
+          <td>مر بمراحل اختبار <span class="en">Testing</span> واجتاز شھادة التوافق</td>
+          <td>لا یمتلك شھادة رسمیة</td>
+        </tr>
+        <tr>
+          <td>المیزات</td>
+          <td>لا یضیف میزات خاصة بھ غیر موجودة في <span class="en">POSIX</span></td>
+          <td>یضیف میزات خاصة بھ غیر موجودة في <span class="en">POSIX</span></td>
+        </tr>
+        <tr>
+          <td>استخدام اسم <span class="en">Unix</span></td>
+          <td>یملك الحق في استخدام اسم <span class="en">Unix</span> (<span class="en">Trade mark</span>)</td>
+          <td>لا یمتلك الحق لأنه لا یمتلك الشھادة</td>
+        </tr>
+        <tr>
+          <td>مثال</td>
+          <td><span class="en">macOS</span></td>
+          <td><span class="en">Linux</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Kernel Space vs User Space -->
+  <h3 class="subsection-title">مقارنة: <span class="en">Kernel Space</span> مقابل <span class="en">User Space</span></h3>
+
+  <div class="table-wrapper">
+    <table class="prof-table comp-table">
+      <thead>
+        <tr>
+          <th>المعيار</th>
+          <th><span class="en">Kernel Space</span> — النواة مساحة</th>
+          <th><span class="en">User Space</span> — المستخدم مساحة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>التعريف</td>
+          <td>المكان الذي تعیش وتعمل فیھ النواة <span class="en">Kernel</span></td>
+          <td>المكان الذي تعمل فیھ تطبیقات المستخدم العادیة</td>
+        </tr>
+        <tr>
+          <td>الصلاحیات</td>
+          <td>صلاحیات كاملة ومطلقة للتحكم في العتاد <span class="en">Hardware</span></td>
+          <td>لا یملك أي صلاحیة للتحكم أو للتحول مباشرة بالعتاد</td>
+        </tr>
+        <tr>
+          <td>طریقة العمل</td>
+          <td>ینفذ الحساسة الأوامر (إدارة ذاكرة، بروتوكولات، الخ)</td>
+          <td>إذا احتاج التطبیق لشيء من العتاد، یجب أن یطلب ذلك من <span class="en">Kernel</span> الـ عبر النظام واجھات</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="section-title">
+    <span class="section-icon">❓</span>
+    هل يمكن أن نقول "GNU" بدون "Linux" في العصر الحالي؟
+  </h2>
+
+  <p class="body-text">
+    نعم، خاصة في <span class="en">Embedded Linux</span> الـ يمكنك بناء نظام من:
+  </p>
+
+  <ul class="styled-list">
+    <li><span class="en">Kernel</span>: <span class="en">Linux Kernel</span></li>
+    <li><span class="en">Compiler</span>: <span class="en">Clang</span> (بدلاً من <span class="en">GCC</span>)</li>
+    <li><span class="en">C Library</span>: <span class="en">musl</span> (بدلاً من <span class="en">glibc</span>)</li>
+    <li><span class="en">Utilities</span>: <span class="en">BusyBox</span> (بدلاً من <span class="en">Coreutils</span>) وهو أسرع وأخف جداً ومناسب للأنظمة المدمجة</li>
+  </ul>
+
+  <p class="body-text">
+    في الحالة ھذه النظام لا یستخدم أجزاء <span class="en">GNU</span> ویسمى <span class="en">Linux</span> فقط.
+  </p>
+
+  <div class="callout callout-green">
+    <span class="callout-icon">✅</span>
+    <div class="callout-body">
+      <span class="callout-label">تتذكر؟ ماذا يجب أن</span>
+      <div class="callout-text">
+        كلمة <span class="en">Linux</span> تقنیاً تعني النواة <span class="en">Kernel</span> فقط. النظام التشغیل الكامل یتكون من النواة plus إلیھا مضافا مكتبات وأدوات مساحة المستخدم <span class="en">User Space</span>.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-red">
+    <span class="callout-icon">⚠️</span>
+    <div class="callout-body">
+      <span class="callout-label">أخطاء شائعة</span>
+      <div class="callout-text">
+        الخلط بین <span class="en">gcc</span> (كـ <span class="en">Executable compiler</span>) و <span class="en">GCC</span> (كـ <span class="en">Compiler Collection</span>) — الأداة الكبیرة والصغیرة الكلمة ھي المشروع بأكملھ.
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="version-info">Embedded Linux & Yocto — Golden Course v1.0</span>
+    <span class="page-num">7</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 8: CHAPTER 7 — COURSE ROADMAP                            -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto — Golden Course</span>
+    <span class="chapter-name">خطة الدورة التدريبية</span>
+  </div>
+
+  <div class="chapter-opening">
+    <span class="ch-number">SECTION 07</span>
+    <span class="ch-icon">🗺️</span>
+    <div class="ch-title">خطة الدورة التدريبية</div>
+    <div class="ch-subtitle"><span class="en">Course Roadmap</span></div>
+    <div class="chapter-divider"></div>
+    <div class="ch-intro">
+      سيتم تعلمه بشكل عملي مكثف (أكثر من 500 شريحة براكتيكال ستنشر تباعاً)
+    </div>
+  </div>
+
+  <h2 class="section-title" id="sec7">
+    <span class="section-icon">📍</span>
+    المراحل التدريبية الـ 12
+  </h2>
+
+  <div class="roadmap-grid">
+    <div class="roadmap-card">
+      <div class="rm-num">1</div>
+      <div class="rm-content">
+        <div class="rm-title">الأوامر سطر والسكربتات كتابة</div>
+        <div class="rm-en">Shell Utilities & Programming</div>
+        <div class="rm-desc">تعلم الأوامر سطر وكتابة سكربتات</div>
+      </div>
+    </div>
+    <div class="roadmap-card">
+      <div class="rm-num">2</div>
+      <div class="rm-content">
+        <div class="rm-title">بنية نظام ملفات لينكس</div>
+        <div class="rm-en">Linux File System Structure</div>
+        <div class="rm-desc">كیف ینظم لینكس ملفاته (عكس الویندوز C/: و D/:)</div>
+      </div>
+    </div>
+    <div class="roadmap-card">
+      <div class="rm-num">3</div>
+      <div class="rm-content">
+        <div class="rm-title">عملیة الترجمة</div>
+        <div class="rm-en">Compilation Process</div>
+        <div class="rm-desc">دورة حیات ملف C حتى یصبح ملفاً تنفیذیاً</div>
+      </div>
+    </div>
+    <div class="roadmap-card">
+      <div class="rm-num">4</div>
+      <div class="rm-content">
+        <div class="rm-title">المكتبات</div>
+        <div class="rm-en">Libraries</div>
+        <div class="rm-desc">المكتبات الثابتة والدینامیكیة <span class="en">Static vs Shared</span></div>
+      </div>
+    </div>
+    <div class="roadmap-card">
+      <div class="rm-num">5</div>
+      <div class="rm-content">
+        <div class="rm-title">أنظمة البناء</div>
+        <div class="rm-en">Build Systems</div>
+        <div class="rm-desc">التحكم بالبناء الآلي باستخدام <span class="en">Make</span> و <span class="en">CMake</span></div>
+      </div>
+    </div>
+    <div class="roadmap-card">
+      <div class="rm-num">6</div>
+      <div class="rm-content">
+        <div class="rm-title">الترجمة المتقاطعة وسلاسل الأدوات</div>
+        <div class="rm-en">Cross-Compilation & Toolchains</div>
+        <div class="rm-desc">بناء أدوات (مترجم ومكتبة) مخصصة لمعالج مختلف عن معالج حاسوبك (مثل معالج ARM في لوحة Raspberry Pi)</div>
+      </div>
+    </div>
+    <div class="roadmap-card">
+      <div class="rm-num">7</div>
+      <div class="rm-content">
+        <div class="rm-title">النواة وبرامج التعریف</div>
+        <div class="rm-en">Kernel & Device Drivers</div>
+        <div class="rm-desc">فھم بنیة النواة وكیفیة كتابة برامج تعریف للتحكم بالعتاد</div>
+      </div>
+    </div>
+    <div class="roadmap-card">
+      <div class="rm-num">8</div>
+      <div class="rm-content">
+        <div class="rm-title">بروتوكولات العتاد</div>
+        <div class="rm-en">Hardware Protocols (I2C, SPI, GPIO)</div>
+        <div class="rm-desc">كیفیة التحكم بھا من مساحة المستخدم ومن داخل النواة</div>
+      </div>
+    </div>
+    <div class="roadmap-card">
+      <div class="rm-num">9</div>
+      <div class="rm-content">
+        <div class="rm-title">مشروع Yocto</div>
+        <div class="rm-en">Yocto Project</div>
+        <div class="rm-desc">أداة بناء <span class="en">Build System</span> جداً خاصة لإنشاء توزیعة لینكس مخصصة <span class="en">Linux Distribution</span> (للتخلص من الحجم الزائد في أنظمة مثل Ubuntu)</div>
+      </div>
+    </div>
+    <div class="roadmap-card">
+      <div class="rm-num">10</div>
+      <div class="rm-content">
+        <div class="rm-title">عملیة الإقلاع ومحملات الإقلاع</div>
+        <div class="rm-en">Boot Process & Bootloaders</div>
+        <div class="rm-desc">تفاصیل عملیة الإقلاع من لحظة توصیل الطاقة حتى عمل النواة (باستخدام U-Boot)</div>
+      </div>
+    </div>
+    <div class="roadmap-card">
+      <div class="rm-num">11</div>
+      <div class="rm-content">
+        <div class="rm-title">الأمان</div>
+        <div class="rm-en">Security</div>
+        <div class="rm-desc">حمایة وحدة التخزین بالتشفیر <span class="en">Encryption</span></div>
+      </div>
+    </div>
+    <div class="roadmap-card">
+      <div class="rm-num">12</div>
+      <div class="rm-content">
+        <div class="rm-title">التحديثات عن بُعد</div>
+        <div class="rm-en">OTA (Over The Air) Updates</div>
+        <div class="rm-desc">كیفیة تحدیث النظام عن بُعد للأجھزة المنتشرة في السوق باستخدام مشروع RAUC</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="version-info">Embedded Linux & Yocto — Golden Course v1.0</span>
+    <span class="page-num">8</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 9: CHAPTER 8 — Q&A                                       -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto — Golden Course</span>
+    <span class="chapter-name">أسئلة شائعة</span>
+  </div>
+
+  <div class="chapter-opening">
+    <span class="ch-number">SECTION 08</span>
+    <span class="ch-icon">💬</span>
+    <div class="ch-title">أسئلة شائعة وإجاباتها</div>
+    <div class="ch-subtitle"><span class="en">Q&A</span></div>
+    <div class="chapter-divider"></div>
+    <div class="ch-intro">
+      إجابات على أكثر الأسئلة التي تطرح عند البدء في مجال Embedded Linux
+    </div>
+  </div>
+
+  <h2 class="section-title" id="sec8">
+    <span class="section-icon">❓</span>
+    الأسئلة والأجوبة
+  </h2>
+
+  <!-- Q1 -->
+  <div class="callout callout-blue" style="margin-bottom: 16px;">
+    <span class="callout-icon">📘</span>
+    <div class="callout-body">
+      <span class="callout-label">سؤال: ما الفرق بين رخصة MIT ورخصة GPL؟</span>
+      <div class="callout-text">
+        رخصة <span class="en">MIT</span> تمتلك قیوداً أقل <span class="en">Less limitations</span> وتعطیك حریة أكبر في التصرف في الكود المصدري مقارنة بـ <span class="en">GPL</span> التي تجبرك على إبقاء الكود مفتوحاً في المشاریع المشتقة.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="callout callout-blue" style="margin-bottom: 16px;">
+    <span class="callout-icon">📘</span>
+    <div class="callout-body">
+      <span class="callout-label">سؤال: هل نظام Windows يملك Kernel؟</span>
+      <div class="callout-text">
+        نعم، أي نظام تشغیل في العالم (<span class="en">Windows, macOS, Linux</span>) یمتلك نواة <span class="en">Kernel</span> مھمتھا التحكم بالعتاد.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="callout callout-blue" style="margin-bottom: 16px;">
+    <span class="callout-icon">📘</span>
+    <div class="callout-body">
+      <span class="callout-label">سؤال: ما هي متطلبات أداة Yocto؟</span>
+      <div class="callout-text">
+        حاسوباً قویاً جداً؛ الحد الأدنى <span class="en">RAM 8GB</span> (ویفضل جداً <span class="en">16GB</span>) ومعالج لا یقل عن 4 أنویة، لأن كلما كانت عملیة البناء أقوى كان أسرع.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="callout callout-blue" style="margin-bottom: 16px;">
+    <span class="callout-icon">📘</span>
+    <div class="callout-body">
+      <span class="callout-label">سؤال: هل يمكن الاعتماد على المحاكاة Simulation بدون لوحة حقيقية؟</span>
+      <div class="callout-text">
+        سنبدأ في <span class="en">Yocto</span> باستخدام محاكي اسمه <span class="en">QEMU</span>، ولكن في مراحل كتابة الـ <span class="en">Drivers</span> والتعامل مع السنسورات (<span class="en">I2C, SPI</span>)، یجب أن تمتلك عتاداً حقیقیاً.
+      </div>
+    </div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="callout callout-blue" style="margin-bottom: 16px;">
+    <span class="callout-icon">📘</span>
+    <div class="callout-body">
+      <span class="callout-label">سؤال: ما الفرق بين أنظمة مثل Zephyr و Embedded Linux؟</span>
+      <div class="callout-text">
+        <span class="en">Zephyr</span> موجھ للأنظمة الدقیقة جداً <span class="en">RTOS</span> لأن المبادئ <span class="en">Concepts</span> مختلفة، ولكن ھناك بعض التشابھات مثل <span class="en">Device Tree</span> و <span class="en">Compilation process</span>.
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="version-info">Embedded Linux & Yocto — Golden Course v1.0</span>
+    <span class="page-num">9</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- PAGE 10: QUICK REVIEW                                         -->
+<!-- ============================================================ -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto — Golden Course</span>
+    <span class="chapter-name">مراجعة سريعة</span>
+  </div>
+
+  <div class="quick-review">
+    <div class="qr-title">📝 مراجعة سريعة للدرس</div>
+
+    <!-- Main Concepts -->
+    <div class="qr-section">
+      <div class="qr-section-title">📌 المفاهيم الرئيسية</div>
+      <ul class="qr-list">
+        <li>نظام التشغیل هو الوسیط والمدیر بین التطبیقات والمكونات الصلبة <span class="en">Hardware</span>.</li>
+        <li>لغة <span class="en">C</span> ابتُكرت لحل مشكلة نقل أنظمة التشغیل بین المعالجات المختلفة بدلاً من <span class="en">Assembly</span>.</li>
+        <li><span class="en">POSIX</span> هو معیار نصي یوحد واجھات الأنظمة لضمان قابلية نقل الكود <span class="en">Portability</span>.</li>
+        <li>مشروع <span class="en">GNU</span> وفّر المكتبات <span class="en">glibc</span> والأدوات <span class="en">Coreutils</span> والمترجم <span class="en">GCC</span> لكنه افتقر إلى النواة.</li>
+        <li><span class="en">Linux Kernel</span> كملت القطعة الناقصة لتشكیل نظام <span class="en">GNU/Linux</span> الكامل.</li>
+        <li><span class="en">Kernel Space</span> یمتلك صلاحیات مطلقة، <span class="en">User Space</span> یحتاج <span class="en">System Calls</span> للوصول إلى العتاد.</li>
+        <li>في <span class="en">Embedded Linux</span> يمكن استخدام بدائل <span class="en">GNU</span> مثل <span class="en">musl</span> و <span class="en">BusyBox</span> و <span class="en">Clang</span>.</li>
+      </ul>
+    </div>
+
+    <!-- Important Definitions -->
+    <div class="qr-section">
+      <div class="qr-section-title">📌 التعريفات المهمة</div>
+      <ul class="qr-list">
+        <li><span class="inline-bold">Process</span>: تطبیق <span class="en">Application</span> في حالة تشغیل <span class="en">Running</span>.</li>
+        <li><span class="inline-bold">Scheduler</span>: جزء ذكي من نظام التشغیل ینظم وقت المعالج بین العملیات.</li>
+        <li><span class="inline-bold">Memory Management</span>: تنظیم القراءة والكتابة في الذاكرة العشوائیة بشكل آمن.</li>
+        <li><span class="inline-bold">POSIX</span>: مستند نصي (قانون) یحدد واجھات النظام والترویسة ملفات والأدوات الأساسیة.</li>
+        <li><span class="inline-bold">GNU</span>: مشروع لبناء نظام تشغیل حر ومتوافق مع <span class="en">POSIX</span> (<span class="en">GNU's Not Unix</span>).</li>
+        <li><span class="inline-bold">GPL</span>: رخصة تضمن بقاء الكود المفتوح حتى في المشاریع المشتقة.</li>
+        <li><span class="inline-bold">Kernel</span>: الجزء الأساسي من نظام التشغیل الذي یتحكم مباشرة بالعتاد.</li>
+        <li><span class="inline-bold">Kernel Space</span>: مساحة النواة بصلاحیات مطلقة.</li>
+        <li><span class="inline-bold">User Space</span>: مساحة التطبیقات العادیة بصلاحیات محدودة.</li>
+        <li><span class="inline-bold">Portability</span>: قدرة الكود على العمل على أنظمة ومعالجات مختلفة.</li>
+        <li><span class="inline-bold">Compilation Process</span>: تحویل الكود المصدري <span class="en">Source Code</span> إلى ملف تنفيذي <span class="en">Executable</span> عبر المترجم والرابط.</li>
+        <li><span class="inline-bold">GCC</span>: <span class="en">GNU Compiler Collection</span> — مجموعة مترجمات (لیس مجرد مترجم C واحد).</li>
+      </ul>
+    </div>
+
+    <!-- Common Mistakes -->
+    <div class="qr-section">
+      <div class="qr-section-title">⚠️ أخطاء شائعة</div>
+      <div class="qr-mistake">
+        شراء إصدار قدیم من <span class="en">Raspberry Pi</span> (مثل النسخة الأولى <span class="en">Zero 1</span>) بدلاً من <span class="en">Zero 2 W</span> — یسبب مشاكل في الأداء والتوافق.
+      </div>
+      <div class="qr-mistake">
+        الاعتقاد بأن <span class="en">Linux</span> هو <span class="en">Unix</span> نفسه — <span class="en">Linux</span> نظام شبیھ بـ <span class="en">Unix</span> (<span class="en">Unix-like</span>) ولیس مطابقاً له.
+      </div>
+      <div class="qr-mistake">
+        الخلط بین <span class="en">gcc</span> (المترجم التنفيذي الصغیر) و <span class="en">GCC</span> (مشروع المجموعة الكبیرة).
+      </div>
+      <div class="qr-mistake">
+        اعتبار أن <span class="en">POSIX</span> هو نظام تشغیل أو كود — هو مجرد مستند معیاري نصي.
+      </div>
+    </div>
+
+    <!-- Interview Notes -->
+    <div class="qr-section">
+      <div class="qr-section-title">🎯 ملاحظات للمقابلات</div>
+      <div class="qr-interview">
+        لماذا تُعد لغة <span class="en">C</span> أساسیة في أنظمة التشغیل؟ — لأنها توفر تحكماً منخفض المستوى بالعتاد مع قابلية النقل <span class="en">Portability</span> بین المعالجات.
+      </div>
+      <div class="qr-interview">
+        ما الفرق بین <span class="en">Kernel Space</span> و <span class="en">User Space</span>؟ — <span class="en">Kernel Space</span> یعمل بصراحة كاملة مباشرة مع العتاد، بینما <span class="en">User Space</span> یحتاج استدعاءات نظام <span class="en">System Calls</span>.
+      </div>
+      <div class="qr-interview">
+        هل <span class="en">Linux</span> هو <span class="en">Unix</span>؟ — لا، <span class="en">Linux</span> هو <span class="en">Unix-like</span>، لا یمتلك شھادة <span class="en">Unix</span> الرسمیة.
+      </div>
+      <div class="qr-interview">
+        لماذا یدافع <span class="en">Stallman</span> على تسمیة <span class="en">GNU/Linux</span>؟ — لأن أغلب مكونات النظام (المكتبات، الأدوات، المترجم) من مشروع <span class="en">GNU</span>.
+      </div>
+      <div class="qr-interview">
+        ما هو <span class="en">POSIX</span> ولماذا ھو مهم في <span class="en">Embedded Linux</span>؟ — یضمن أن الكود المكتوب لنظام ینتقل إلى آخر بدون تعدیل.
+      </div>
+    </div>
+
+    <!-- Memory Tips -->
+    <div class="qr-section">
+      <div class="qr-section-title">💡 نصائح للحفظ</div>
+      <div class="qr-tip">
+        <span class="inline-bold">GNU</span> = <span class="en">GNU's Not Unix</span> — الاسم نفسه یذكرك أنه مشروع مختلف عن <span class="en">Unix</span> لكنه متوافق معه.
+      </div>
+      <div class="qr-tip">
+        <span class="inline-bold">POSIX</span> = مستند قانون مثل "الدستور" — الأنظمة تتبعه لكنه لیس نظاماً بحد ذاته.
+      </div>
+      <div class="qr-tip">
+        <span class="inline-bold">Kernel</span> = "النواة" — قلب النظام الذي یتحكم بالعتاد مباشرة.
+      </div>
+      <div class="qr-tip">
+        <span class="inline-bold">gcc</span> صغیر = مترجم واحد، <span class="inline-bold">GCC</span> كبیر = مجموعة كاملة من المترجمات.
+      </div>
+      <div class="qr-tip">
+        تذكر التسلسل: <span class="en">Multics → Unix → C Language → POSIX → GNU → Linux → GNU/Linux</span>.
+      </div>
+    </div>
+
+    <!-- Exam Tips -->
+    <div class="qr-section">
+      <div class="qr-section-title">📊 نصائح للامتحانات</div>
+      <div class="qr-tip">
+        تركّز الامتحانات على الفرق بین <span class="en">Unix-Compliant</span> و <span class="en">Unix-like</span> — تذكر أن <span class="en">macOS</span> مطابق و <span class="en">Linux</span> شبیھ.
+      </div>
+      <div class="qr-tip">
+        مھام نظام التشغیل الأربعة: إدارة الذاكرة، إدارة الملفات، إدارة العملیات والجدولة، الشبكات والأمان.
+      </div>
+      <div class="qr-tip">
+        components مشروع <span class="en">GNU</span> الثلاثة: <span class="en">glibc</span> + <span class="en">Coreutils</span> + <span class="en">GCC</span>.
+      </div>
+      <div class="qr-tip">
+        في <span class="en">Embedded Linux</span> قد نستبدل: <span class="en">glibc → musl</span>، <span class="en">Coreutils → BusyBox</span>، <span class="en">GCC → Clang</span>.
+      </div>
+    </div>
+
+    <!-- Revision Checklist -->
+    <div class="qr-section">
+      <div class="qr-section-title">✅ قائمة التحقق من المراجعة</div>
+      <ul class="qr-checklist" id="checklist">
+        <li onclick="this.classList.toggle('checked')">أفهم دور نظام التشغیل كوسیط بین التطبیقات والعتاد</li>
+        <li onclick="this.classList.toggle('checked')">أستطيع شرح مھام نظام التشغیل الأربعة بالتفصیل</li>
+        <li onclick="this.classList.toggle('checked')">أفهم لماذا ابتُكرت لغة C وما مشكلة Assembly</li>
+        <li onclick="this.classList.toggle('checked')">أعرف ما هو POSIX ولماذا وُجد</li>
+        <li onclick="this.classList.toggle('checked')">أستطيع ذكر فصول POSIX الثلاثة الرئيسیة</li>
+        <li onclick="this.classList.toggle('checked')">أفهم معنى Portability وأمثلة علیه</li>
+        <li onclick="this.classList.toggle('checked')">أعرف ما هو مشروع GNU ومكوناته الثلاثة</li>
+        <li onclick="this.classList.toggle('checked')">أفهم كيف تعمل رخصة GPL</li>
+        <li onclick="this.classList.toggle('checked')">أستطيع شرح قصة Linux Kernel و Linus Torvalds</li>
+        <li onclick="this.classList.toggle('checked')">أفهم الفرق بین Kernel Space و User Space</li>
+        <li onclick="this.classList.toggle('checked')">أعرف الفرق بین Unix-Compliant و Unix-like</li>
+        <li onclick="this.classList.toggle('checked')">أفهم لماذا یقول Stallman GNU/Linux وليس Linux فقط</li>
+        <li onclick="this.classList.toggle('checked')">أعرف البدائل المستخدمة في Embedded Linux بدلاً من GNU</li>
+        <li onclick="this.classList.toggle('checked')">أستطيع تمییز gcc عن GCC</li>
+        <li onclick="this.classList.toggle('checked')">أعرف المتطلبات العتادیة للدورة</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="version-info">Embedded Linux & Yocto — Golden Course v1.0</span>
+    <span class="page-num">10</span>
+  </div>
+</div>
+
+</body>
+</html>

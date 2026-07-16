@@ -1,0 +1,2374 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embedded Linux & Yocto — الدرس الرابع: Shell Utilities & File System Internals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800;900&family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0F4C81;
+    --primary-light: #1a6bb5;
+    --primary-dark: #0a3559;
+    --secondary: #14B8A6;
+    --secondary-light: #2dd4bf;
+    --accent: #F59E0B;
+    --accent-light: #fbbf24;
+    --success: #16A34A;
+    --success-light: #22c55e;
+    --warning: #EA580C;
+    --warning-light: #f97316;
+    --danger: #DC2626;
+    --danger-light: #ef4444;
+    --bg: #F8FAFC;
+    --bg-alt: #F1F5F9;
+    --card: #FFFFFF;
+    --text: #1E293B;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --border-light: #F1F5F9;
+    --code-bg: #1E293B;
+    --code-text: #E2E8F0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @page {
+    size: A4;
+    margin: 2cm;
+  }
+
+  body {
+    font-family: 'Cairo', 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 12.5pt;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+    direction: rtl;
+    text-align: justify;
+  }
+
+  .page-container {
+    max-width: 210mm;
+    margin: 0 auto;
+    background: var(--card);
+    box-shadow: 0 0 60px rgba(15,76,129,0.08);
+  }
+
+  /* ─── Header ─── */
+  .running-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    padding: 10px 2cm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 9.5pt;
+    font-weight: 500;
+    direction: rtl;
+    box-shadow: 0 2px 20px rgba(15,76,129,0.2);
+  }
+  .running-header .header-course {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    opacity: 0.9;
+  }
+  .running-header .header-chapter {
+    font-weight: 600;
+    opacity: 0.95;
+  }
+  .running-header .header-divider {
+    width: 1px;
+    height: 18px;
+    background: rgba(255,255,255,0.3);
+    margin: 0 16px;
+  }
+
+  /* ─── Footer ─── */
+  .running-footer {
+    background: var(--bg-alt);
+    border-top: 1px solid var(--border);
+    padding: 8px 2cm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 8.5pt;
+    color: var(--text-muted);
+    direction: rtl;
+  }
+  .running-footer .footer-version {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+  }
+
+  /* ─── Main Content ─── */
+  .content {
+    padding: 2cm;
+    min-height: calc(297mm - 4cm - 80px);
+  }
+
+  /* ─── Table of Contents ─── */
+  .toc-container {
+    padding: 40px 0;
+  }
+  .toc-title {
+    font-size: 24pt;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+  .toc-subtitle {
+    font-size: 12pt;
+    color: var(--text-secondary);
+    margin-bottom: 36px;
+    font-weight: 400;
+  }
+  .toc-divider {
+    height: 4px;
+    width: 80px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 2px;
+    margin-bottom: 36px;
+  }
+  .toc-list {
+    list-style: none;
+    padding: 0;
+  }
+  .toc-item {
+    display: flex;
+    align-items: baseline;
+    padding: 10px 0;
+    border-bottom: 1px dotted var(--border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    color: inherit;
+  }
+  .toc-item:hover {
+    background: var(--bg-alt);
+    padding-right: 12px;
+    border-radius: 6px;
+  }
+  .toc-number {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    color: var(--primary);
+    margin-left: 14px;
+    font-size: 11pt;
+    min-width: 32px;
+    direction: ltr;
+    text-align: left;
+  }
+  .toc-text {
+    flex: 1;
+    font-weight: 600;
+    font-size: 12pt;
+    color: var(--text);
+  }
+  .toc-text-en {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+    font-weight: 500;
+    color: var(--secondary);
+    font-size: 10.5pt;
+    margin-right: 8px;
+  }
+  .toc-page {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    color: var(--text-muted);
+    direction: ltr;
+    font-size: 10pt;
+  }
+  .toc-sub {
+    padding-right: 46px;
+  }
+  .toc-sub .toc-text {
+    font-weight: 400;
+    font-size: 11pt;
+    color: var(--text-secondary);
+  }
+  .toc-sub .toc-number {
+    font-weight: 500;
+    color: var(--secondary);
+  }
+
+  /* ─── Chapter Opening ─── */
+  .chapter-opening {
+    padding: 50px 0 40px;
+    border-bottom: 3px solid var(--border);
+    margin-bottom: 40px;
+    position: relative;
+  }
+  .chapter-number-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    padding: 6px 20px;
+    border-radius: 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 10pt;
+    font-weight: 700;
+    letter-spacing: 1px;
+    direction: ltr;
+    margin-bottom: 20px;
+  }
+  .chapter-icon {
+    font-size: 20pt;
+    display: block;
+    margin-bottom: 16px;
+  }
+  .chapter-title {
+    font-size: 24pt;
+    font-weight: 900;
+    color: var(--primary);
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+  .chapter-title-en {
+    font-family: 'Inter', sans-serif;
+    font-size: 16pt;
+    font-weight: 700;
+    color: var(--secondary);
+    direction: ltr;
+    unicode-bidi: embed;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .chapter-subtitle {
+    font-size: 12pt;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-bottom: 20px;
+    line-height: 1.8;
+  }
+  .chapter-divider {
+    height: 4px;
+    width: 120px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+    border-radius: 2px;
+    margin-bottom: 24px;
+  }
+  .chapter-intro {
+    font-size: 12pt;
+    color: var(--text-secondary);
+    line-height: 1.9;
+    background: var(--bg-alt);
+    padding: 20px 24px;
+    border-radius: 12px;
+    border-right: 4px solid var(--primary);
+  }
+  .trainer-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-size: 10pt;
+    color: var(--text-secondary);
+    margin-top: 16px;
+  }
+  .trainer-info .trainer-label {
+    font-weight: 700;
+    color: var(--primary);
+  }
+  .trainer-info .trainer-role {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+    color: var(--secondary);
+    font-weight: 600;
+    font-size: 9.5pt;
+  }
+
+  /* ─── Animated Chapter Overview ─── */
+  .chapter-overview {
+    background: linear-gradient(135deg, #f0f9ff 0%, #f0fdfa 50%, #fffbeb 100%);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px;
+    margin: 0 0 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .chapter-overview::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(20,184,166,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .overview-title {
+    font-size: 14pt;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .overview-subtitle {
+    font-size: 10pt;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+    font-weight: 400;
+  }
+  .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+  }
+  .overview-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  .overview-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(15,76,129,0.1);
+    border-color: var(--secondary);
+  }
+  .overview-card-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 28pt;
+    font-weight: 800;
+    color: var(--border);
+    line-height: 1;
+    margin-bottom: 8px;
+    direction: ltr;
+  }
+  .overview-card-icon {
+    font-size: 26pt;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .overview-card-title {
+    font-size: 10.5pt;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+    line-height: 1.5;
+  }
+  .overview-card-title-en {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--secondary);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .overview-card-desc {
+    font-size: 9pt;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .overview-flow-arrows {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    margin: 20px 0 0;
+    direction: ltr;
+  }
+  .overview-flow-arrows .flow-arrow {
+    font-size: 16pt;
+    color: var(--secondary);
+    animation: flowPulse 2s ease-in-out infinite;
+  }
+  .overview-flow-arrows .flow-arrow:nth-child(2) { animation-delay: 0.3s; }
+  .overview-flow-arrows .flow-arrow:nth-child(3) { animation-delay: 0.6s; }
+  .overview-flow-arrows .flow-arrow:nth-child(4) { animation-delay: 0.9s; }
+  .overview-flow-arrows .flow-arrow:nth-child(5) { animation-delay: 1.2s; }
+
+  @keyframes flowPulse {
+    0%, 100% { opacity: 0.3; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.1); }
+  }
+
+  /* ─── Section Headings ─── */
+  .section {
+    margin: 44px 0 32px;
+    scroll-margin-top: 70px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--border);
+  }
+  .section-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 16pt;
+    font-weight: 800;
+    direction: ltr;
+    flex-shrink: 0;
+  }
+  .section-title {
+    font-size: 20pt;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1.3;
+  }
+  .section-title-en {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+    font-size: 13pt;
+    font-weight: 700;
+    color: var(--secondary);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .subsection {
+    margin: 32px 0 20px;
+    scroll-margin-top: 70px;
+  }
+  .subsection-title {
+    font-size: 17pt;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .subsection-title .sub-icon {
+    font-size: 18pt;
+  }
+
+  .sub-subsection {
+    margin: 24px 0 14px;
+  }
+  .sub-subsection-title {
+    font-size: 14pt;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+    padding-right: 14px;
+    border-right: 3px solid var(--secondary);
+  }
+
+  /* ─── Paragraphs ─── */
+  .body-text {
+    font-size: 12.5pt;
+    line-height: 1.8;
+    color: var(--text);
+    margin-bottom: 14px;
+    text-align: justify;
+  }
+  .body-text .en-term {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+    font-weight: 600;
+    color: var(--secondary);
+    font-size: 11.5pt;
+  }
+
+  /* ─── Callout Boxes ─── */
+  .callout {
+    border-radius: 12px;
+    margin: 20px 0;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  .callout-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    font-size: 11pt;
+    font-weight: 700;
+  }
+  .callout-header .callout-icon {
+    font-size: 16pt;
+  }
+  .callout-body {
+    padding: 16px 20px;
+    font-size: 11.5pt;
+    line-height: 1.8;
+  }
+  .callout-body .en-term {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+    font-weight: 600;
+    color: var(--secondary);
+  }
+
+  /* Blue - Concept */
+  .callout-concept {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+  }
+  .callout-concept .callout-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+  }
+  .callout-concept .callout-body {
+    color: var(--text);
+    background: #f8fbff;
+  }
+
+  /* Green - Key Takeaway */
+  .callout-takeaway {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+  }
+  .callout-takeaway .callout-header {
+    background: linear-gradient(135deg, var(--success), var(--success-light));
+    color: white;
+  }
+  .callout-takeaway .callout-body {
+    color: var(--text);
+    background: #f8fff9;
+  }
+
+  /* Orange - Tip */
+  .callout-tip {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+  }
+  .callout-tip .callout-header {
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    color: white;
+  }
+  .callout-tip .callout-body {
+    color: var(--text);
+    background: #fffef8;
+  }
+
+  /* Red - Important */
+  .callout-important {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+  }
+  .callout-important .callout-header {
+    background: linear-gradient(135deg, var(--danger), var(--danger-light));
+    color: white;
+  }
+  .callout-important .callout-body {
+    color: var(--text);
+    background: #fff8f8;
+  }
+
+  /* Gray - Definition */
+  .callout-definition {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+  }
+  .callout-definition .callout-header {
+    background: linear-gradient(135deg, #64748b, #94a3b8);
+    color: white;
+  }
+  .callout-definition .callout-body {
+    color: var(--text);
+    background: #fafbfc;
+  }
+
+  /* Purple - Deep Understanding */
+  .callout-deep {
+    background: #faf5ff;
+    border: 1px solid #e9d5ff;
+  }
+  .callout-deep .callout-header {
+    background: linear-gradient(135deg, #7c3aed, #a78bfa);
+    color: white;
+  }
+  .callout-deep .callout-body {
+    color: var(--text);
+    background: #fcf8ff;
+  }
+
+  /* Dark - Practical Example */
+  .callout-practical {
+    background: var(--code-bg);
+    border: 1px solid #334155;
+  }
+  .callout-practical .callout-header {
+    background: #0f172a;
+    color: var(--secondary-light);
+  }
+  .callout-practical .callout-body {
+    color: var(--code-text);
+    background: var(--code-bg);
+  }
+
+  /* Warning - Orange */
+  .callout-warning {
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+  }
+  .callout-warning .callout-header {
+    background: linear-gradient(135deg, var(--warning), var(--warning-light));
+    color: white;
+  }
+  .callout-warning .callout-body {
+    color: var(--text);
+    background: #fffcf8;
+  }
+
+  /* ─── Quick Review ─── */
+  .review-remember {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 18px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .review-remember .rr-icon {
+    font-size: 18pt;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .review-remember .rr-text {
+    font-size: 11.5pt;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  .quick-review-section {
+    margin: 50px 0 20px;
+    padding-top: 30px;
+    border-top: 3px solid var(--primary);
+  }
+  .quick-review-title {
+    font-size: 20pt;
+    font-weight: 900;
+    color: var(--primary);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .quick-review-subtitle {
+    font-size: 10.5pt;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+  }
+
+  .review-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .review-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    font-size: 12pt;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+  }
+  .review-card-body {
+    padding: 18px 20px;
+    font-size: 11.5pt;
+    line-height: 1.8;
+  }
+  .review-card-body ul {
+    padding-right: 20px;
+    margin: 0;
+  }
+  .review-card-body li {
+    margin-bottom: 8px;
+  }
+  .review-card-body li::marker {
+    color: var(--secondary);
+  }
+
+  .review-concepts { background: #f0f9ff; }
+  .review-concepts .review-card-header { color: var(--primary); background: #e0f2fe; }
+  .review-definitions { background: #faf5ff; }
+  .review-definitions .review-card-header { color: #7c3aed; background: #f3e8ff; }
+  .review-mistakes { background: #fef2f2; }
+  .review-mistakes .review-card-header { color: var(--danger); background: #fee2e2; }
+  .review-interview { background: #fffbeb; }
+  .review-interview .review-card-header { color: var(--accent); background: #fef3c7; }
+  .review-memory { background: #f0fdf4; }
+  .review-memory .review-card-header { color: var(--success); background: #dcfce7; }
+  .review-exam { background: #fff7ed; }
+  .review-exam .review-card-header { color: var(--warning); background: #ffedd5; }
+  .review-checklist { background: #f8fafc; }
+  .review-checklist .review-card-header { color: #475569; background: #e2e8f0; }
+
+  .checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px dotted var(--border);
+    cursor: pointer;
+  }
+  .checklist-item:last-child { border-bottom: none; }
+  .checklist-box {
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+    font-size: 12pt;
+    color: transparent;
+  }
+  .checklist-item.checked .checklist-box {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+  }
+  .checklist-item.checked .checklist-text {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+  .checklist-text {
+    font-size: 11.5pt;
+    line-height: 1.6;
+    transition: all 0.2s ease;
+  }
+
+  /* ─── Code Blocks ─── */
+  .code-block {
+    background: var(--code-bg);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    margin: 18px 0;
+    overflow: hidden;
+    direction: ltr;
+    text-align: left;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  .code-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 18px;
+    background: #0f172a;
+    border-bottom: 1px solid #334155;
+  }
+  .code-block-lang {
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--secondary-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .code-block-dots {
+    display: flex;
+    gap: 6px;
+  }
+  .code-block-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .code-block-dots span:nth-child(1) { background: #ef4444; }
+  .code-block-dots span:nth-child(2) { background: #f59e0b; }
+  .code-block-dots span:nth-child(3) { background: #22c55e; }
+  .code-block-body {
+    padding: 18px;
+    overflow-x: auto;
+  }
+  .code-block-body pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5pt;
+    line-height: 1.7;
+    color: var(--code-text);
+    margin: 0;
+    white-space: pre;
+    direction: ltr;
+    text-align: left;
+  }
+  .code-line-numbers {
+    display: inline-block;
+    width: 32px;
+    text-align: right;
+    padding-right: 16px;
+    margin-right: 16px;
+    border-right: 1px solid #334155;
+    color: #475569;
+    user-select: none;
+    font-size: 9.5pt;
+  }
+  .code-keyword { color: #c084fc; }
+  .code-string { color: #34d399; }
+  .code-comment { color: #64748b; font-style: italic; }
+  .code-function { color: #60a5fa; }
+  .code-variable { color: #fbbf24; }
+  .code-operator { color: #f472b6; }
+  .code-number { color: #fb923c; }
+  .code-flag { color: #38bdf8; }
+
+  .inline-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5pt;
+    background: #f1f5f9;
+    color: var(--primary);
+    padding: 2px 8px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    direction: ltr;
+    unicode-bidi: embed;
+    white-space: nowrap;
+  }
+
+  /* ─── Tables ─── */
+  .table-container {
+    margin: 22px 0;
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  }
+  .table-title {
+    font-size: 11pt;
+    font-weight: 700;
+    color: var(--primary);
+    padding: 12px 20px;
+    background: var(--bg-alt);
+    border-bottom: 1px solid var(--border);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    direction: rtl;
+  }
+  thead th {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    padding: 14px 18px;
+    font-size: 10.5pt;
+    font-weight: 700;
+    text-align: right;
+    white-space: nowrap;
+  }
+  thead th:first-child {
+    border-radius: 0;
+  }
+  thead th:last-child {
+    border-radius: 0;
+  }
+  tbody td {
+    padding: 12px 18px;
+    font-size: 11pt;
+    line-height: 1.7;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: top;
+  }
+  tbody tr:nth-child(even) {
+    background: #f8fafc;
+  }
+  tbody tr:nth-child(odd) {
+    background: white;
+  }
+  tbody tr:hover {
+    background: #f0f9ff;
+  }
+  .table-en {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+    font-weight: 600;
+    color: var(--secondary);
+    font-size: 10pt;
+  }
+  .table-code {
+    font-family: 'JetBrains Mono', monospace;
+    direction: ltr;
+    unicode-bidi: embed;
+    font-size: 10pt;
+    color: var(--primary);
+    background: #f1f5f9;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* ─── Technical Diagrams ─── */
+  .diagram-container {
+    margin: 24px 0;
+    padding: 28px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    direction: ltr;
+    text-align: center;
+  }
+  .diagram-title {
+    font-family: 'Cairo', sans-serif;
+    direction: rtl;
+    text-align: right;
+    font-size: 12pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border);
+  }
+  .diagram-layers {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .diagram-layer {
+    padding: 14px 40px;
+    border-radius: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12pt;
+    font-weight: 700;
+    min-width: 280px;
+    text-align: center;
+    position: relative;
+  }
+  .diagram-layer-app {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    color: var(--primary);
+    border: 2px solid #93c5fd;
+  }
+  .diagram-layer-syscall {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    color: #92400e;
+    border: 2px solid #fbbf24;
+    padding: 10px 40px;
+    font-size: 10.5pt;
+  }
+  .diagram-layer-kernel {
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    color: #166534;
+    border: 2px solid #4ade80;
+  }
+  .diagram-layer-hw {
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    color: #334155;
+    border: 2px solid #94a3b8;
+  }
+  .diagram-arrow {
+    font-size: 18pt;
+    color: var(--text-muted);
+    line-height: 1;
+    padding: 4px 0;
+  }
+
+  /* File System Diagram */
+  .fs-diagram {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin: 20px 0;
+    direction: ltr;
+  }
+  .fs-block {
+    border-radius: 12px;
+    padding: 22px 18px;
+    text-align: center;
+    border: 2px solid;
+    transition: transform 0.2s ease;
+  }
+  .fs-block:hover {
+    transform: translateY(-3px);
+  }
+  .fs-block-icon {
+    font-size: 28pt;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .fs-block-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 13pt;
+    font-weight: 800;
+    margin-bottom: 4px;
+    direction: ltr;
+  }
+  .fs-block-sub {
+    font-family: 'Inter', sans-serif;
+    font-size: 9.5pt;
+    font-weight: 600;
+    direction: ltr;
+    opacity: 0.7;
+    margin-bottom: 10px;
+  }
+  .fs-block-desc {
+    font-family: 'Cairo', sans-serif;
+    direction: rtl;
+    font-size: 10pt;
+    line-height: 1.6;
+  }
+  .fs-super { background: #fffbeb; border-color: #fbbf24; }
+  .fs-super .fs-block-title { color: #92400e; }
+  .fs-inode { background: #f0fdf4; border-color: #4ade80; }
+  .fs-inode .fs-block-title { color: #166534; }
+  .fs-data { background: #f0f9ff; border-color: #60a5fa; }
+  .fs-data .fs-block-title { color: var(--primary); }
+
+  /* Shell Workflow Diagram */
+  .workflow-diagram {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 20px 0;
+    direction: ltr;
+  }
+  .workflow-step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 22px;
+    min-width: 320px;
+    text-align: left;
+  }
+  .workflow-step-num {
+    width: 30px;
+    height: 30px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 12pt;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .workflow-step-text {
+    font-family: 'Cairo', sans-serif;
+    direction: rtl;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    color: var(--text);
+  }
+  .workflow-step-text .en-term {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+    font-weight: 600;
+    color: var(--secondary);
+  }
+  .workflow-arrow-down {
+    font-size: 16pt;
+    color: var(--secondary);
+    padding: 3px 0;
+    animation: flowPulse 2s ease-in-out infinite;
+  }
+
+  /* ─── Bullet Lists ─── */
+  .bullet-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0;
+  }
+  .bullet-list li {
+    position: relative;
+    padding-right: 24px;
+    padding-bottom: 10px;
+    font-size: 12pt;
+    line-height: 1.8;
+  }
+  .bullet-list li::before {
+    content: '';
+    position: absolute;
+    right: 6px;
+    top: 10px;
+    width: 8px;
+    height: 8px;
+    background: var(--secondary);
+    border-radius: 50%;
+  }
+  .numbered-list {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0;
+    counter-reset: item;
+  }
+  .numbered-list li {
+    position: relative;
+    padding-right: 36px;
+    padding-bottom: 10px;
+    font-size: 12pt;
+    line-height: 1.8;
+    counter-increment: item;
+  }
+  .numbered-list li::before {
+    content: counter(item);
+    position: absolute;
+    right: 0;
+    top: 2px;
+    width: 24px;
+    height: 24px;
+    background: var(--primary);
+    color: white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 10pt;
+    font-weight: 700;
+  }
+
+  /* ─── Fast Review Strip ─── */
+  .fast-review {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 20px 0;
+    color: white;
+  }
+  .fast-review-title {
+    font-size: 11pt;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--secondary-light);
+  }
+  .fast-review-items {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .fast-review-item {
+    background: rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 12px 14px;
+    backdrop-filter: blur(4px);
+  }
+  .fast-review-item-label {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    font-size: 10pt;
+    font-weight: 700;
+    color: var(--accent-light);
+    margin-bottom: 4px;
+  }
+  .fast-review-item-value {
+    font-size: 10pt;
+    line-height: 1.6;
+    opacity: 0.95;
+  }
+
+  /* ─── Comparison Table Enhanced ─── */
+  .comparison-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 18px 0;
+  }
+  .comparison-side {
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    border: 2px solid;
+  }
+  .comparison-side-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 14pt;
+    font-weight: 800;
+    direction: ltr;
+    margin-bottom: 4px;
+  }
+  .comparison-side-desc {
+    font-size: 10pt;
+    line-height: 1.5;
+  }
+  .comparison-correct {
+    background: #f0fdf4;
+    border-color: #4ade80;
+  }
+  .comparison-correct .comparison-side-title { color: #166534; }
+  .comparison-wrong {
+    background: #fef2f2;
+    border-color: #f87171;
+  }
+  .comparison-wrong .comparison-side-title { color: #991b1b; }
+
+  /* ─── End Mark ─── */
+  .end-mark {
+    text-align: center;
+    margin: 40px 0 20px;
+    padding: 20px;
+    color: var(--text-muted);
+    font-size: 10pt;
+  }
+  .end-mark .end-line {
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 2px;
+    margin: 0 auto 12px;
+  }
+
+  /* ─── Responsive ─── */
+  @media (max-width: 768px) {
+    .content { padding: 1.5cm; }
+    .running-header, .running-footer { padding: 8px 1.5cm; }
+    .overview-grid { grid-template-columns: 1fr; }
+    .fast-review-items { grid-template-columns: 1fr; }
+    .fs-diagram { grid-template-columns: 1fr; }
+    .comparison-header { grid-template-columns: 1fr; }
+  }
+
+  @media print {
+    .running-header { position: static; }
+    .callout, .table-container, .code-block, .diagram-container {
+      break-inside: avoid;
+    }
+    body { background: white; }
+    .page-container { box-shadow: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-container">
+
+  <!-- ━━━ Running Header ━━━ -->
+  <div class="running-header">
+    <span class="header-course">Embedded Linux & Yocto</span>
+    <span class="header-divider"></span>
+    <span class="header-chapter">الدرس الرابع: Shell Utilities & File System Internals</span>
+  </div>
+
+  <!-- ━━━ Content ━━━ -->
+  <div class="content">
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- TABLE OF CONTENTS                          -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="toc-container" id="toc">
+      <div class="toc-title">فهرس المحتويات</div>
+      <div class="toc-subtitle">Table of Contents</div>
+      <div class="toc-divider"></div>
+
+      <ul class="toc-list">
+        <li>
+          <a class="toc-item" href="#chapter-opening">
+            <span class="toc-number">04</span>
+            <span class="toc-text">الدرس الرابع: Shell Utilities & File System Internals</span>
+            <span class="toc-page">2</span>
+          </a>
+        </li>
+        <li>
+          <a class="toc-item toc-sub" href="#section-1">
+            <span class="toc-number">4.1</span>
+            <span class="toc-text">البنية الداخلية لنظام الملفات <span class="toc-text-en">File System Internals</span></span>
+            <span class="toc-page">3</span>
+          </a>
+        </li>
+        <li>
+          <a class="toc-item toc-sub" href="#section-1-1">
+            <span class="toc-number">4.1.1</span>
+            <span class="toc-text">Data Blocks — بلوكس داتا</span>
+            <span class="toc-page">3</span>
+          </a>
+        </li>
+        <li>
+          <a class="toc-item toc-sub" href="#section-1-2">
+            <span class="toc-number">4.1.2</span>
+            <span class="toc-text">Super Block — بلوك سوبر</span>
+            <span class="toc-page">4</span>
+          </a>
+        </li>
+        <li>
+          <a class="toc-item toc-sub" href="#section-1-3">
+            <span class="toc-number">4.1.3</span>
+            <span class="toc-text">Inode — نود الآي</span>
+            <span class="toc-page">4</span>
+          </a>
+        </li>
+        <li>
+          <a class="toc-item toc-sub" href="#section-1-4">
+            <span class="toc-number">4.1.4</span>
+            <span class="toc-text">فلسفة "كل شيء ملف" <span class="toc-text-en">Everything is a file</span></span>
+            <span class="toc-page">5</span>
+          </a>
+        </li>
+        <li>
+          <a class="toc-item toc-sub" href="#section-2">
+            <span class="toc-number">4.2</span>
+            <span class="toc-text">المتغيرات في الشل <span class="toc-text-en">Shell Variables</span></span>
+            <span class="toc-page">6</span>
+          </a>
+        </li>
+        <li>
+          <a class="toc-item toc-sub" href="#section-3">
+            <span class="toc-number">4.3</span>
+            <span class="toc-text">أوامر الطباعة <span class="toc-text-en">echo & printf</span></span>
+            <span class="toc-page">8</span>
+          </a>
+        </li>
+        <li>
+          <a class="toc-item toc-sub" href="#section-4">
+            <span class="toc-number">4.4</span>
+            <span class="toc-text">الرمز الخاص ($) واستخداماته المتقدمة</span>
+            <span class="toc-page">9</span>
+          </a>
+        </li>
+        <li>
+          <a class="toc-item toc-sub" href="#section-5">
+            <span class="toc-number">4.5</span>
+            <span class="toc-text">تشغيل عدة أوامر معاً <span class="toc-text-en">Command Separators</span></span>
+            <span class="toc-page">11</span>
+          </a>
+        </li>
+        <li>
+          <a class="toc-item toc-sub" href="#section-6">
+            <span class="toc-number">4.6</span>
+            <span class="toc-text">حالة الخروج <span class="toc-text-en">Exit Status / Return Value</span></span>
+            <span class="toc-page">13</span>
+          </a>
+        </li>
+        <li>
+          <a class="toc-item" href="#quick-review">
+            <span class="toc-number">★</span>
+            <span class="toc-text">مراجعة سريعة <span class="toc-text-en">Quick Review</span></span>
+            <span class="toc-page">15</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- CHAPTER OPENING                             -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="chapter-opening" id="chapter-opening">
+      <span class="chapter-number-badge">LESSON 04</span>
+      <span class="chapter-icon">🐚</span>
+      <div class="chapter-title">الدرس الرابع: Shell Utilities & File System Internals</div>
+      <span class="chapter-title-en">Shell Utilities & File System Internals (Part 2)</span>
+      <div class="chapter-subtitle">المتغيرات في الشل، البنية الداخلية لنظام الملفات، الرموز الخاصة، الطباعة، وحالة الخروج للبرامج</div>
+      <div class="chapter-divider"></div>
+      <div class="chapter-intro">
+        هذا الدرس يعتمد على ما تعلمناه سابقاً بربط المفاهيم السابقة مثل بنية لينكس <span class="en-term">Linux Architecture</span> ونداءات النظام <span class="en-term">System Calls</span>، ثم يتعمق في كيفية تعامل <span class="en-term">Shell</span> مع المدخلات والبرامج. البنية الداخلية لنظام الملفات <span class="en-term">File System Internals</span>.
+      </div>
+      <div class="trainer-info">
+        <span class="trainer-label">المدرب:</span>
+        <span>سالم بالحاج طلال</span>
+        <span style="margin: 0 6px; color: var(--border);">|</span>
+        <span class="trainer-role">Embedded Linux Architect</span>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- ANIMATED CHAPTER OVERVIEW                   -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="chapter-overview">
+      <div class="overview-title">🗺️ خريطة الدرس التفاعلية</div>
+      <div class="overview-subtitle">مسار التعلم — نظرة شاملة على مواضيع هذا الدرس في 30 ثانية</div>
+
+      <div class="overview-grid">
+        <div class="overview-card">
+          <div class="overview-card-num">01</div>
+          <span class="overview-card-icon">💾</span>
+          <div class="overview-card-title">البنية الداخلية لنظام الملفات</div>
+          <span class="overview-card-title-en">File System Internals</span>
+          <div class="overview-card-desc">Data Blocks — Super Block — Inode — فلسفة Everyting is a file</div>
+        </div>
+        <div class="overview-card">
+          <div class="overview-card-num">02</div>
+          <span class="overview-card-icon">⚙️</span>
+          <div class="overview-card-title">المتغيرات في الشل</div>
+          <span class="overview-card-title-en">Shell Variables</span>
+          <div class="overview-card-desc">إنشاء المتغيرات — لا أنواع بيانات — قاعدة المسافات الحاسمة</div>
+        </div>
+        <div class="overview-card">
+          <div class="overview-card-num">03</div>
+          <span class="overview-card-icon">🖥️</span>
+          <div class="overview-card-title">أوامر الطباعة</div>
+          <span class="overview-card-title-en">echo & printf</span>
+          <div class="overview-card-desc">الطباعة البسيطة — التنسيق الدقيق — الرموز الخاصة</div>
+        </div>
+        <div class="overview-card">
+          <div class="overview-card-num">04</div>
+          <span class="overview-card-icon">💲</span>
+          <div class="overview-card-title">الرمز الخاص $</div>
+          <span class="overview-card-title-en">Advanced $ Usage</span>
+          <div class="overview-card-desc">استدعاء القيم — الحماية — القيم الافتراضية — Command Substitution</div>
+        </div>
+        <div class="overview-card">
+          <div class="overview-card-num">05</div>
+          <span class="overview-card-icon">🔗</span>
+          <div class="overview-card-title">فواصل الأوامر</div>
+          <span class="overview-card-title-en">Command Separators</span>
+          <div class="overview-card-desc">; التسلسل الأعمى — && التشغيل المشروط — || النسخة الاحتياطية</div>
+        </div>
+        <div class="overview-card">
+          <div class="overview-card-num">06</div>
+          <span class="overview-card-icon">🔓</span>
+          <div class="overview-card-title">حالة الخروج</div>
+          <span class="overview-card-title-en">Exit Status</span>
+          <div class="overview-card-desc">القيمة 0 = نجاح — أي رقم آخر = خطأ — المتغير $? السري</div>
+        </div>
+      </div>
+
+      <div class="overview-flow-arrows">
+        <span class="flow-arrow">●</span>
+        <span class="flow-arrow">●</span>
+        <span class="flow-arrow">●</span>
+        <span class="flow-arrow">●</span>
+        <span class="flow-arrow">●</span>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 1: File System Internals            -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section" id="section-1">
+      <div class="section-header">
+        <span class="section-number">4.1</span>
+        <div>
+          <div class="section-title">البنية الداخلية لنظام الملفات</div>
+          <span class="section-title-en">File System Internals</span>
+        </div>
+      </div>
+
+      <p class="body-text">لفهم كيف يخزن <span class="en-term">Kernel</span> التطبيقات والملفات في وحدة التخزين <span class="en-term">Storage Device</span>، استعان المدرب بتشبيه "الأرض الزراعية".</p>
+
+      <div class="callout callout-practical">
+        <div class="callout-header">
+          <span class="callout-icon">🚀</span>
+          <span>مثال تطبيقي — كيف يتم تخزين الملفات فعلياً في الديسك؟</span>
+        </div>
+        <div class="callout-body">
+          تخيل أن وحدة التخزين هي مساحة أرض مقسمة إلى أجزاء صغيرة تسمى قطاعات <span class="en-term">Sectors</span> أو <span class="en-term">Data Blocks</span>. التصميم الذي ينظم كيفية الكتابة في هذه الأجزاء هو نظام الملفات <span class="en-term">File System</span>.
+        </div>
+      </div>
+
+      <p class="body-text">ويتكون من ثلاثة عناصر رئيسية:</p>
+
+      <!-- File System Architecture Diagram -->
+      <div class="diagram-container">
+        <div class="diagram-title">📐 مخطط بنية نظام الملفات — File System Architecture</div>
+        <div class="fs-diagram">
+          <div class="fs-block fs-super">
+            <span class="fs-block-icon">📋</span>
+            <div class="fs-block-title">Super Block</div>
+            <div class="fs-block-sub">بلوك سوبر</div>
+            <div class="fs-block-desc">معلومات وصفية عن النظام ككل — يوجد في بداية وحدة التخزين</div>
+          </div>
+          <div class="fs-block fs-inode">
+            <span class="fs-block-icon">🏷️</span>
+            <div class="fs-block-title">Inode</div>
+            <div class="fs-block-sub">Index / Information Node — نود الآي</div>
+            <div class="fs-block-desc">هيكل بيانات يمثل أي ملف أو مجلد — يحتوي على تفاصيل الملف ومؤشرات لمواقع البيانات</div>
+          </div>
+          <div class="fs-block fs-data">
+            <span class="fs-block-icon">📦</span>
+            <div class="fs-block-title">Data Blocks</div>
+            <div class="fs-block-sub">بلوكس داتا</div>
+            <div class="fs-block-desc">المساحات الفعليية التي تُكتب وتُخزن فيها بيانات الملفات — كل بلوك له حجم معين</div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ── 4.1.1 Data Blocks ── -->
+      <div class="subsection" id="section-1-1">
+        <div class="subsection-title">
+          <span class="sub-icon">📦</span>
+          Data Blocks — بلوكس داتا
+        </div>
+        <p class="body-text">هي المساحات الفعليية التي تُكتب وتُخزن فيها بيانات الملفات. كل بلوك له حجم معين.</p>
+      </div>
+
+
+      <!-- ── 4.1.2 Super Block ── -->
+      <div class="subsection" id="section-1-2">
+        <div class="subsection-title">
+          <span class="sub-icon">📋</span>
+          Super Block — بلوك سوبر
+        </div>
+        <p class="body-text">هو بلوك خاص جداً يتواجد في بداية وحدة التخزين.</p>
+
+        <div class="callout callout-concept">
+          <div class="callout-header">
+            <span class="callout-icon">📘</span>
+            <span>مفهوم — وظيفة الـ Super Block</span>
+          </div>
+          <div class="callout-body">
+            <p style="margin-bottom:10px;"><strong>وظيفته:</strong> يحتوي على المعلومات الوصفية <span class="en-term">Metadata</span> الخاصة بنظام الملفات ككل، مثل:</p>
+            <ul class="bullet-list">
+              <li>نوع نظام الملفات</li>
+              <li>حجم الملفات</li>
+              <li>المساحة الفارغة</li>
+              <li>كيف يتعامل القرص مع <span class="en-term">Data Blocks</span></li>
+              <li>إلخ...</li>
+            </ul>
+            <p>أولاً يقرأ الكيرنل هذا البلوك ليفهم أولاً...</p>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ── 4.1.3 Inode ── -->
+      <div class="subsection" id="section-1-3">
+        <div class="subsection-title">
+          <span class="sub-icon">🏷️</span>
+          Inode — Index/Information Node — نود الآي
+        </div>
+
+        <div class="callout callout-definition">
+          <div class="callout-header">
+            <span class="callout-icon">📌</span>
+            <span>تعريف — Inode</span>
+          </div>
+          <div class="callout-body">
+            هو هيكل بيانات <span class="en-term">Data Structure</span> يمثل أي ملف أو مجلد في لينكس.
+          </div>
+        </div>
+
+        <p class="body-text"><strong>كل ملف في لينكس يملك به خاص <span class="en-term">Inode</span> فریداً رقماً <span class="en-term">Unique Number</span>.</strong></p>
+
+        <div class="callout callout-deep">
+          <div class="callout-header">
+            <span class="callout-icon">🧠</span>
+            <span>فهم عميق — محتوى الـ Inode</span>
+          </div>
+          <div class="callout-body">
+            <p style="margin-bottom:10px;"><strong>المحتوى:</strong> لا يحتوي على بيانات الملف بل على تفاصيل الملف والأهم:</p>
+            <ul class="bullet-list">
+              <li>نوعه</li>
+              <li>حجمه</li>
+              <li>صلاحياته</li>
+              <li>تاريخ إنشائه</li>
+            </ul>
+            <p style="margin-top:12px;"><strong>المؤشرات:</strong> يحتوي على مؤشرات <span class="en-term">Pointers</span> تدل على أماكن الـ <span class="en-term">Data Blocks</span> التي توجد بها البيانات الحقيقية للملف.</p>
+          </div>
+        </div>
+
+        <div class="review-remember">
+          <span class="rr-icon">✅</span>
+          <div class="rr-text">تتذكر؟ الملف في لينكس ليس كتلة واحدة، بل <span class="en-term">Inode</span> يحتوي على معلومات الملف ويشير إلى <span class="en-term">Data Blocks</span> متفرقة تحتوي على البيانات.</div>
+        </div>
+      </div>
+
+
+      <!-- ── 4.1.4 Everything is a file ── -->
+      <div class="subsection" id="section-1-4">
+        <div class="subsection-title">
+          <span class="sub-icon">📄</span>
+          فلسفة يونكس: "كل شيء ملف" — Everything is a file
+        </div>
+
+        <p class="body-text">المجلدات <span class="en-term">Directories</span> في لينكس هي حتى عن عبارة ملفات لها <span class="en-term">Inode</span> خاص.</p>
+
+        <div class="callout callout-deep">
+          <div class="callout-header">
+            <span class="callout-icon">🧠</span>
+            <span>فهم عميق — كيف يعمل المجلد؟</span>
+          </div>
+          <div class="callout-body">
+            <p style="margin-bottom:10px;"><strong>كيف يعمل المجلد؟</strong> المجلد إذن هو ملف <span class="en-term">Inode</span> نوعه "Directory" ببساطة هو فِهرس بأسماء الملفات المخزنة داخله وأرقام الـ <span class="en-term">Inodes</span> الخاصة بها.</p>
+          </div>
+        </div>
+
+        <div class="callout callout-important">
+          <div class="callout-header">
+            <span class="callout-icon">⚠️</span>
+            <span>خطأ شائع</span>
+          </div>
+          <div class="callout-body">
+            الاعتقاد بأن المجلد <span class="en-term">Directory</span> هو "صندوق" في الديسك. برمجياً، المجلد مجرد ملف نصي يحتوي على أسماء ملفات أخرى.
+          </div>
+        </div>
+      </div>
+
+      <!-- Fast Review for Section 1 -->
+      <div class="fast-review">
+        <div class="fast-review-title">⚡ مراجعة سريعة</div>
+        <div class="fast-review-items">
+          <div class="fast-review-item">
+            <div class="fast-review-item-label">Super Block</div>
+            <div class="fast-review-item-value">معلومات كاملة عن القرص</div>
+          </div>
+          <div class="fast-review-item">
+            <div class="fast-review-item-label">Inode</div>
+            <div class="fast-review-item-value">معلومات ملف محدد ومكان بياناته</div>
+          </div>
+          <div class="fast-review-item">
+            <div class="fast-review-item-label">Data Block</div>
+            <div class="fast-review-item-value">البيانات الحقيقية</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 2: Shell Variables                  -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section" id="section-2">
+      <div class="section-header">
+        <span class="section-number">4.2</span>
+        <div>
+          <div class="section-title">المتغيرات في الشل</div>
+          <span class="section-title-en">Shell Variables</span>
+        </div>
+      </div>
+
+      <p class="body-text">بما أن الـ <span class="en-term">Shell</span> هو لغة برمجة <span class="en-term">Programming Language</span> ومترجم <span class="en-term">Interpreter</span>، فإنه يدعم إنشاء المتغيرات <span class="en-term">Variables</span> لتخزين البيانات.</p>
+
+      <div class="callout callout-concept">
+        <div class="callout-header">
+          <span class="callout-icon">📘</span>
+          <span>مفهوم — كيف تعمل المتغيرات في الشل؟</span>
+        </div>
+        <div class="callout-body">
+          <p style="margin-bottom:10px;"><strong>لا يوجد نوع لها</strong> <span class="en-term">No Data Types</span> — المتغيرات في الشل ليس لها نوع (لا <span class="en-term">int, float, string</span>...)، كل شيء يُعامل مبدئياً كنص.</p>
+          <p style="margin-bottom:10px;"><strong>طريقة التعريف:</strong> نكتب اسم المتغير متبوعاً بعلامة التساوي <span class="inline-code">=</span> ثم القيمة <span class="en-term">Value</span>.</p>
+        </div>
+      </div>
+
+      <div class="callout callout-important">
+        <div class="callout-header">
+          <span class="callout-icon">⚠️</span>
+          <span>قاعدة جداً مهمة — المسافات</span>
+        </div>
+        <div class="callout-body">
+          <p style="margin-bottom:12px;">يجب ألا توجد أي مسافة <span class="en-term">Space</span> قبل أو بعد علامة التساوي <span class="inline-code">=</span>.</p>
+
+          <div class="comparison-header">
+            <div class="comparison-side comparison-correct">
+              <div class="comparison-side-title">✅ الكتابة الصحيحة</div>
+              <div class="comparison-side-desc"><span class="table-code">NAME=techleef</span></div>
+            </div>
+            <div class="comparison-side comparison-wrong">
+              <div class="comparison-side-title">❌ الكتابة الخاطئة</div>
+              <div class="comparison-side-desc"><span class="table-code">NAME = techleef</span></div>
+            </div>
+          </div>
+
+          <p style="margin-top:14px;"><strong>لماذا؟</strong> إذا تركت مسافة، الشل سيحلل السطور بناءً على المسافات <span class="en-term">Spaces</span>، سيعتبر أن الكلمة الأولى NAME هي أمر <span class="en-term">Command</span>، وأن علامة <span class="inline-code">=</span> هي خيار <span class="en-term">Option</span>، وأن techleef هو معامل <span class="en-term">Argument</span>. ولأنه لا يوجد أمر اسمه NAME، سيظهر لك خطأ!</p>
+        </div>
+      </div>
+
+      <div class="review-remember">
+        <span class="rr-icon">✅</span>
+        <div class="rr-text">تتذكر؟ إياك ووضع مسافات حول علامة التساوي عند تعريف المتغيرات في سطر أوامر لينكس.</div>
+      </div>
+
+      <div class="callout callout-important">
+        <div class="callout-header">
+          <span class="callout-icon">⚠️</span>
+          <span>خطأ شائع</span>
+        </div>
+        <div class="callout-body">
+          التعود بمسافات على تعريف المتغير (مثل لغات البرمجة الأخرى C أو Python).
+        </div>
+      </div>
+
+      <!-- Fast Review for Section 2 -->
+      <div class="fast-review">
+        <div class="fast-review-title">⚡ مراجعة سريعة</div>
+        <div class="fast-review-items">
+          <div class="fast-review-item">
+            <div class="fast-review-item-label">VAR=value</div>
+            <div class="fast-review-item-value">⬅ تعريف صحیح لمتغیر</div>
+          </div>
+          <div class="fast-review-item">
+            <div class="fast-review-item-label">VAR = value</div>
+            <div class="fast-review-item-value">⬅ خطأ (سیعتبر VAR أمرًا)</div>
+          </div>
+          <div class="fast-review-item">
+            <div class="fast-review-item-label">No Data Types</div>
+            <div class="fast-review-item-value">كل شيء يُعامل كنص</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 3: echo & printf                    -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section" id="section-3">
+      <div class="section-header">
+        <span class="section-number">4.3</span>
+        <div>
+          <div class="section-title">أوامر الطباعة</div>
+          <span class="section-title-en">echo & printf</span>
+        </div>
+      </div>
+
+      <p class="body-text">لدينا أمران أساسيان لطباعة المخرجات على الشاشة <span class="en-term">Standard Output</span>:</p>
+
+      <!-- echo -->
+      <div class="subsection">
+        <div class="subsection-title">
+          <span class="sub-icon">🔊</span>
+          echo [Text/Variable]
+        </div>
+
+        <div class="callout callout-concept">
+          <div class="callout-header">
+            <span class="callout-icon">📘</span>
+            <span>مفهوم — وظيفة echo</span>
+          </div>
+          <div class="callout-body">
+            <p><strong>الوظيفة:</strong> طباعة النصوص أو محتوى المتغيرات على الشاشة مع إضافة سطر جديد <span class="en-term">New line</span> تلقائياً في النهاية.</p>
+            <p style="margin-top:8px;"><strong>الاستخدام:</strong> يُستخدم للطباعة البسيطة والسريعة.</p>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <div class="code-block-dots"><span></span><span></span><span></span></div>
+            <span class="code-block-lang">Shell</span>
+          </div>
+          <div class="code-block-body">
+<pre><span class="code-comment"># مثال: سيطبع النص كما هو</span>
+<span class="code-function">echo</span> hello world</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- printf -->
+      <div class="subsection">
+        <div class="subsection-title">
+          <span class="sub-icon">🖨️</span>
+          printf [Format] [Arguments]
+        </div>
+
+        <div class="callout callout-concept">
+          <div class="callout-header">
+            <span class="callout-icon">📘</span>
+            <span>مفهوم — وظيفة printf</span>
+          </div>
+          <div class="callout-body">
+            <p><strong>الوظيفة:</strong> يتيح لك تنسيق المخرجات <span class="en-term">Formatting</span> بدقة. أمر مطور يشبه دالة <span class="inline-code">printf</span> في لغة C.</p>
+            <p style="margin-top:8px;"><strong>الاستخدام:</strong> يُستخدم عندما تحتاج للتحكم الدقيق في شكل الطباعة أو إدخال الرموز الخاصة مثل <span class="inline-code">\n</span> للنزول لسطر جديد أو <span class="inline-code">\t</span> للمسافات.</p>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <div class="code-block-dots"><span></span><span></span><span></span></div>
+            <span class="code-block-lang">Shell</span>
+          </div>
+          <div class="code-block-body">
+<pre><span class="code-comment"># مثال: سيطبع hello ثم ينزل لسطر جديد</span>
+<span class="code-function">printf</span> <span class="code-string">"%s\n"</span> hello</pre>
+          </div>
+        </div>
+
+        <div class="review-remember">
+          <span class="rr-icon">✅</span>
+          <div class="rr-text">تتذكر؟ <span class="inline-code">printf</span> أقوى لضمان التنسيق في كتابة السكربتات المعقدة، بينما <span class="inline-code">echo</span> أسهل للاستخدام اليومي.</div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 4: Advanced $ Usage                 -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section" id="section-4">
+      <div class="section-header">
+        <span class="section-number">4.4</span>
+        <div>
+          <div class="section-title">الرمز الخاص ($) واستخداماته المتقدمة</div>
+          <span class="section-title-en">Advanced $ Usage</span>
+        </div>
+      </div>
+
+      <p class="body-text">الـ <span class="en-term">Shell</span> يقوم بتحليل <span class="en-term">Interpret</span> أي سطر تكتبه حرفياً. إذا كتبت <span class="inline-code">echo NAME</span> فسيطبع الشل كلمة "NAME" حرفياً. لإخبار الشل بأن هذه الكلمة ليست نصاً عادياً بل متغيراً يجب جلب قيمته، نستخدم رمز الدولار <span class="inline-code">$</span>.</p>
+
+      <!-- Workflow Diagram -->
+      <div class="diagram-container">
+        <div class="diagram-title">🔄 مخطط تدفق عمل الشل — كيف يحلل الشل السطر الذي يحتوي على $؟</div>
+        <div class="workflow-diagram">
+          <div class="workflow-step">
+            <span class="workflow-step-num">1</span>
+            <span class="workflow-step-text">الشل يقرأ السطر</span>
+          </div>
+          <div class="workflow-arrow-down">↓</div>
+          <div class="workflow-step">
+            <span class="workflow-step-num">2</span>
+            <span class="workflow-step-text">يجد رمز <span class="en-term">$</span> ويدرك أن ما بعده هو معامل (متغير خاص أو أمر)</span>
+          </div>
+          <div class="workflow-arrow-down">↓</div>
+          <div class="workflow-step">
+            <span class="workflow-step-num">3</span>
+            <span class="workflow-step-text">يذهب إلى الذاكرة الداخلية الخاصة ويبحث عن متغير بهذا الاسم</span>
+          </div>
+          <div class="workflow-arrow-down">↓</div>
+          <div class="workflow-step">
+            <span class="workflow-step-num">4</span>
+            <span class="workflow-step-text">يمسح كلمة المتغير من السطر ويستبدلها بالقيمة الحقيقية <span class="en-term">Substitution</span></span>
+          </div>
+          <div class="workflow-arrow-down">↓</div>
+          <div class="workflow-step">
+            <span class="workflow-step-num">5</span>
+            <span class="workflow-step-text">يمرر السطر النهائي إلى الـ <span class="en-term">Kernel</span> لتشغيله</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Advanced $ Table -->
+      <div class="table-container">
+        <div class="table-title">جدول الاستخدامات المتقدمة لرمز الدولار $</div>
+        <table>
+          <thead>
+            <tr>
+              <th>التنسيق <span class="table-en">Syntax</span></th>
+              <th>الميزة / الوظيفة <span class="table-en">Advantage</span></th>
+              <th>مثال <span class="table-en">Example</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="table-code">$VAR</span></td>
+              <td>استخدام أو طباعة القيمة المباشرة للمتغير</td>
+              <td><span class="table-code">echo $NAME</span></td>
+            </tr>
+            <tr>
+              <td><span class="table-code">${VAR}</span></td>
+              <td>
+                <ol style="padding-right:18px;margin:0;">
+                  <li style="margin-bottom:6px;">رفع الغموض <span class="table-en">Ambiguity</span>: يفصل اسم المتغير عما بعده من حروف</li>
+                  <li>التعدیل <span class="table-en">Substitution</span>: يمكن استخدامه لتوفير قيمة افتراضية <span class="table-en">Default Value</span> إذا لم يكن المتغير موجوداً</li>
+                </ol>
+              </td>
+              <td>
+                <span class="table-code">echo ${NAME}iable</span><br>
+                <span class="table-code">echo ${PLACE:-Tunisia}</span>
+              </td>
+            </tr>
+            <tr>
+              <td><span class="table-code">$(Command)</span></td>
+              <td>
+                أمر داخل أمر <span class="table-en">Command Substitution</span>: الشل يقوم بتنفيذ الأمر الموجود بين الأقواس أولاً، ويأخذ نتيجتها، ويضعها مكان هذا المقطع لتشغيل الأمر الخارجي
+              </td>
+              <td><span class="table-code">echo $(pwd)</span><br>يطبع مسار المجلد الحالي</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="review-remember">
+        <span class="rr-icon">✅</span>
+        <div class="rr-text">تتذكر؟ الأقواس المتعرجة <span class="inline-code">{}</span> تستخدم لنصوص المتغيرات والحماية من التداخل، بينما الدائریة الأقواس <span class="inline-code">()</span> تستخدم لتشغیل الأوامر وتمریر نتائجھا.</div>
+      </div>
+
+      <div class="callout callout-important">
+        <div class="callout-header">
+          <span class="callout-icon">⚠️</span>
+          <span>أخطاء شائعة</span>
+        </div>
+        <div class="callout-body">
+          <ul class="bullet-list">
+            <li><strong>الخلط بين القوس المتعرج والدائري:</strong> <span class="inline-code">$(VAR)</span> سيعتبر VAR أمراً ويحاول تشغيله مما ينتج عنه خطأ، بينما <span class="inline-code">${VAR}</span> للمتغيرات الصحيحة.</li>
+            <li><strong>استخدام علامة الاقتباس الفردية <span class="inline-code">' '</span>:</strong> سيعطل الرمز <span class="inline-code">$</span> ويطبع كنص عادي. استخدم دائماً علامات الاقتباس المزدوجة <span class="inline-code">" "</span> مع المتغيرات.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 5: Command Separators               -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section" id="section-5">
+      <div class="section-header">
+        <span class="section-number">4.5</span>
+        <div>
+          <div class="section-title">تشغيل عدة أوامر معاً</div>
+          <span class="section-title-en">Command Separators</span>
+        </div>
+      </div>
+
+      <p class="body-text">هل يمكنك تشغيل أكثر من أمر في سطر واحد؟ نعم، خلال استخدام رموز فصل خاصة تخبر الـ <span class="en-term">Shell</span> بكيفية التعامل مع تسلسل الأوامر <span class="en-term">Execution Flow</span>.</p>
+
+      <!-- Command Separators Table -->
+      <div class="table-container">
+        <div class="table-title">جدول أدوات ربط الأوامر</div>
+        <table>
+          <thead>
+            <tr>
+              <th>الرمز</th>
+              <th>الاسم <span class="table-en">Name</span></th>
+              <th>الفكرة</th>
+              <th>الوظيفة</th>
+              <th>مثال يوضح</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="text-align:center;font-size:16pt;font-weight:800;color:var(--primary);">;</td>
+              <td><span class="table-en">Semicolon</span><br>الفاصلة المنقوطة</td>
+              <td>التنفيذ المتتالي الأعمى</td>
+              <td>ينفذ الأمر الأول ثم الثاني، بغض النظر عن نجاح أو فشل الأمر الأول</td>
+              <td><span class="table-code">cmd1 ; cmd2</span></td>
+            </tr>
+            <tr>
+              <td style="text-align:center;font-size:16pt;font-weight:800;color:var(--success);">&&</td>
+              <td><span class="table-en">Logical AND</span><br>العامل المنطقي AND</td>
+              <td>التشغيل المشروط (بالنجاح)</td>
+              <td>ينفذ الأمر الثاني فقط إذا نجح الأمر الأول بدون أخطاء</td>
+              <td><span class="table-code">mkdir lab && cd lab</span><br><span style="font-size:9.5pt;color:var(--text-muted);">يدخل المجلد (لو فشل الإنشاء لن يدخل)</span></td>
+            </tr>
+            <tr>
+              <td style="text-align:center;font-size:16pt;font-weight:800;color:var(--warning);">||</td>
+              <td><span class="table-en">Logical OR</span><br>العامل المنطقي OR</td>
+              <td>النسخة الاحتياطية (بالإخفاق)</td>
+              <td>ينفذ الأمر الثاني فقط إذا فشل الأمر الأول</td>
+              <td><span class="table-code">cd lab || echo "Directory not found"</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Visual Comparison Diagram -->
+      <div class="diagram-container">
+        <div class="diagram-title">📊 مقارنة بصرية — سلوك فواصل الأوامر الثلاثة</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;direction:ltr;text-align:center;">
+          <!-- ; -->
+          <div style="background:#f8fafc;border:2px solid var(--border);border-radius:10px;padding:18px 14px;">
+            <div style="font-size:28pt;font-weight:900;color:var(--primary);font-family:'Inter',sans-serif;margin-bottom:8px;">;</div>
+            <div style="font-family:'Inter',sans-serif;font-size:10pt;font-weight:700;color:var(--text);margin-bottom:6px;">Blind Sequence</div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+              <div style="background:#dbeafe;color:var(--primary);padding:8px 18px;border-radius:6px;font-size:10pt;font-weight:600;width:100%;">cmd1</div>
+              <div style="color:var(--text-muted);font-size:14pt;">↓</div>
+              <div style="background:#dbeafe;color:var(--primary);padding:8px 18px;border-radius:6px;font-size:10pt;font-weight:600;width:100%;">cmd2</div>
+            </div>
+            <div style="font-size:9pt;color:var(--text-muted);margin-top:8px;">دائماً ينفذ الثاني</div>
+          </div>
+          <!-- && -->
+          <div style="background:#f0fdf4;border:2px solid #bbf7d0;border-radius:10px;padding:18px 14px;">
+            <div style="font-size:28pt;font-weight:900;color:var(--success);font-family:'Inter',sans-serif;margin-bottom:8px;">&&</div>
+            <div style="font-family:'Inter',sans-serif;font-size:10pt;font-weight:700;color:var(--text);margin-bottom:6px;">Conditional (Success)</div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+              <div style="background:#dcfce7;color:#166534;padding:8px 18px;border-radius:6px;font-size:10pt;font-weight:600;width:100%;">cmd1 ✅</div>
+              <div style="color:var(--success);font-size:14pt;">↓</div>
+              <div style="background:#dcfce7;color:#166534;padding:8px 18px;border-radius:6px;font-size:10pt;font-weight:600;width:100%;">cmd2 ✅</div>
+            </div>
+            <div style="font-size:9pt;color:var(--text-muted);margin-top:8px;">فقط إذا نجح الأول</div>
+          </div>
+          <!-- || -->
+          <div style="background:#fff7ed;border:2px solid #fed7aa;border-radius:10px;padding:18px 14px;">
+            <div style="font-size:28pt;font-weight:900;color:var(--warning);font-family:'Inter',sans-serif;margin-bottom:8px;">||</div>
+            <div style="font-family:'Inter',sans-serif;font-size:10pt;font-weight:700;color:var(--text);margin-bottom:6px;">Fallback (Failure)</div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+              <div style="background:#fee2e2;color:#991b1b;padding:8px 18px;border-radius:6px;font-size:10pt;font-weight:600;width:100%;">cmd1 ❌</div>
+              <div style="color:var(--warning);font-size:14pt;">↓</div>
+              <div style="background:#ffedd5;color:#9a3412;padding:8px 18px;border-radius:6px;font-size:10pt;font-weight:600;width:100%;">cmd2 ⚡</div>
+            </div>
+            <div style="font-size:9pt;color:var(--text-muted);margin-top:8px;">فقط إذا فشل الأول</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="review-remember">
+        <span class="rr-icon">✅</span>
+        <div class="rr-text">تتذكر؟ رمز <span class="inline-code">&&</span> ممتاز في السكربتات لتجنب الكوارث؛ مثلاً لا تقم بنسخ الملفات إلا إذا تأكدت من نجاح إنشاء المجلد.</div>
+      </div>
+
+      <div class="callout callout-important">
+        <div class="callout-header">
+          <span class="callout-icon">⚠️</span>
+          <span>خطأ شائع</span>
+        </div>
+        <div class="callout-body">
+          استخدام الفاصلة المنقوطة <span class="inline-code">;</span> لربط أوامر يعتمد بعضها على بعض، فلو فشل الأمر الأول سيكمل النظام تشغيل الثاني مما قد يؤدي إلى حذف أو نقل ملفات بالخطأ.
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECTION 6: Exit Status                      -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="section" id="section-6">
+      <div class="section-header">
+        <span class="section-number">4.6</span>
+        <div>
+          <div class="section-title">حالة الخروج</div>
+          <span class="section-title-en">Exit Status / Return Value</span>
+        </div>
+      </div>
+
+      <p class="body-text">كيف يعرف الـ <span class="en-term">Shell</span> ما إذا كان الأمر الأول قد نجح أم فشل (كما في رمز <span class="inline-code">&&</span>)؟ السر يكمن في ما يُعرف بـ <span class="en-term">Exit Status</span>.</p>
+
+      <div class="callout callout-definition">
+        <div class="callout-header">
+          <span class="callout-icon">📌</span>
+          <span>تعريف — ما هو الـ Exit Status؟</span>
+        </div>
+        <div class="callout-body">
+          <p style="margin-bottom:10px;">عندما تُبرمج تطبيقاً بلغة C وتنتهي دالة <span class="inline-code">main</span> بـ <span class="inline-code">return 0</span>، فإن هذا الصفر يُرسل إلى الـ <span class="en-term">Kernel</span> والـ <span class="en-term">Kernel</span> يرسله للـ <span class="en-term">Shell</span>.</p>
+          <ul class="bullet-list">
+            <li><strong>الرقم 0</strong> يعني أن التطبيق اشتغل بشكل سلیم تماماً <span class="en-term">Success / No Errors</span></li>
+            <li><strong>أي رقم غير 0</strong> (مثال 1, 2, 127) يعني أن هناك خطأ <span class="en-term">Error</span> قد حدث أثناء التشغيل (كل رقم يعبر عن خطأ محدد — مثلاً 127 يعني <span class="en-term">Command Not Found</span>)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Exit Status Visual -->
+      <div class="diagram-container">
+        <div class="diagram-title">🔢 مخطط حالة الخروج — Exit Status Values</div>
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px;direction:ltr;">
+          <div style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);border:2px solid #4ade80;border-radius:12px;padding:24px;text-align:center;">
+            <div style="font-family:'Inter',sans-serif;font-size:48pt;font-weight:900;color:#166534;line-height:1;">0</div>
+            <div style="font-family:'Inter',sans-serif;font-size:12pt;font-weight:700;color:#166534;margin-top:8px;">SUCCESS</div>
+            <div style="font-size:10pt;color:#166534;margin-top:4px;opacity:0.8;">No Errors</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+              <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:12px;text-align:center;">
+                <div style="font-family:'Inter',sans-serif;font-size:22pt;font-weight:800;color:#991b1b;">1</div>
+                <div style="font-family:'Inter',sans-serif;font-size:8pt;font-weight:600;color:#991b1b;">General Error</div>
+              </div>
+              <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:12px;text-align:center;">
+                <div style="font-family:'Inter',sans-serif;font-size:22pt;font-weight:800;color:#991b1b;">2</div>
+                <div style="font-family:'Inter',sans-serif;font-size:8pt;font-weight:600;color:#991b1b;">Misuse</div>
+              </div>
+              <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:12px;text-align:center;">
+                <div style="font-family:'Inter',sans-serif;font-size:22pt;font-weight:800;color:#991b1b;">127</div>
+                <div style="font-family:'Inter',sans-serif;font-size:8pt;font-weight:600;color:#991b1b;">Not Found</div>
+              </div>
+            </div>
+            <div style="background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;flex:1;display:flex;align-items:center;justify-content:center;">
+              <span style="font-family:'Inter',sans-serif;font-size:11pt;color:var(--text-muted);font-weight:600;">1 – 255 → أي رقم آخر = فشل / خطأ</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- $? Variable -->
+      <div class="subsection">
+        <div class="subsection-title">
+          <span class="sub-icon">⚙️</span>
+          المتغير السري $?
+        </div>
+
+        <p class="body-text">بما أن الـ <span class="en-term">Shell</span> افتراضياً لا يطبع حالة الخروج للمستخدم، فإنه يقوم فوراً بتخزين الرقم هذا في متغير داخلي خاص يحمل اسم علامة الاستفهام <span class="inline-code">$?</span>.</p>
+
+        <div class="callout callout-concept">
+          <div class="callout-header">
+            <span class="callout-icon">📘</span>
+            <span>مفهوم — وظيفة المتغير $?</span>
+          </div>
+          <div class="callout-body">
+            <p><strong>الوظيفة:</strong> طباعة حالة الخروج <span class="en-term">Exit Status</span> لآخر أمر تم تنفيذه.</p>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-block-header">
+            <div class="code-block-dots"><span></span><span></span><span></span></div>
+            <span class="code-block-lang">Shell</span>
+          </div>
+          <div class="code-block-body">
+<pre><span class="code-function">echo</span> <span class="code-variable">$?</span></pre>
+          </div>
+        </div>
+
+        <div class="callout callout-tip">
+          <div class="callout-header">
+            <span class="callout-icon">💡</span>
+            <span>طريقة الاستخدام</span>
+          </div>
+          <div class="callout-body">
+            تقوم بتشغيل أي أمر (مثال: <span class="inline-code">ls</span>) ثم تكتب فوراً <span class="inline-code">echo $?</span> — إذا طبع 0 فالأمر السابق تم بنجاح.
+          </div>
+        </div>
+
+        <div class="review-remember">
+          <span class="rr-icon">✅</span>
+          <div class="rr-text">تتذكر؟ يجب فحص <span class="inline-code">$?</span> فوراً بعد الأمر الذي ترید التأكد من حالته. یُحدَّث بعد كل أمر كأنه متغیر باسم غریب (علامة استفھام) لا تنشغل به حالتھ.</div>
+        </div>
+      </div>
+
+      <!-- Fast Review for Section 6 -->
+      <div class="fast-review">
+        <div class="fast-review-title">⚡ مراجعة سريعة</div>
+        <div class="fast-review-items">
+          <div class="fast-review-item">
+            <div class="fast-review-item-label">0</div>
+            <div class="fast-review-item-value">= نجاح مطلق</div>
+          </div>
+          <div class="fast-review-item">
+            <div class="fast-review-item-label">أي رقم آخر</div>
+            <div class="fast-review-item-value">= فشل / خطأ</div>
+          </div>
+          <div class="fast-review-item">
+            <div class="fast-review-item-label">$?</div>
+            <div class="fast-review-item-value">= المتغير الذي يحمل هذا الرقم</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- QUICK REVIEW                                -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div class="quick-review-section" id="quick-review">
+      <div class="quick-review-title">📝 مراجعة سريعة — Quick Review</div>
+      <div class="quick-review-subtitle">ملخص تعليمي شامل لمواضيع الدرس الرابع</div>
+
+      <!-- Main Concepts -->
+      <div class="review-card review-concepts">
+        <div class="review-card-header">
+          <span>📘</span>
+          <span>المفاهيم الرئيسية — Main Concepts</span>
+        </div>
+        <div class="review-card-body">
+          <ul>
+            <li>نظام الملفات <span class="en-term">File System</span> يتكون من ثلاثة عناصر: <span class="inline-code">Data Blocks</span> و <span class="inline-code">Super Block</span> و <span class="inline-code">Inode</span></li>
+            <li>الـ <span class="inline-code">Inode</span> لا يحتوي على بيانات الملف بل على معلوماته ومؤشرات لمواقع البيانات الحقيقية</li>
+            <li>المجلدات في لينكس هي ملفات من نوع "Directory" تحتوي على فهرس بأسماء الملفات وأرقام الـ <span class="en-term">Inodes</span> الخاصة بها</li>
+            <li>المتغيرات في الشل ليس لها أنواع بيانات <span class="en-term">No Data Types</span> — كل شيء يُعامل كنص</li>
+            <li>لا مسافات حول علامة التساوي <span class="inline-code">=</span> عند تعريف المتغيرات</li>
+            <li><span class="inline-code">echo</span> للطباعة البسيطة، <span class="inline-code">printf</span> للتنسيق الدقيق</li>
+            <li>رمز <span class="inline-code">$</span> يستدعي قيمة المتغير، <span class="inline-code">${}</span> للحماية والتعدیل، <span class="inline-code">$()</span> لتشغیل الأوامر</li>
+            <li><span class="inline-code">;</span> تنفيذ أعمى، <span class="inline-code">&&</span> مشروط بالنجاح، <span class="inline-code">||</span> مشروط بالفشل</li>
+            <li>حالة الخروج <span class="inline-code">Exit Status</span>: 0 = نجاح، أي رقم آخر = خطأ</li>
+            <li>المتغير <span class="inline-code">$?</span> يحفظ حالة الخروج لآخر أمر تم تنفيذه</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Important Definitions -->
+      <div class="review-card review-definitions">
+        <div class="review-card-header">
+          <span>📌</span>
+          <span>تعريفات مهمة — Important Definitions</span>
+        </div>
+        <div class="review-card-body">
+          <ul>
+            <li><strong>Data Blocks:</strong> المساحات الفعليية التي تُكتب وتُخزن فيها بيانات الملفات، كل بلوك له حجم معين</li>
+            <li><strong>Super Block:</strong> بلوك خاص جداً يتواجد في بداية وحدة التخزين، يحتوي على <span class="en-term">Metadata</span> خاصة بنظام الملفات ككل</li>
+            <li><strong>Inode:</strong> هيكل بيانات <span class="en-term">Data Structure</span> يمثل أي ملف أو مجلد في لينكس، يحتوي على تفاصيل الملف ومؤشرات <span class="en-term">Pointers</span> لأماكن البيانات</li>
+            <li><strong>Exit Status:</strong> رقم يُرسل من التطبيق إلى الـ <span class="en-term">Kernel</span> ثم إلى الـ <span class="en-term">Shell</span> يدل على نجاح أو فشل الأمر</li>
+            <li><strong>Command Substitution:</strong> تشغيل أمر داخل أمر باستخدام <span class="inline-code">$(Command)</span> واستبدال نتيجته مكان المقطع</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Common Mistakes -->
+      <div class="review-card review-mistakes">
+        <div class="review-card-header">
+          <span>⚠️</span>
+          <span>أخطاء شائعة — Common Mistakes</span>
+        </div>
+        <div class="review-card-body">
+          <ul>
+            <li>الاعتقاد بأن المجلد <span class="en-term">Directory</span> هو "صندوق" في الديسك — برمجياً هو مجرد ملف نصي فِهرسي</li>
+            <li>وضع مسافات حول <span class="inline-code">=</span> عند تعريف المتغيرات — نتيجة التعود من لغات مثل C أو Python</li>
+            <li>الخلط بين <span class="inline-code">${VAR}</span> (متغير) و <span class="inline-code">$(VAR)</span> (أمر) — الثاني يُسبب خطأ</li>
+            <li>استخدام علامة الاقتباس الفردية <span class="inline-code">' '</span> مع المتغيرات — تعطل <span class="inline-code">$</span></li>
+            <li>استخدام <span class="inline-code">;</span> لربط أوامر مت-dependency — قد يُسبب حذف أو نقل ملفات بالخطأ</li>
+            <li>فحص <span class="inline-code">$?</span> بعد أكثر من أمر — يُحدَّث بعد كل أمر لذا يجب فحصه فوراً</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Interview Notes -->
+      <div class="review-card review-interview">
+        <div class="review-card-header">
+          <span>🎯</span>
+          <span>ملاحظات المقابلات — Interview Notes</span>
+        </div>
+        <div class="review-card-body">
+          <ul>
+            <li>ما الفرق بين <span class="inline-code">Inode</span> و <span class="inline-code">Data Block</span>؟ — <span class="en-term">Inode</span> يحتوي على معلومات الملف ومؤشرات، <span class="en-term">Data Block</span> يحتوي على البيانات الفعلية</li>
+            <li>لماذا "كل شيء ملف" في يونكس؟ — حتى المجلدات هي ملفات من نوع Directory</li>
+            <li>ما الفرق بين <span class="inline-code">echo</span> و <span class="inline-code">printf</span>؟ — <span class="inline-code">echo</span> يضيف سطر جديد تلقائياً، <span class="inline-code">printf</span> يتيح تحكم دقيق في التنسيق</li>
+            <li>متى تستخدم <span class="inline-code">${VAR}</span> بدلاً من <span class="inline-code">$VAR</span>؟ — عند الحاجة لفصل اسم المتغير عن النص المجاور أو استخدام قيم افتراضية</li>
+            <li>ما معنى <span class="inline-code">Exit Status</span> قيمته 127؟ — <span class="en-term">Command Not Found</span></li>
+            <li>لماذا <span class="inline-code">&&</span> أفضل من <span class="inline-code">;</span> في السكربتات؟ — لتجنب تنفيذ أوامر تعتمد على نجاح أمر سابق</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Memory Tips -->
+      <div class="review-card review-memory">
+        <div class="review-card-header">
+          <span>🧠</span>
+          <span>حيل الذاكرة — Memory Tips</span>
+        </div>
+        <div class="review-card-body">
+          <ul>
+            <li><strong>File System ثلاثية:</strong> تخيل أرشيف مكتبة — <span class="en-term">Super Block</span> = فهرس الأرشيف، <span class="en-term">Inode</span> = بطاقة تفاصيل الكتاب، <span class="en-term">Data Block</span> = الرف الفعلي الذي عليه الكتاب</li>
+            <li><strong>المسافات حول =:</strong> تذكر أن الشل يقرأ المسافات كفواصل بين أجزاء الأمر — أي مسافة تُفسّر الكلمة التالية كمعامل جديد</li>
+            <li><strong>$ المتغيرات:</strong> <span class="inline-code">${}</span> مثل قوسين يحمان الاسم، <span class="inline-code">$()</span> مثل آلة تنفيذ الأوامر</li>
+            <li><strong>فواصل الأوامر:</strong> <span class="inline-code">;</span> = "لا أهتم" (ينفذ دائماً)، <span class="inline-code">&&</span> = "فقط إذا نجح"، <span class="inline-code">||</span> = "فقط إذا فشل" (الخطة ب)</li>
+            <li><strong>Exit Status:</strong> صفر = كل شيء تمام (كعلامة ممتاز)، أي شيء آخر = مشكلة</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Exam Tips -->
+      <div class="review-card review-exam">
+        <div class="review-card-header">
+          <span>📋</span>
+          <span>نصائح الامتحان — Exam Tips</span>
+        </div>
+        <div class="review-card-body">
+          <ul>
+            <li>توقع سؤال عن الفرق بين <span class="inline-code">$VAR</span> و <span class="inline-code">${VAR}</span> و <span class="inline-code">$(VAR)</span></li>
+            <li>احفظ قاعدة "لا مسافات حول <span class="inline-code">=</span>" — سؤال شائع في الامتحانات العملية</li>
+            <li>كن جاهزاً لكتابة أمر يستخدم <span class="inline-code">&&</span> أو <span class="inline-code">||</span> بشكل صحيح</li>
+            <li>افهم الفرق بين <span class="inline-code">echo</span> و <span class="inline-code">printf</span> من حيث التنسيق والسطر الجديد التلقائي</li>
+            <li>توقع سؤال "ماذا يطبع <span class="inline-code">echo $?</span> بعد أمر ناجح؟" — الجواب: 0</li>
+            <li>كن قادراً على شرح عناصر نظام الملفات الثلاثة ووظيفة كل منها</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Revision Checklist -->
+      <div class="review-card review-checklist">
+        <div class="review-card-header">
+          <span>✅</span>
+          <span>قائمة المراجعة — Revision Checklist</span>
+        </div>
+        <div class="review-card-body">
+          <div class="checklist-item" onclick="this.classList.toggle('checked')">
+            <span class="checklist-box">✓</span>
+            <span class="checklist-text">أستطيع شرح الفرق بين Data Blocks و Super Block و Inode</span>
+          </div>
+          <div class="checklist-item" onclick="this.classList.toggle('checked')">
+            <span class="checklist-box">✓</span>
+            <span class="checklist-text">أفهم لماذا المجلدات في لينكس تُعتبر ملفات</span>
+          </div>
+          <div class="checklist-item" onclick="this.classList.toggle('checked')">
+            <span class="checklist-box">✓</span>
+            <span class="checklist-text">أستطيع تعريف متغير في الشل بدون مسافات حول =</span>
+          </div>
+          <div class="checklist-item" onclick="this.classList.toggle('checked')">
+            <span class="checklist-box">✓</span>
+            <span class="checklist-text">أعرف الفرق بين echo و printf ومتى أستخدم كل منهما</span>
+          </div>
+          <div class="checklist-item" onclick="this.classList.toggle('checked')">
+            <span class="checklist-box">✓</span>
+            <span class="checklist-text">أستطيع استخدام $ و ${} و $() بشكل صحيح</span>
+          </div>
+          <div class="checklist-item" onclick="this.classList.toggle('checked')">
+            <span class="checklist-box">✓</span>
+            <span class="checklist-text">أفهم الفرق بين ; و && و || واختيار الأنسب للموقف</span>
+          </div>
+          <div class="checklist-item" onclick="this.classList.toggle('checked')">
+            <span class="checklist-box">✓</span>
+            <span class="checklist-text">أعرف أن Exit Status = 0 يعني نجاح وأي رقم آخر يعني خطأ</span>
+          </div>
+          <div class="checklist-item" onclick="this.classList.toggle('checked')">
+            <span class="checklist-box">✓</span>
+            <span class="checklist-text">أستطيع استخدام $? لفحص حالة آخر أمر</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- End Mark -->
+    <div class="end-mark">
+      <div class="end-line"></div>
+      <div>نهاية ملخص الدرس الرابع — End of Lesson 4 Summary</div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- ━━━ Running Footer ━━━ -->
+  <div class="running-footer">
+    <span>Embedded Linux & Yocto — الدرس الرابع</span>
+    <span class="footer-version">v1.0 | Shell Utilities & File System Internals (Part 2)</span>
+  </div>
+
+</div><!-- /page-container -->
+
+<script>
+  // Smooth scroll for TOC links
+  document.querySelectorAll('.toc-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      const targetId = this.getAttribute('href').substring(1);
+      const target = document.getElementById(targetId);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  // Add subtle entrance animations on scroll
+  const observerOptions = { threshold: 0.1, rootMargin: '0px 0px -50px 0px' };
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.section, .callout, .code-block, .table-container, .diagram-container, .fast-review, .review-card').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+
+  // Overview cards staggered entrance
+  document.querySelectorAll('.overview-card').forEach((card, i) => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(20px)';
+    card.style.transition = `opacity 0.4s ease ${i * 0.1}s, transform 0.4s ease ${i * 0.1}s`;
+    setTimeout(() => {
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    }, 200);
+  });
+</script>
+
+</body>
+</html>

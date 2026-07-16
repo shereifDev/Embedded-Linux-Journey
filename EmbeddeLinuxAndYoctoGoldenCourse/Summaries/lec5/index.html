@@ -1,0 +1,2322 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embedded Linux & Shell Programming - POSIX Compliance</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+:root {
+  --primary: #0F4C81;
+  --secondary: #14B8A6;
+  --accent: #F59E0B;
+  --success: #16A34A;
+  --warning: #EA580C;
+  --danger: #DC2626;
+  --bg: #F8FAFC;
+  --card: #FFFFFF;
+  --text: #1E293B;
+  --text-muted: #64748B;
+  --border: #E2E8F0;
+  --code-bg: #1E293B;
+  --code-text: #E2E8F0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'IBM Plex Sans Arabic', 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12.5pt;
+  line-height: 1.7;
+  direction: rtl;
+}
+
+/* Page Container */
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 0 auto;
+  background: var(--card);
+  padding: 2cm;
+  position: relative;
+  box-shadow: 0 0 40px rgba(0,0,0,0.08);
+  margin-bottom: 2px;
+}
+
+/* Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid var(--border);
+  margin-bottom: 24px;
+  font-size: 9pt;
+  color: var(--text-muted);
+}
+
+.page-header .course-name {
+  font-weight: 600;
+  color: var(--primary);
+  font-family: 'Inter', 'IBM Plex Sans Arabic', sans-serif;
+}
+
+.page-header .chapter-name {
+  font-weight: 500;
+}
+
+/* Footer */
+.page-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+  font-size: 8.5pt;
+  color: var(--text-muted);
+}
+
+.page-footer .page-num {
+  font-weight: 600;
+  color: var(--primary);
+  font-family: 'Inter', sans-serif;
+}
+
+/* TOC Styles */
+.toc-page {
+  padding-top: 1cm;
+}
+
+.toc-title {
+  font-size: 28pt;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 8px;
+  letter-spacing: -0.5px;
+}
+
+.toc-subtitle {
+  font-size: 13pt;
+  color: var(--text-muted);
+  margin-bottom: 36px;
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--primary);
+}
+
+.toc-item {
+  display: flex;
+  align-items: baseline;
+  padding: 6px 0;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  color: var(--text);
+}
+
+.toc-item:hover {
+  color: var(--primary);
+  padding-right: 6px;
+}
+
+.toc-item.chapter {
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--primary);
+  padding: 12px 0 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.toc-item.section {
+  font-size: 11.5pt;
+  font-weight: 600;
+  padding-right: 20px;
+}
+
+.toc-item.subsection {
+  font-size: 11pt;
+  font-weight: 400;
+  color: var(--text-muted);
+  padding-right: 40px;
+}
+
+.toc-dots {
+  flex: 1;
+  border-bottom: 1.5px dotted var(--border);
+  margin: 0 8px;
+  min-width: 20px;
+  align-self: flex-end;
+  margin-bottom: 3px;
+}
+
+.toc-page-num {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 10.5pt;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+/* Chapter Opening */
+.chapter-opening {
+  text-align: center;
+  padding: 40px 0 30px;
+  border-bottom: 3px solid var(--primary);
+  margin-bottom: 32px;
+  position: relative;
+}
+
+.chapter-number {
+  font-family: 'Inter', sans-serif;
+  font-size: 14pt;
+  font-weight: 700;
+  color: var(--secondary);
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  margin-bottom: 12px;
+}
+
+.chapter-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, var(--primary), #1a6bb5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  box-shadow: 0 8px 24px rgba(15,76,129,0.3);
+}
+
+.chapter-icon-wrapper i {
+  color: white;
+  width: 40px;
+  height: 40px;
+}
+
+.chapter-title {
+  font-size: 24pt;
+  font-weight: 700;
+  color: var(--primary);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.chapter-subtitle {
+  font-size: 13pt;
+  color: var(--text-muted);
+  font-weight: 400;
+  font-family: 'Inter', 'IBM Plex Sans Arabic', sans-serif;
+}
+
+.chapter-intro {
+  margin-top: 24px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(15,76,129,0.04), rgba(20,184,166,0.04));
+  border-radius: 12px;
+  border-right: 4px solid var(--primary);
+  text-align: right;
+  line-height: 1.8;
+}
+
+/* Section Headings */
+h2.section-title {
+  font-size: 20pt;
+  font-weight: 700;
+  color: var(--primary);
+  margin: 36px 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--secondary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+h2.section-title .num {
+  font-family: 'Inter', sans-serif;
+  background: var(--primary);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14pt;
+  flex-shrink: 0;
+}
+
+h3.subsection-title {
+  font-size: 17pt;
+  font-weight: 600;
+  color: var(--primary);
+  margin: 28px 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+h3.subsection-title::before {
+  content: '';
+  width: 6px;
+  height: 24px;
+  background: var(--secondary);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+h4.minor-title {
+  font-size: 14pt;
+  font-weight: 600;
+  color: var(--text);
+  margin: 20px 0 10px;
+}
+
+/* Paragraphs */
+p {
+  margin-bottom: 12px;
+  text-align: justify;
+  line-height: 1.75;
+}
+
+/* LTR Text */
+.ltr, code, .code-inline, .cmd {
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: isolate;
+}
+
+.code-inline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5pt;
+  background: #F1F5F9;
+  color: var(--primary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-weight: 500;
+}
+
+/* Code Blocks */
+.code-block {
+  background: var(--code-bg);
+  border-radius: 12px;
+  padding: 0;
+  margin: 16px 0;
+  overflow: hidden;
+  direction: ltr;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10pt;
+  line-height: 1.7;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.code-header {
+  background: rgba(255,255,255,0.06);
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.code-lang {
+  color: var(--secondary);
+  font-size: 9pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.code-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.code-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+}
+
+.code-dots span:first-child { background: #EF4444; }
+.code-dots span:nth-child(2) { background: #F59E0B; }
+.code-dots span:nth-child(3) { background: #22C55E; }
+
+.code-body {
+  padding: 20px;
+  overflow-x: auto;
+  counter-reset: line;
+}
+
+.code-body .line {
+  display: block;
+  padding-right: 50px;
+  position: relative;
+  min-height: 1.7em;
+}
+
+.code-body .line::before {
+  counter-increment: line;
+  content: counter(line);
+  position: absolute;
+  right: 0;
+  color: rgba(255,255,255,0.2);
+  font-size: 9pt;
+  width: 35px;
+  text-align: right;
+  user-select: none;
+}
+
+/* Syntax Colors */
+.syn-kw { color: #C084FC; font-weight: 600; }
+.syn-fn { color: #60A5FA; }
+.syn-str { color: #34D399; }
+.syn-cm { color: #64748B; font-style: italic; }
+.syn-num { color: #F59E0B; }
+.syn-op { color: #F472B6; }
+.syn-var { color: #E2E8F0; }
+
+/* Callout Boxes */
+.callout {
+  border-radius: 12px;
+  margin: 20px 0;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.callout-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 12pt;
+}
+
+.callout-body {
+  padding: 16px 20px;
+  line-height: 1.75;
+  font-size: 11.5pt;
+}
+
+/* Blue - Concept */
+.callout-concept .callout-header {
+  background: linear-gradient(135deg, #0F4C81, #1a6bb5);
+  color: white;
+}
+
+.callout-concept .callout-body {
+  background: rgba(15,76,129,0.04);
+  border: 1px solid rgba(15,76,129,0.1);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Green - Key Takeaway */
+.callout-takeaway .callout-header {
+  background: linear-gradient(135deg, #16A34A, #22C55E);
+  color: white;
+}
+
+.callout-takeaway .callout-body {
+  background: rgba(22,163,74,0.04);
+  border: 1px solid rgba(22,163,74,0.1);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Orange - Tip */
+.callout-tip .callout-header {
+  background: linear-gradient(135deg, #F59E0B, #FBBF24);
+  color: white;
+}
+
+.callout-tip .callout-body {
+  background: rgba(245,158,11,0.04);
+  border: 1px solid rgba(245,158,11,0.1);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Red - Important/Warning */
+.callout-warning .callout-header {
+  background: linear-gradient(135deg, #DC2626, #EF4444);
+  color: white;
+}
+
+.callout-warning .callout-body {
+  background: rgba(220,38,38,0.04);
+  border: 1px solid rgba(220,38,38,0.1);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Orange-Red - Attention */
+.callout-attention .callout-header {
+  background: linear-gradient(135deg, #EA580C, #F97316);
+  color: white;
+}
+
+.callout-attention .callout-body {
+  background: rgba(234,88,12,0.04);
+  border: 1px solid rgba(234,88,12,0.1);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Gray - Definition */
+.callout-definition .callout-header {
+  background: linear-gradient(135deg, #475569, #64748B);
+  color: white;
+}
+
+.callout-definition .callout-body {
+  background: rgba(71,85,105,0.04);
+  border: 1px solid rgba(71,85,105,0.1);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Purple - Deep Understanding */
+.callout-deep .callout-header {
+  background: linear-gradient(135deg, #7C3AED, #8B5CF6);
+  color: white;
+}
+
+.callout-deep .callout-body {
+  background: rgba(124,58,237,0.04);
+  border: 1px solid rgba(124,58,237,0.1);
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+}
+
+/* Dark - Practical Example */
+.callout-practical .callout-header {
+  background: linear-gradient(135deg, #1E293B, #334155);
+  color: white;
+}
+
+.callout-practical .callout-body {
+  background: #1E293B;
+  border: 1px solid #334155;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  color: #E2E8F0;
+  direction: ltr;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5pt;
+}
+
+/* Tables */
+.table-wrapper {
+  margin: 20px 0;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  border: 1px solid var(--border);
+}
+
+.table-title {
+  background: var(--primary);
+  color: white;
+  padding: 12px 20px;
+  font-weight: 600;
+  font-size: 12pt;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11pt;
+}
+
+thead th {
+  background: linear-gradient(135deg, #0F4C81, #1a6bb5);
+  color: white;
+  padding: 12px 16px;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+thead th.ltr-col {
+  text-align: center;
+  direction: ltr;
+  font-family: 'JetBrains Mono', 'Inter', sans-serif;
+}
+
+tbody td {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+tbody tr:nth-child(even) {
+  background: rgba(15,76,129,0.02);
+}
+
+tbody tr:hover {
+  background: rgba(15,76,129,0.05);
+}
+
+tbody td.code-cell {
+  direction: ltr;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10pt;
+  color: var(--primary);
+  background: #F8FAFC;
+}
+
+tbody td.num-cell {
+  text-align: center;
+  direction: ltr;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Animated Chapter Overview */
+.overview-container {
+  margin: 28px 0;
+  padding: 28px;
+  background: linear-gradient(135deg, rgba(15,76,129,0.03), rgba(20,184,166,0.03));
+  border-radius: 16px;
+  border: 1.5px solid rgba(15,76,129,0.1);
+  position: relative;
+}
+
+.overview-label {
+  position: absolute;
+  top: -12px;
+  right: 24px;
+  background: var(--primary);
+  color: white;
+  padding: 4px 16px;
+  border-radius: 8px;
+  font-size: 9.5pt;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.overview-card {
+  background: white;
+  border-radius: 12px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  text-align: center;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.overview-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(15,76,129,0.1);
+  border-color: var(--secondary);
+}
+
+.overview-card .card-num {
+  font-family: 'Inter', sans-serif;
+  font-size: 10pt;
+  font-weight: 700;
+  color: var(--secondary);
+  margin-bottom: 8px;
+}
+
+.overview-card .card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 10px;
+}
+
+.overview-card .card-icon i {
+  width: 24px;
+  height: 24px;
+}
+
+.overview-card .card-title {
+  font-size: 11pt;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.overview-card .card-desc {
+  font-size: 9.5pt;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.overview-flow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.flow-step {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 10pt;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.flow-step:hover {
+  border-color: var(--primary);
+  background: rgba(15,76,129,0.04);
+}
+
+.flow-step i {
+  width: 18px;
+  height: 18px;
+  color: var(--primary);
+}
+
+.flow-arrow {
+  color: var(--secondary);
+  font-size: 16pt;
+  font-weight: 700;
+}
+
+.flow-arrow.ltr {
+  direction: ltr;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Bullet Lists */
+.bullet-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+}
+
+.bullet-list li {
+  padding: 6px 0 6px 0;
+  padding-right: 24px;
+  position: relative;
+  line-height: 1.75;
+}
+
+.bullet-list li::before {
+  content: '';
+  position: absolute;
+  right: 4px;
+  top: 14px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--secondary);
+}
+
+.bullet-list.primary li::before {
+  background: var(--primary);
+}
+
+/* Numbered Lists */
+.num-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  counter-reset: item;
+}
+
+.num-list li {
+  counter-increment: item;
+  padding: 8px 0 8px 0;
+  padding-right: 40px;
+  position: relative;
+  line-height: 1.75;
+}
+
+.num-list li::before {
+  content: counter(item);
+  position: absolute;
+  right: 0;
+  top: 8px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: var(--primary);
+  color: white;
+  font-size: 10pt;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Quick Review Section */
+.quick-review {
+  margin-top: 40px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid var(--primary);
+  background: white;
+}
+
+.quick-review-header {
+  background: linear-gradient(135deg, var(--primary), #1a6bb5);
+  color: white;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 18pt;
+  font-weight: 700;
+}
+
+.quick-review-section {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.quick-review-section:last-child {
+  border-bottom: none;
+}
+
+.quick-review-section h4 {
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.review-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.review-item {
+  background: rgba(15,76,129,0.03);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 10.5pt;
+  line-height: 1.6;
+  border-right: 3px solid var(--secondary);
+}
+
+.review-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.checklist {
+  list-style: none;
+  padding: 0;
+}
+
+.checklist li {
+  padding: 6px 0;
+  padding-right: 28px;
+  position: relative;
+  font-size: 11pt;
+}
+
+.checklist li::before {
+  content: '☐';
+  position: absolute;
+  right: 0;
+  top: 6px;
+  font-size: 14pt;
+  color: var(--primary);
+}
+
+/* Diagrams */
+.diagram-container {
+  margin: 24px 0;
+  padding: 24px;
+  background: white;
+  border-radius: 16px;
+  border: 1.5px solid var(--border);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+
+.diagram-title {
+  font-size: 12pt;
+  font-weight: 700;
+  color: var(--primary);
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Layered Diagram */
+.layer-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  direction: ltr;
+}
+
+.layer {
+  width: 80%;
+  padding: 14px 20px;
+  border-radius: 10px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 12pt;
+  font-family: 'Inter', 'IBM Plex Sans Arabic', sans-serif;
+  position: relative;
+}
+
+.layer-arrow {
+  color: var(--secondary);
+  font-size: 18pt;
+  line-height: 1;
+}
+
+/* Architecture Diagram */
+.arch-diagram {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  direction: ltr;
+  align-items: center;
+}
+
+.arch-box {
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 11.5pt;
+  text-align: center;
+  min-width: 260px;
+  font-family: 'Inter', 'IBM Plex Sans Arabic', sans-serif;
+}
+
+.arch-arrow {
+  color: var(--text-muted);
+  font-size: 16pt;
+  line-height: 1;
+}
+
+/* Comparison Diagram */
+.comparison-container {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  align-items: start;
+  direction: ltr;
+}
+
+.comparison-side {
+  border-radius: 12px;
+  padding: 20px;
+  border: 2px solid;
+}
+
+.comparison-side h4 {
+  text-align: center;
+  font-size: 13pt;
+  margin-bottom: 12px;
+  font-family: 'Inter', sans-serif;
+}
+
+.comparison-vs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 14pt;
+  color: var(--primary);
+  background: var(--bg);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--primary);
+}
+
+/* Timeline */
+.timeline {
+  position: relative;
+  padding-right: 40px;
+  direction: rtl;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  right: 16px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, var(--primary), var(--secondary));
+  border-radius: 2px;
+}
+
+.timeline-item {
+  position: relative;
+  padding: 12px 0 12px 0;
+  padding-right: 32px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  right: -28px;
+  top: 18px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 3px solid white;
+  box-shadow: 0 0 0 2px var(--primary);
+}
+
+.timeline-label {
+  font-size: 9.5pt;
+  color: var(--secondary);
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+}
+
+.timeline-content {
+  font-size: 11pt;
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* Print Styles */
+@media print {
+  body { background: white; }
+  .page {
+    box-shadow: none;
+    margin: 0;
+    page-break-after: always;
+  }
+  .overview-card:hover { transform: none; box-shadow: none; }
+  .toc-item:hover { padding-right: 0; }
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.overview-card {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+.overview-card:nth-child(1) { animation-delay: 0.1s; }
+.overview-card:nth-child(2) { animation-delay: 0.2s; }
+.overview-card:nth-child(3) { animation-delay: 0.3s; }
+.overview-card:nth-child(4) { animation-delay: 0.4s; }
+.overview-card:nth-child(5) { animation-delay: 0.5s; }
+
+.flow-step {
+  animation: fadeInUp 0.4s ease forwards;
+  opacity: 0;
+}
+
+.flow-step:nth-child(1) { animation-delay: 0.15s; }
+.flow-step:nth-child(2) { animation-delay: 0.3s; }
+.flow-step:nth-child(3) { animation-delay: 0.45s; }
+.flow-step:nth-child(4) { animation-delay: 0.6s; }
+.flow-step:nth-child(5) { animation-delay: 0.75s; }
+.flow-step:nth-child(6) { animation-delay: 0.9s; }
+.flow-step:nth-child(7) { animation-delay: 1.05s; }
+.flow-step:nth-child(8) { animation-delay: 1.2s; }
+.flow-step:nth-child(9) { animation-delay: 1.35s; }
+
+/* Special inline styles for mixed text */
+.en-term {
+  font-family: 'Inter', 'JetBrains Mono', sans-serif;
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-weight: 500;
+}
+
+.inline-code-block {
+  direction: ltr;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10pt;
+  background: #F1F5F9;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  color: var(--primary);
+  display: inline;
+  unicode-bidi: isolate;
+}
+
+/* Question box */
+.question-box {
+  background: linear-gradient(135deg, rgba(15,76,129,0.06), rgba(20,184,166,0.06));
+  border: 1.5px solid rgba(15,76,129,0.15);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-weight: 500;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.question-box i {
+  color: var(--primary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Syntax label */
+.syntax-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(15,76,129,0.08);
+  color: var(--primary);
+  padding: 4px 14px;
+  border-radius: 6px;
+  font-size: 10.5pt;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+/* Error example */
+.error-example {
+  background: rgba(220,38,38,0.04);
+  border: 1px solid rgba(220,38,38,0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  direction: ltr;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10pt;
+  color: var(--danger);
+}
+
+.correct-example {
+  background: rgba(22,163,74,0.04);
+  border: 1px solid rgba(22,163,74,0.15);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 10px 0;
+  direction: ltr;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10pt;
+  color: var(--success);
+}
+
+/* Review item styles */
+.review-item-error {
+  background: rgba(220,38,38,0.04);
+  border-right-color: var(--danger);
+}
+
+.review-item-tip {
+  background: rgba(245,158,11,0.04);
+  border-right-color: var(--accent);
+}
+
+.review-item-success {
+  background: rgba(22,163,74,0.04);
+  border-right-color: var(--success);
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== TABLE OF CONTENTS ==================== -->
+<div class="page toc-page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">Shell Programming — POSIX Compliance</span>
+  </div>
+
+  <div class="toc-title">فهرس المحتويات</div>
+  <div class="toc-subtitle">الدرس الخامس: برمجة سطر الأوامر — التوافقية مع معيار <span class="en-term">POSIX</span> (الجزء الثالث)</div>
+
+  <a class="toc-item chapter" href="#chapter5">
+    <span>الدرس الخامس: برمجة سطر الأوامر — <span class="en-term">Shell Scripting</span> — التوافقية مع معيار <span class="en-term">POSIX</span> (الجزء الثالث)</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">2</span>
+  </a>
+
+  <a class="toc-item section" href="#sec1">
+    <span>5.1 التواصل مع برامج تعريف النواة: <span class="en-term">ioctl &amp; Kernel Headers</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">2</span>
+  </a>
+  <a class="toc-item subsection" href="#sec1-1">
+    <span>ما هو نداء النظام <span class="en-term">ioctl</span>؟</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">2</span>
+  </a>
+  <a class="toc-item subsection" href="#sec1-2">
+    <span>ما هي <span class="en-term">Kernel Headers</span>؟ ولماذا توجد؟</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">3</span>
+  </a>
+
+  <a class="toc-item section" href="#sec2">
+    <span>5.2 الجملة الشرطية <span class="en-term">if Statement</span> في الشل</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">4</span>
+  </a>
+  <a class="toc-item subsection" href="#sec2-1">
+    <span>كيف ينظر الشل إلى الجملة الشرطية <span class="en-term">if</span>؟</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">4</span>
+  </a>
+  <a class="toc-item subsection" href="#sec2-2">
+    <span>الهيكل العام <span class="en-term">Syntax</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">5</span>
+  </a>
+  <a class="toc-item subsection" href="#sec2-3">
+    <span>قاعدة السطر الواحد <span class="en-term">Semicolon Rule</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">5</span>
+  </a>
+
+  <a class="toc-item section" href="#sec3">
+    <span>5.3 أمر الفحص والمقارنة <span class="en-term">test</span> و <span class="en-term">[ ]</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">6</span>
+  </a>
+  <a class="toc-item subsection" href="#sec3-1">
+    <span>ما هو أمر <span class="en-term">test</span>؟</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">6</span>
+  </a>
+  <a class="toc-item subsection" href="#sec3-2">
+    <span>خيارات أمر <span class="en-term">test</span> <span class="en-term">Options</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">6</span>
+  </a>
+  <a class="toc-item subsection" href="#sec3-3">
+    <span>القوس المربع <span class="en-term">[ ]</span> — <span class="en-term">The Bracket Command</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">7</span>
+  </a>
+  <a class="toc-item subsection" href="#sec3-4">
+    <span>القاعدة الذهبية: علامات الاقتباس المزدوجة <span class="en-term">Double Quotes</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">8</span>
+  </a>
+
+  <a class="toc-item section" href="#sec4">
+    <span>5.4 حلقات التكرار <span class="en-term">Loops</span> والرموز الخاصة</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">9</span>
+  </a>
+  <a class="toc-item subsection" href="#sec4-1">
+    <span>حلقة <span class="en-term">for</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">9</span>
+  </a>
+  <a class="toc-item subsection" href="#sec4-2">
+    <span>طرق تكوين القائمة <span class="en-term">List Creation</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">9</span>
+  </a>
+  <a class="toc-item subsection" href="#sec4-3">
+    <span>الرمز الخاص <span class="en-term">*</span> <span class="en-term">Wildcard</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">10</span>
+  </a>
+  <a class="toc-item subsection" href="#sec4-4">
+    <span>حلقة <span class="en-term">while</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">10</span>
+  </a>
+  <a class="toc-item subsection" href="#sec4-5">
+    <span>أمران: <span class="en-term">true</span> و <span class="en-term">false</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">11</span>
+  </a>
+
+  <a class="toc-item section" href="#sec5">
+    <span>5.5 العمليات الحسابية ومعياريّة <span class="en-term">POSIX</span> وخطر استخدام <span class="en-term">Bashisms</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">12</span>
+  </a>
+  <a class="toc-item subsection" href="#sec5-1">
+    <span>الطرق المتاحة</span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">12</span>
+  </a>
+  <a class="toc-item subsection" href="#sec5-2">
+    <span>التحذير الأهم للمهندس: <span class="en-term">POSIX Compliance vs Bashisms</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">12</span>
+  </a>
+
+  <a class="toc-item section" href="#review">
+    <span>مراجعة سريعة — <span class="en-term">Quick Review</span></span>
+    <span class="toc-dots"></span>
+    <span class="toc-page-num">14</span>
+  </a>
+
+  <div class="page-footer">
+    <span>الإصدار 1.0 — Embedded Linux Architect Course</span>
+    <span class="page-num">1</span>
+  </div>
+</div>
+
+<!-- ==================== CHAPTER 5 OPENING ==================== -->
+<div class="page" id="chapter5">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الخامس: Shell Scripting — POSIX Compliance</span>
+  </div>
+
+  <div class="chapter-opening">
+    <div class="chapter-number">CHAPTER 5</div>
+    <div class="chapter-icon-wrapper">
+      <i data-lucide="terminal"></i>
+    </div>
+    <div class="chapter-title">برمجة سطر الأوامر — <span class="en-term">Shell Scripting</span></div>
+    <div class="chapter-subtitle">التوافقية مع معيار <span class="en-term">POSIX</span> (الجزء الثالث)</div>
+    <div class="chapter-intro">
+      <p>موضوع الدرس: الجمل الشرطية <span class="en-term">If Statements</span>، حلقات التكرار <span class="en-term">Loops</span>، برمجة الأوامر، الفحص والمقارنة <span class="en-term">[ ]</span> و <span class="en-term">test</span>، ومفهوم التوافقية مع معيار <span class="en-term">POSIX</span> في الأنظمة المدمجة.</p>
+      <p style="margin-top: 8px; font-size: 11pt; color: var(--text-muted);">المدرب: سالم بالحاج طلال — <span class="en-term">Embedded Linux Architect</span></p>
+    </div>
+  </div>
+
+  <!-- Animated Chapter Overview -->
+  <div class="overview-container">
+    <div class="overview-label">
+      <i data-lucide="map" style="width:14px;height:14px;"></i>
+      خريطة الدرس — <span class="en-term">Chapter Roadmap</span>
+    </div>
+    <div class="overview-grid">
+      <div class="overview-card">
+        <div class="card-num">STEP 1</div>
+        <div class="card-icon" style="background: rgba(15,76,129,0.1); color: var(--primary);">
+          <i data-lucide="cpu"></i>
+        </div>
+        <div class="card-title"><span class="en-term">ioctl</span> &amp; <span class="en-term">Kernel Headers</span></div>
+        <div class="card-desc">التواصل مع برامج تعريف النواة وأهمية ملفات الترويسة</div>
+      </div>
+      <div class="overview-card">
+        <div class="card-num">STEP 2</div>
+        <div class="card-icon" style="background: rgba(20,184,166,0.1); color: var(--secondary);">
+          <i data-lucide="git-branch"></i>
+        </div>
+        <div class="card-title"><span class="en-term">if Statement</span></div>
+        <div class="card-desc">الجملة الشرطية في الشل وكيف تختلف عن لغات البرمجة العادية</div>
+      </div>
+      <div class="overview-card">
+        <div class="card-num">STEP 3</div>
+        <div class="card-icon" style="background: rgba(245,158,11,0.1); color: var(--accent);">
+          <i data-lucide="search-check"></i>
+        </div>
+        <div class="card-title"><span class="en-term">test</span> &amp; <span class="en-term">[ ]</span></div>
+        <div class="card-desc">أمر الفحص والمقارنة والقواعد الصارمة للمسافات وعلامات الاقتباس</div>
+      </div>
+      <div class="overview-card">
+        <div class="card-num">STEP 4</div>
+        <div class="card-icon" style="background: rgba(22,163,74,0.1); color: var(--success);">
+          <i data-lucide="repeat"></i>
+        </div>
+        <div class="card-title"><span class="en-term">Loops</span> &amp; <span class="en-term">Wildcard</span></div>
+        <div class="card-desc">حلقات التكرار <span class="en-term">for</span> و <span class="en-term">while</span> والرمز الخاص <span class="en-term">*</span></div>
+      </div>
+      <div class="overview-card">
+        <div class="card-num">STEP 5</div>
+        <div class="card-icon" style="background: rgba(124,58,237,0.1); color: #7C3AED;">
+          <i data-lucide="shield-check"></i>
+        </div>
+        <div class="card-title"><span class="en-term">POSIX Compliance</span></div>
+        <div class="card-desc">التحذير الأهم: خطر <span class="en-term">Bashisms</span> في الأنظمة المدمجة</div>
+      </div>
+    </div>
+    <div class="overview-flow">
+      <div class="flow-step">
+        <i data-lucide="cpu"></i>
+        <span><span class="en-term">ioctl</span></span>
+      </div>
+      <span class="flow-arrow ltr">→</span>
+      <div class="flow-step">
+        <i data-lucide="git-branch"></i>
+        <span><span class="en-term">if</span></span>
+      </div>
+      <span class="flow-arrow ltr">→</span>
+      <div class="flow-step">
+        <i data-lucide="search-check"></i>
+        <span><span class="en-term">test [ ]</span></span>
+      </div>
+      <span class="flow-arrow ltr">→</span>
+      <div class="flow-step">
+        <i data-lucide="repeat"></i>
+        <span><span class="en-term">Loops</span></span>
+      </div>
+      <span class="flow-arrow ltr">→</span>
+      <div class="flow-step">
+        <i data-lucide="shield-check"></i>
+        <span><span class="en-term">POSIX</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>الإصدار 1.0 — Embedded Linux Architect Course</span>
+    <span class="page-num">2</span>
+  </div>
+</div>
+
+<!-- ==================== SECTION 5.1 ==================== -->
+<div class="page" id="sec1">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الخامس: Shell Scripting — POSIX Compliance</span>
+  </div>
+
+  <h2 class="section-title" id="sec1-1">
+    <span class="num">1</span>
+    التواصل مع برامج تعريف النواة: <span class="en-term">ioctl &amp; Kernel Headers</span>
+  </h2>
+
+  <div class="question-box">
+    <i data-lucide="help-circle" style="width:20px;height:20px;"></i>
+    <div>قبل الدخول في برمجة الـ <span class="en-term">Shell</span>، أجاب المدرب على سؤال جوهري حول كيفية تفاعل التطبيقات مع العتاد عبر الكيرنل: <strong>كيف تتواصل التطبيقات <span class="en-term">User Space</span> مع الـ <span class="en-term">Kernel Drivers</span>؟؟</strong></div>
+  </div>
+
+  <p>سابقاً تعلمنا أننا نستخدم نداءات النظام <span class="en-term">System Calls</span> مثل <span class="inline-code-block">read</span> و <span class="inline-code-block">write</span>. ولكن ماذا لو كنا نريد إرسال أمر "خاص" لقطعة هاردوير (مثال: تغيير سرعة دوران محرك، أو ضبط إعدادات حساس) لا يمكن التعبير عنه بمجرد كتابة أو قراءة؟</p>
+
+  <div class="callout callout-definition">
+    <div class="callout-header">
+      <span>📌</span>
+      <span>تعريف: نداء النظام <span class="en-term">ioctl</span> — <span class="en-term">Input/Output Control</span></span>
+    </div>
+    <div class="callout-body">
+      <p>هو نداء نظام خاص <span class="en-term">Special System Call</span> يُستخدم لإرسال أوامر مخصصة <span class="en-term">Custom Commands</span> لبرامج التعريف <span class="en-term">Drivers</span> داخل الكيرنل.</p>
+    </div>
+  </div>
+
+  <ul class="bullet-list primary">
+    <li><span class="en-term">ioctl</span> يعتمد على معرفات <span class="en-term">IDs</span> — يقوم التطبيق بإرسال <span class="en-term">ID</span> معين، ويقوم الـ <span class="en-term">Driver</span> بالتقاط هذا الـ <span class="en-term">ID</span> ومطابقة تماماً لما ينتظره الـ <span class="en-term">Driver</span> في الـ <span class="en-term">Kernel Space</span> (حسب معيار <span class="en-term">ABI</span>).</li>
+    <li>ثم ينفذ الوظيفة المقابلة لهذا الـ <span class="en-term">ID</span>.</li>
+  </ul>
+
+  <h3 class="subsection-title" id="sec1-2">ما هي <span class="en-term">Kernel Headers</span>؟ ولماذا توجد؟</h3>
+
+  <div class="callout callout-definition">
+    <div class="callout-header">
+      <span>📌</span>
+      <span>تعريف: <span class="en-term">Kernel Headers</span></span>
+    </div>
+    <div class="callout-body">
+      <p>هي ملفات ترويسة <span class="en-term">Header Files .h</span> مكتوبة بلغة <span class="en-term">C</span>، يتم استخراجها من الكيرنل وإتاحتها لمساحة المستخدم <span class="en-term">User Space</span>.</p>
+    </div>
+  </div>
+
+  <p><strong>وظيفتها:</strong></p>
+  <ul class="bullet-list">
+    <li>تحتوي على تعريفات الثوابت <span class="en-term">Constants</span> وأرقام الـ <span class="en-term">IDs</span> الخاصة بالـ <span class="en-term">ioctl</span>.</li>
+    <li>ليتمكن المطور من عمل <span class="en-term">include</span> لها في تطبيقه، مما يضمن توافق الأوامر بين التطبيق والكيرنل.</li>
+  </ul>
+
+  <!-- ioctl Diagram -->
+  <div class="diagram-container">
+    <div class="diagram-title">آلية عمل <span class="en-term">ioctl</span> — تواصل <span class="en-term">User Space</span> مع <span class="en-term">Kernel Space</span></div>
+    <div class="arch-diagram">
+      <div class="arch-box" style="background: rgba(20,184,166,0.12); border: 2px solid var(--secondary); color: var(--secondary);">
+        📱 التطبيق — <span class="en-term">User Space Application</span>
+      </div>
+      <div class="arch-arrow">▼</div>
+      <div class="arch-box" style="background: rgba(15,76,129,0.12); border: 2px solid var(--primary); color: var(--primary);">
+        يرسل <span class="en-term">ioctl(fd, CMD_ID, data)</span> — معرف الأمر <span class="en-term">ID</span>
+      </div>
+      <div class="arch-arrow">▼</div>
+      <div class="arch-box" style="background: rgba(124,58,237,0.12); border: 2px solid #7C3AED; color: #7C3AED;">
+        📂 <span class="en-term">Kernel Headers</span> — ملفات <span class="en-term">.h</span> تحتوي تعريفات الثوابت والأرقام
+      </div>
+      <div class="arch-arrow">▼</div>
+      <div class="arch-box" style="background: rgba(245,158,11,0.12); border: 2px solid var(--accent); color: var(--accent);">
+        ⚙️ <span class="en-term">Kernel Driver</span> — يستقبل الـ <span class="en-term">ID</span> وينفذ الوظيفة المقابلة
+      </div>
+      <div class="arch-arrow">▼</div>
+      <div class="arch-box" style="background: rgba(100,116,139,0.12); border: 2px solid #64748B; color: #64748B;">
+        🔧 العتاد — <span class="en-term">Hardware</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-takeaway">
+    <div class="callout-header">
+      <span>✅</span>
+      <span>ماذا يجب أن تتذكر؟</span>
+    </div>
+    <div class="callout-body">
+      <p>نداء <span class="en-term">ioctl</span> هو نافذة التطبيقات للتحكم الدقيق والمخصص في العتاد عبر الـ <span class="en-term">Drivers</span>. والـ <span class="en-term">Kernel Headers</span> هي "القاموس" المشترك بين التطبيق والكيرنل.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-tip">
+    <div class="callout-header">
+      <span>💡</span>
+      <span>مراجعة سريعة</span>
+    </div>
+    <div class="callout-body">
+      <ul class="bullet-list" style="margin:0;">
+        <li><span class="inline-code-block">read/write</span>: لنقل البيانات القياسية.</li>
+        <li><span class="inline-code-block">ioctl</span>: لإرسال أوامر مخصصة وإعدادات للعتاد.</li>
+        <li><span class="inline-code-block">Kernel Headers</span>: ملفات <span class="en-term">.h</span> تضمن اتفاق التطبيق والكيرنل على نفس الثوابت.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>الإصدار 1.0 — Embedded Linux Architect Course</span>
+    <span class="page-num">3</span>
+  </div>
+</div>
+
+<!-- ==================== SECTION 5.2 ==================== -->
+<div class="page" id="sec2">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الخامس: Shell Scripting — POSIX Compliance</span>
+  </div>
+
+  <h2 class="section-title" id="sec2-1">
+    <span class="num">2</span>
+    الجملة الشرطية <span class="en-term">if Statement</span> في الشل
+  </h2>
+
+  <div class="callout callout-concept">
+    <div class="callout-header">
+      <span>📘</span>
+      <span>مفهوم أساسي</span>
+    </div>
+    <div class="callout-body">
+      <p>الجملة الشرطية في الـ <span class="en-term">Shell</span> تختلف جذرياً فلسفياً عن لغات البرمجة العادية مثل <span class="en-term">C</span> أو <span class="en-term">Python</span>.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection-title">كيف ينظر الشل إلى الجملة الشرطية <span class="en-term">if</span>؟</h3>
+
+  <div class="comparison-container" style="margin: 20px 0; direction: rtl;">
+    <div class="comparison-side" style="border-color: var(--text-muted); background: rgba(100,116,139,0.04);">
+      <h4 style="color: #64748B;">في لغة <span class="en-term">C</span></h4>
+      <p style="font-size: 10.5pt; line-height: 1.7;"><span class="en-term">if</span> تقوم بتقييم متغير أو عملية حسابية — إذا كانت النتيجة <span class="inline-code-block">0</span> ف هي <span class="en-term">False</span>، وإلا ف هي <span class="en-term">True</span>.</p>
+    </div>
+    <div class="comparison-vs">VS</div>
+    <div class="comparison-side" style="border-color: var(--primary); background: rgba(15,76,129,0.04);">
+      <h4 style="color: var(--primary);">في الـ <span class="en-term">Shell</span></h4>
+      <p style="font-size: 10.5pt; line-height: 1.7;">الشرط الخاص بـ <span class="en-term">if</span> عبارة عن "أمر" <span class="en-term">Command</span>.</p>
+    </div>
+  </div>
+
+  <p><strong>ماذا يحدث بالضبط؟</strong></p>
+  <ul class="num-list">
+    <li>الـ <span class="en-term">Shell</span> يقوم بتشغيل الأمر.</li>
+    <li>ينظر إلى حالة الخروج <span class="en-term">Exit Status</span> (الموجودة في المتغیر <span class="inline-code-block">$?</span>).</li>
+    <li>إذا كانت حالة الخروج تساوي <span class="inline-code-block">0</span> (نفذ الأمر بنجاح تام) — تُعتبر النتيجة <span class="en-term">True</span> ويدخل إلى بلوك الـ <span class="en-term">then</span>.</li>
+    <li>إذا كانت حالة الخروج أي رقم آخر (حدث خطأ) — تُعتبر النتيجة <span class="en-term">False</span> ويدخل إلى بلوك الـ <span class="en-term">else</span>.</li>
+  </ul>
+
+  <h3 class="subsection-title" id="sec2-2">الهيكل العام <span class="en-term">Syntax</span></h3>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Shell</span>
+    </div>
+    <div class="code-body">
+<span class="line"><span class="syn-kw">if</span> [<span class="syn-fn">Command</span>]; <span class="syn-kw">then</span></span>
+<span class="line">    <span class="syn-cm"># Commands to execute if True (Exit status is 0)</span></span>
+<span class="line"><span class="syn-kw">elif</span> [<span class="syn-fn">Command</span>]; <span class="syn-kw">then</span></span>
+<span class="line">    <span class="syn-cm"># Commands to execute if True</span></span>
+<span class="line"><span class="syn-kw">else</span></span>
+<span class="line">    <span class="syn-cm"># Commands to execute if all above are False (Exit status != 0)</span></span>
+<span class="line"><span class="syn-kw">fi</span></span>
+    </div>
+  </div>
+
+  <ul class="bullet-list">
+    <li><strong>الوظيفة:</strong> التحكم بمسار تنفيذ البرنامج بناءً على نجاح أو فشل أوامر أخرى.</li>
+    <li><span class="inline-code-block">if</span>: بداية الشرط (تُتبع بأمر).</li>
+    <li><span class="inline-code-block">then</span>: بداية البلوك الذي سيُنفذ في حال النجاح.</li>
+    <li><span class="inline-code-block">fi</span>: نهاية وإعلان إغلاق الجملة الشرطية بالكامل — وتُستخدم كلمة <span class="inline-code-block">if</span> معكوسة.</li>
+  </ul>
+
+  <h3 class="subsection-title" id="sec2-3">قاعدة السطر الواحد <span class="en-term">Semicolon Rule</span></h3>
+
+  <div class="callout callout-attention">
+    <div class="callout-header">
+      <span>⚠️</span>
+      <span>تنبيه مهم</span>
+    </div>
+    <div class="callout-body">
+      <p>بما أن مترجم الـ <span class="en-term">Shell</span> <span class="en-term">Interpreter</span> فإنه يقرأ سطراً بسطر. إذا أردت كتابة <span class="en-term">if</span> و <span class="en-term">then</span> في نفس السطر، يجب وضع فاصلة منقوطة <span class="inline-code-block">;</span> بعد الأمر لإنهاء الجملة، ليتمكن الشل من تمييز كلمة <span class="inline-code-block">then</span> ككلمة مفتاحية <span class="en-term">Keyword</span> وليس كمدخل <span class="en-term">Argument</span> للأمر.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-practical">
+    <div class="callout-header">
+      <span>🚀</span>
+      <span>مثال عملي</span>
+    </div>
+    <div class="callout-body">
+if echo "Hi"; then echo "Done"; fi
+    </div>
+  </div>
+
+  <div class="callout callout-takeaway">
+    <div class="callout-header">
+      <span>✅</span>
+      <span>ماذا يجب أن تتذكر؟</span>
+    </div>
+    <div class="callout-body">
+      <p>الـ <span class="en-term">if</span> في الـ <span class="en-term">Shell</span> لا تقارن أرقاماً بل تشغل أمراً وتراقب نجاحه أو فشله.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-warning">
+    <div class="callout-header">
+      <span>⚠️</span>
+      <span>أخطاء شائعة</span>
+    </div>
+    <div class="callout-body">
+      <p>كتابة <span class="inline-code-block">if VAR == 1</span> بناءً خاطئ تماماً لأن الـ <span class="en-term">if</span> تنتظر "أمراً" ولا تفهم المقارنات الرياضية المباشرة.</p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>الإصدار 1.0 — Embedded Linux Architect Course</span>
+    <span class="page-num">4</span>
+  </div>
+</div>
+
+<!-- ==================== SECTION 5.3 ==================== -->
+<div class="page" id="sec3">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الخامس: Shell Scripting — POSIX Compliance</span>
+  </div>
+
+  <h2 class="section-title" id="sec3-1">
+    <span class="num">3</span>
+    أمر الفحص والمقارنة <span class="en-term">test</span> و <span class="en-term">[ ]</span>
+  </h2>
+
+  <p>بما أن الـ <span class="en-term">if</span> تتطلب "أمراً" للعمل، فكيف يمكننا إجراء مقارنات نصوص أو أرقام؟ الحل هو استخدام أمر يسمى <span class="en-term">test</span>.</p>
+
+  <h3 class="subsection-title">ما هو أمر <span class="en-term">test</span>؟</h3>
+
+  <div class="callout callout-definition">
+    <div class="callout-header">
+      <span>📌</span>
+      <span>تعريف: أمر <span class="en-term">test</span></span>
+    </div>
+    <div class="callout-body">
+      <p>أداة للمقارنة (للأرقام والنصوص) وفحص حالة الملفات (هل الملف موجود؟ هل هو مجلد؟) وإرجاع نتيجة <span class="en-term">Exit status</span>.</p>
+    </div>
+  </div>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Shell</span>
+    </div>
+    <div class="code-body">
+<span class="line"><span class="syn-fn">test</span> [<span class="syn-var">Options</span>] [<span class="syn-var">Arguments</span>]</span>
+    </div>
+  </div>
+
+  <p><strong>الوظيفة:</strong> إذا كانت المقارنة صحيحة يُرجع <span class="inline-code-block">0</span>، وإذا كانت خاطئة يُرجع <span class="inline-code-block">1</span>.</p>
+
+  <h3 class="subsection-title" id="sec3-2">خيارات أمر <span class="en-term">test</span> — <span class="en-term">Options</span></h3>
+
+  <div class="table-wrapper">
+    <div class="table-title">جدول خيارات أمر <span class="en-term">test</span> الكامل</div>
+    <table>
+      <thead>
+        <tr>
+          <th>نوع الفحص</th>
+          <th class="ltr-col">الخيار <span class="en-term">Option</span></th>
+          <th>المعنى والوظيفة</th>
+          <th class="ltr-col">مثال</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>النصوص <span class="en-term">Strings</span></td>
+          <td class="code-cell">-z</td>
+          <td><span class="en-term">Zero</span> — هل النص فارغ؟ (طوله صفر)</td>
+          <td class="code-cell">test -z "$NAME"</td>
+        </tr>
+        <tr>
+          <td>النصوص <span class="en-term">Strings</span></td>
+          <td class="code-cell">-n</td>
+          <td><span class="en-term">Non-zero/Not empty</span> — هل النص يحتوي على قيمة؟</td>
+          <td class="code-cell">test -n "$NAME"</td>
+        </tr>
+        <tr>
+          <td>النصوص <span class="en-term">Strings</span></td>
+          <td class="code-cell">=</td>
+          <td>هل النص الأول يطابق النص الثاني؟</td>
+          <td class="code-cell">test "$A" = "$B"</td>
+        </tr>
+        <tr>
+          <td>الأرقام <span class="en-term">Integers</span></td>
+          <td class="code-cell">-eq</td>
+          <td><span class="en-term">Equal</span> — هل الرقمان متساويان؟</td>
+          <td class="code-cell">test 1 -eq 1</td>
+        </tr>
+        <tr>
+          <td>الأرقام <span class="en-term">Integers</span></td>
+          <td class="code-cell">-lt</td>
+          <td><span class="en-term">Less Than</span> — هل أصغر من؟</td>
+          <td class="code-cell">test 10 -lt 20</td>
+        </tr>
+        <tr>
+          <td>الأرقام <span class="en-term">Integers</span></td>
+          <td class="code-cell">-gt</td>
+          <td><span class="en-term">Greater Than</span> — هل أكبر من؟</td>
+          <td class="code-cell">test 20 -gt 10</td>
+        </tr>
+        <tr>
+          <td>الملفات <span class="en-term">Files</span></td>
+          <td class="code-cell">-d</td>
+          <td>هل المسار موجود وهو مجلد <span class="en-term">Directory</span>؟</td>
+          <td class="code-cell">test -d /home</td>
+        </tr>
+        <tr>
+          <td>الملفات <span class="en-term">Files</span></td>
+          <td class="code-cell">-f</td>
+          <td>هل المسار موجود وهو ملف عادي <span class="en-term">Regular File</span>؟</td>
+          <td class="code-cell">test -f /etc/passwd</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="subsection-title" id="sec3-3">القوس المربع <span class="en-term">[ ]</span> — <span class="en-term">The Bracket Command</span></h3>
+
+  <p>وجد المبرمجون أن كتابة <span class="inline-code-block">if test -n "$VAR"</span> تبدو غير مقروءة بوضوح. تم تطوير أمر جديد تماماً مطابق لأمر <span class="en-term">test</span> يسمى <span class="inline-code-block">[</span> (نعم، اسم الأمر هو القوس المفتوح <span class="inline-code-block">[</span> ولكنّه).</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Shell</span>
+    </div>
+    <div class="code-body">
+<span class="line">[ <span class="syn-var">$A</span> <span class="syn-op">-eq</span> <span class="syn-var">$B</span> ]</span>
+    </div>
+  </div>
+
+  <div class="callout callout-attention">
+    <div class="callout-header">
+      <span>⚠️</span>
+      <span>قاعدة المسافات الصارمة</span>
+    </div>
+    <div class="callout-body">
+      <p>أمر <span class="inline-code-block">[</span> يتطلب وجود مسافة <span class="en-term">Space</span> فوراً بعده، ومسافة قبل القوس المغلق <span class="inline-code-block">]</span>.</p>
+      <p style="margin-top: 8px;"><strong>السبب التقني:</strong> لأن <span class="inline-code-block">[</span> هو اسم البرنامج (الكوماند)، والمدخلات هي المقارنة و <span class="en-term">Arguments</span>، و <span class="inline-code-block">]</span> هو المدخل الإجباري الأخير الذي يطلبه البرنامج لرؤيته حتى يعرف نهاية العملية. بدون مسافات الشل سيعتبرها كلمة واحدة ولن يجد أمراً بهذا الاسم.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-takeaway">
+    <div class="callout-header">
+      <span>✅</span>
+      <span>ماذا يجب أن تتذكر؟</span>
+    </div>
+    <div class="callout-body">
+      <p>القوس <span class="inline-code-block">[</span> ليس جزءاً من قواعد الشل <span class="en-term">Syntax</span> بل هو برنامج تنفيذي <span class="en-term">Command</span> وظيفته المقارنة، والمسافات حوله إجبارية.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection-title" id="sec3-4">القاعدة الذهبية: علامات الاقتباس المزدوجة <span class="en-term">Double Quotes</span></h3>
+
+  <div class="callout callout-warning">
+    <div class="callout-header">
+      <span>⚠️</span>
+      <span>هذا الخطأ يقع فيه 99% من المبتدئين</span>
+    </div>
+    <div class="callout-body">
+      <p>يجب دائماً إحاطة المتغيرات بعلامات اقتباس مزدوجة عند استخدامها مع أمر <span class="en-term">test</span> أو <span class="inline-code-block">[ ]</span>.</p>
+    </div>
+  </div>
+
+  <p><strong>مثال خاطئ:</strong></p>
+  <div class="error-example">[ -z $NAME ]</div>
+
+  <p><strong>المشكلة:</strong> إذا كان المتغير <span class="inline-code-block">NAME</span> فارغاً، الشل سيُعوّضه بفراغ، وبعد الترجمة سيصبح الأمر هكذا: <span class="inline-code-block">[ -z  ]</span> — الآن الأمر ناقص مدخل بعد <span class="inline-code-block">-z</span> (يحتاج ليفحصه)، مما سيؤدي إلى خطأ تشغيلي <span class="en-term">Syntax error</span> وإرجاع نتيجة خاطئة دائماً.</p>
+
+  <p><strong>الحل الصحيح:</strong></p>
+  <div class="correct-example">[ -z "$NAME" ]</div>
+
+  <p>لو كان المتغير فارغاً، الأمر سيصبح <span class="inline-code-block">[ -z "" ]</span> — الآن الأمر مكتمل برمجياً وسيفحص نصاً فارغاً وسيرجع النتيجة المتوقعة بشكل سليم.</p>
+
+  <div class="callout callout-warning">
+    <div class="callout-header">
+      <span>⚠️</span>
+      <span>أخطاء شائعة</span>
+    </div>
+    <div class="callout-body">
+      <ul class="bullet-list" style="margin:0;">
+        <li>كتابة <span class="inline-code-block">[$A -eq $B]</span> (بدون مسافات).</li>
+        <li>نسيان وضع <span class="inline-code-block">$VAR</span> داخل علامات اقتباس مزدوجة.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>الإصدار 1.0 — Embedded Linux Architect Course</span>
+    <span class="page-num">5</span>
+  </div>
+</div>
+
+<!-- ==================== SECTION 5.4 ==================== -->
+<div class="page" id="sec4">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الخامس: Shell Scripting — POSIX Compliance</span>
+  </div>
+
+  <h2 class="section-title" id="sec4-1">
+    <span class="num">4</span>
+    حلقات التكرار <span class="en-term">Loops</span> والرموز الخاصة
+  </h2>
+
+  <h3 class="subsection-title">حلقة <span class="en-term">for</span></h3>
+
+  <p>تُستخدم لتكرار تنفيذ بلوك من الأوامر على قائمة <span class="en-term">List</span> من العناصر.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Shell</span>
+    </div>
+    <div class="code-body">
+<span class="line"><span class="syn-kw">for</span> <span class="syn-var">COUNTER</span> <span class="syn-kw">in</span> <span class="syn-var">LIST</span>; <span class="syn-kw">do</span></span>
+<span class="line">    <span class="syn-cm"># Commands to execute using $COUNTER</span></span>
+<span class="line"><span class="syn-kw">done</span></span>
+    </div>
+  </div>
+
+  <ul class="bullet-list">
+    <li><strong>الوظيفة:</strong> الشل يمر على عناصر القائمة <span class="en-term">LIST</span> واحداً تلو الآخر، وفي كل مرة يضع العنصر في المتغير <span class="en-term">COUNTER</span> وينفذ الأوامر الموجودة بين <span class="inline-code-block">do</span> و <span class="inline-code-block">done</span>.</li>
+  </ul>
+
+  <h3 class="subsection-title" id="sec4-2">طرق تكوين القائمة <span class="en-term">List Creation</span></h3>
+
+  <div class="num-list">
+    <li>
+      <strong>كتابة يدوية:</strong>
+      <div class="code-block" style="margin-top: 8px; margin-bottom: 8px;">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <span class="code-lang">Shell</span>
+        </div>
+        <div class="code-body">
+<span class="line"><span class="syn-kw">for</span> name <span class="syn-kw">in</span> Ali Talal; <span class="syn-kw">do</span> <span class="syn-kw">echo</span> <span class="syn-str">"$name"</span>; <span class="syn-kw">done</span></span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <strong>استخدام أمر <span class="en-term">seq</span>:</strong> يولد تسلسلاً رقمیاً. يتم دمجه بأقواس <span class="inline-code-block">$()</span> لتنفيذ الأوامر.
+      <div class="code-block" style="margin-top: 8px; margin-bottom: 8px;">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <span class="code-lang">Shell</span>
+        </div>
+        <div class="code-body">
+<span class="line"><span class="syn-kw">for</span> num <span class="syn-kw">in</span> $(<span class="syn-fn">seq</span> <span class="syn-num">1</span> <span class="syn-num">100</span>); <span class="syn-kw">do</span> <span class="syn-kw">echo</span> <span class="syn-str">"$num"</span>; <span class="syn-kw">done</span></span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <strong>استخدام أقواس التسلسل <span class="inline-code-block">{}</span>:</strong>
+      <div class="code-block" style="margin-top: 8px; margin-bottom: 8px;">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <span class="code-lang">Shell</span>
+        </div>
+        <div class="code-body">
+<span class="line"><span class="syn-kw">for</span> num <span class="syn-kw">in</span> {<span class="syn-num">1</span>..<span class="syn-num">100</span>}; <span class="syn-kw">do</span> <span class="syn-kw">echo</span> <span class="syn-str">"$num"</span>; <span class="syn-kw">done</span></span>
+        </div>
+      </div>
+    </li>
+  </ul>
+
+  <h3 class="subsection-title" id="sec4-3">الرمز الخاص <span class="en-term">*</span> — <span class="en-term">Wildcard</span></h3>
+
+  <div class="callout callout-concept">
+    <div class="callout-header">
+      <span>📘</span>
+      <span>مفهوم</span>
+    </div>
+    <div class="callout-body">
+      <p>رمز النجمة <span class="inline-code-block">*</span> في الشل يعني "كل شيء" <span class="en-term">Matches everything</span>.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-practical">
+    <div class="callout-header">
+      <span>🚀</span>
+      <span>مثال عملي</span>
+    </div>
+    <div class="callout-body">
+for file in *.c; do echo "$file"; done
+    </div>
+  </div>
+
+  <p><strong>التفسير:</strong> الشل سيبحث في المجلد الحالي عن جميع الملفات التي تنتهي بـ <span class="inline-code-block">.c</span> ويحولها إلى قائمة ليمر عليها أمر <span class="en-term">for</span> — مفيدة جداً لمعالجة الملفات دفعة واحدة (مثل مسح جميع ملفات نوع معين <span class="inline-code-block">rm *.txt</span>).</p>
+
+  <h3 class="subsection-title" id="sec4-4">حلقة <span class="en-term">while</span></h3>
+
+  <p>حلقة التكرار المشروطة — تدمج فكرة <span class="en-term">if</span> و <span class="en-term">for</span> معاً.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Shell</span>
+    </div>
+    <div class="code-body">
+<span class="line"><span class="syn-kw">while</span> [<span class="syn-fn">Command</span>]; <span class="syn-kw">do</span></span>
+<span class="line">    <span class="syn-cm"># Commands to execute as long as Command exits with 0 (True)</span></span>
+<span class="line"><span class="syn-kw">done</span></span>
+    </div>
+  </div>
+
+  <ul class="bullet-list">
+    <li><strong>الوظيفة:</strong> تستمر في تنفيذ البلوك طالما أن "الأمر" في الشرط يرجع حالة خروج <span class="inline-code-block">0</span> <span class="en-term">Success/True</span>.</li>
+  </ul>
+
+  <h3 class="subsection-title" id="sec4-5">أمران: <span class="en-term">true</span> و <span class="en-term">false</span></h3>
+
+  <p>هما برنامجان صغيران جداً في لينكس، وظيفتها الوحيدة هي إرجاع حالة خروج محددة:</p>
+
+  <div class="comparison-container" style="margin: 16px 0; direction: rtl;">
+    <div class="comparison-side" style="border-color: var(--success); background: rgba(22,163,74,0.04);">
+      <h4 style="color: var(--success);"><span class="en-term">true</span></h4>
+      <p style="font-size: 10.5pt; line-height: 1.7;">أمر يُرجع دائماً <span class="inline-code-block">0</span> (نجاح).</p>
+    </div>
+    <div class="comparison-vs">VS</div>
+    <div class="comparison-side" style="border-color: var(--danger); background: rgba(220,38,38,0.04);">
+      <h4 style="color: var(--danger);"><span class="en-term">false</span></h4>
+      <p style="font-size: 10.5pt; line-height: 1.7;">أمر يُرجع دائماً <span class="inline-code-block">1</span> (فشل).</p>
+    </div>
+  </div>
+
+  <p><strong>الاستخدام:</strong> لإنشاء حلقة تكرار لا نهائية <span class="en-term">Infinite Loop</span>.</p>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Shell</span>
+    </div>
+    <div class="code-body">
+<span class="line"><span class="syn-kw">while</span> <span class="syn-kw">true</span>; <span class="syn-kw">do</span></span>
+<span class="line">    <span class="syn-kw">echo</span> <span class="syn-str">"Running forever..."</span></span>
+<span class="line"><span class="syn-kw">done</span></span>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>الإصدار 1.0 — Embedded Linux Architect Course</span>
+    <span class="page-num">6</span>
+  </div>
+</div>
+
+<!-- ==================== SECTION 5.5 ==================== -->
+<div class="page" id="sec5">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الخامس: Shell Scripting — POSIX Compliance</span>
+  </div>
+
+  <h2 class="section-title" id="sec5-1">
+    <span class="num">5</span>
+    العمليات الحسابية ومعياريّة <span class="en-term">POSIX</span> وخطر استخدام <span class="en-term">Bashisms</span>
+  </h2>
+
+  <p>بما أن الشل يعتبر كل شيء نصوصاً <span class="en-term">Strings</span>، فكيف نطرح أو نجمع أرقاماً في الشل؟</p>
+
+  <h3 class="subsection-title">الطرق المتاحة</h3>
+
+  <div class="num-list">
+    <li>
+      <strong>القوسان المزدوجان <span class="inline-code-block">$(( ))</span>:</strong> تُستخدم لإجراء العمليات الحسابية مباشرة.
+      <div class="code-block" style="margin-top: 8px; margin-bottom: 8px;">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <span class="code-lang">Shell</span>
+        </div>
+        <div class="code-body">
+<span class="line"><span class="syn-kw">echo</span> $(( <span class="syn-num">1</span> <span class="syn-op">+</span> <span class="syn-num">1</span> ))</span>
+        </div>
+      </div>
+    </li>
+    <li>
+      <strong>أمر <span class="en-term">expr</span>:</strong> برنامج يقوم بتقييم العمليات الحسابية.
+      <div class="code-block" style="margin-top: 8px; margin-bottom: 8px;">
+        <div class="code-header">
+          <div class="code-dots"><span></span><span></span><span></span></div>
+          <span class="code-lang">Shell</span>
+        </div>
+        <div class="code-body">
+<span class="line"><span class="syn-kw">echo</span> $(<span class="syn-fn">expr</span> <span class="syn-num">1</span> <span class="syn-op">+</span> <span class="syn-num">1</span>)</span>
+        </div>
+      </div>
+    </li>
+  </div>
+
+  <h3 class="subsection-title" id="sec5-2">التحذير الأهم للمهندس: <span class="en-term">POSIX Compliance vs Bashisms</span></h3>
+
+  <div class="callout callout-concept">
+    <div class="callout-header">
+      <span>📘</span>
+      <span>مفهوم أساسي</span>
+    </div>
+    <div class="callout-body">
+      <p>برنامج <span class="en-term">Bash</span> <span class="en-term">Bourne Again Shell</span> هو الـ <span class="en-term">Shell</span> الافتراضي في العديد من التوزيعات (مثل <span class="en-term">Ubuntu</span>). مطورو <span class="en-term">Bash</span> قاموا بإضافة العديد من المزايا التي تسهل الكتابة، ولكنها ليست جزءاً من المعيار القياسي <span class="en-term">POSIX</span> وتسمى <span class="en-term">Bashisms</span>.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-practical">
+    <div class="callout-header">
+      <span>🚀</span>
+      <span>مثال على <span class="en-term">Bashism</span></span>
+    </div>
+    <div class="callout-body">
+<span class="syn-cm"># حلقات تكرار تشبه C:</span>
+for ((i=0; i&lt;10; i++))
+
+<span class="syn-cm"># استخدام المقارنة المزدوجة [[ ]]:</span>
+[[ $VAR == "hello" ]]
+    </div>
+  </div>
+
+  <!-- POSIX vs Bashism Comparison -->
+  <div class="diagram-container">
+    <div class="diagram-title">المقارنة: <span class="en-term">POSIX</span> القياسي مقابل <span class="en-term">Bashisms</span></div>
+    <div class="table-wrapper" style="margin: 0; box-shadow: none; border: none;">
+      <table>
+        <thead>
+          <tr>
+            <th>الميزة</th>
+            <th style="background: linear-gradient(135deg, #16A34A, #22C55E);"><span class="en-term">POSIX</span> (قياسي)</th>
+            <th style="background: linear-gradient(135deg, #DC2626, #EF4444);"><span class="en-term">Bashism</span> (خاص بـ <span class="en-term">Bash</span>)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>المقارنة</td>
+            <td class="code-cell">[ "$A" = "$B" ]</td>
+            <td class="code-cell">[[ "$A" == "$B" ]]</td>
+          </tr>
+          <tr>
+            <td>حلقة رقمية</td>
+            <td class="code-cell">for i in $(seq 1 10)</td>
+            <td class="code-cell">for ((i=0; i&lt;10; i++))</td>
+          </tr>
+          <tr>
+            <td>العمليات الحسابية</td>
+            <td class="code-cell">$(( 1 + 1 )) أو expr</td>
+            <td class="code-cell">$(( 1 + 1 ))</td>
+          </tr>
+          <tr>
+            <td>التوافقية</td>
+            <td style="color: var(--success); font-weight: 600;">✅ يعمل على كل الأنظمة</td>
+            <td style="color: var(--danger); font-weight: 600;">❌ يعمل على Bash فقط</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="callout callout-warning">
+    <div class="callout-header">
+      <span>⚠️</span>
+      <span>ما خطورة ذلك في الأنظمة المدمجة <span class="en-term">Embedded Linux</span>؟</span>
+    </div>
+    <div class="callout-body">
+      <p>في الأنظمة المدمجة (مثل أجهزة التوجيه، كاميرات الشبكات، لوحات المراقبة) تكون مساحة التخزين والذاكرة محدودة جداً. لذلك الشركات لا تقوم بتثبيت الـ <span class="en-term">Bash</span> الثقيل، بل تستخدم برامج <span class="en-term">Shell</span> خفيفة جداً (مثل <span class="en-term">ash</span> أو <span class="en-term">dash</span> داخل <span class="en-term">BusyBox</span>).</p>
+      <p style="margin-top: 8px;">هذه البرامج الخفيفة تلتزم بشكل صارم جداً بمعيار <span class="en-term">POSIX</span> لتقليل الحجم.</p>
+      <p style="margin-top: 8px;">إذا قمت بكتابة سكربت يعتمد على مزايا <span class="en-term">bash</span> الخاصة (مثل <span class="inline-code-block">for ((i=0; i&lt;10; i++))</span>) وشغلته على اللوحة المدمجة أو أرسلته للعميل — السكربت سيفشل تماماً بـ <span class="en-term">Syntax Error</span> ولن يتعرف النظام عليه.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-takeaway">
+    <div class="callout-header">
+      <span>✅</span>
+      <span>ماذا يجب أن تتذكر؟</span>
+    </div>
+    <div class="callout-body">
+      <p>كمهندس أنظمة مدمجة، الأساس هو قابلية النقل <span class="en-term">Portability</span> — يجب أن تكتب سكربتات تتوافق حصرياً مع معيار <span class="en-term">POSIX</span>. استخدم <span class="inline-code-block">test</span> و <span class="inline-code-block">[ ]</span> و <span class="inline-code-block">expr</span> لتضمن عمل كودك الخاص على أي بوردة <span class="en-term">Board</span> كان في العالم، مهما كان حجمها أو نوع الـ <span class="en-term">Shell</span> المثبت عليها.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-tip">
+    <div class="callout-header">
+      <span>💡</span>
+      <span>مراجعة سريعة</span>
+    </div>
+    <div class="callout-body">
+      <ul class="bullet-list" style="margin:0;">
+        <li><span class="inline-code-block">bash</span>: ثقيل، غني بالمیزات الإضافية، غير مناسب بشكل افتراضي للأنظمة المدمجة.</li>
+        <li><span class="inline-code-block">sh</span> (<span class="en-term">POSIX</span>): قياسي، خفيف، متوفر دائماً في كل الأنظمة، التزم به دائماً.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Embedded Linux Shell Architecture Diagram -->
+  <div class="diagram-container">
+    <div class="diagram-title">هيكل الـ <span class="en-term">Shell</span> في الأنظمة المدمجة مقابل الأنظمة المكتبية</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; direction: ltr;">
+      <div style="text-align: center;">
+        <div style="font-weight: 700; color: var(--danger); font-size: 12pt; margin-bottom: 12px; font-family: 'Inter', sans-serif;">Desktop / Server</div>
+        <div class="layer-diagram">
+          <div class="layer" style="background: rgba(220,38,38,0.12); border: 2px solid var(--danger); color: var(--danger); width: 90%;">Bash — Heavy Shell</div>
+          <div class="layer-arrow">▼</div>
+          <div class="layer" style="background: rgba(100,116,139,0.1); border: 1px solid #94A3B8; color: #64748B; width: 70%;">Bashisms (Non-POSIX)</div>
+          <div class="layer-arrow">▼</div>
+          <div class="layer" style="background: rgba(100,116,139,0.06); border: 1px dashed #94A3B8; color: #94A3B8; width: 50%; font-size: 10pt;">Large Storage + RAM</div>
+        </div>
+      </div>
+      <div style="text-align: center;">
+        <div style="font-weight: 700; color: var(--success); font-size: 12pt; margin-bottom: 12px; font-family: 'Inter', sans-serif;">Embedded Linux</div>
+        <div class="layer-diagram">
+          <div class="layer" style="background: rgba(22,163,74,0.12); border: 2px solid var(--success); color: var(--success); width: 90%;">ash / dash — BusyBox</div>
+          <div class="layer-arrow">▼</div>
+          <div class="layer" style="background: rgba(15,76,129,0.1); border: 1px solid var(--primary); color: var(--primary); width: 70%;">POSIX Only — Strict</div>
+          <div class="layer-arrow">▼</div>
+          <div class="layer" style="background: rgba(100,116,139,0.06); border: 1px dashed #94A3B8; color: #94A3B8; width: 50%; font-size: 10pt;">Limited Storage + RAM</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>الإصدار 1.0 — Embedded Linux Architect Course</span>
+    <span class="page-num">7</span>
+  </div>
+</div>
+
+<!-- ==================== QUICK REVIEW ==================== -->
+<div class="page" id="review">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الخامس: Shell Scripting — POSIX Compliance</span>
+  </div>
+
+  <div class="quick-review">
+    <div class="quick-review-header">
+      <i data-lucide="clipboard-check" style="width:28px;height:28px;"></i>
+      مراجعة سريعة — <span class="en-term">Quick Review</span>
+    </div>
+
+    <!-- Main Concepts -->
+    <div class="quick-review-section">
+      <h4><i data-lucide="lightbulb" style="width:18px;height:18px;color:var(--accent);"></i> المفاهيم الرئيسية</h4>
+      <div class="review-grid">
+        <div class="review-item">
+          <span class="en-term">ioctl</span> هو نداء نظام خاص لإرسال أوامر مخصصة لبرامج تعريف الكيرنل <span class="en-term">Drivers</span>، ويعتمد على معرفات <span class="en-term">IDs</span> متفق عليها.
+        </div>
+        <div class="review-item">
+          <span class="en-term">Kernel Headers</span> هي ملفات <span class="en-term">.h</span> تحتوي تعريفات الثوابت والأرقام التي تضمن توافق التطبيق مع الكيرنل.
+        </div>
+        <div class="review-item">
+          الـ <span class="en-term">if</span> في الشل لا تقارن أرقاماً بل تشغل أمراً وتراقب حالة الخروج <span class="en-term">Exit Status</span> — <span class="inline-code-block">0</span> يعني نجاح <span class="en-term">True</span>.
+        </div>
+        <div class="review-item">
+          أمر <span class="en-term">test</span> والقوس <span class="inline-code-block">[ ]</span> هما نفس البرنامج — أداة للمقارنة وفحص الملفات ترجع <span class="inline-code-block">0</span> أو <span class="inline-code-block">1</span>.
+        </div>
+        <div class="review-item">
+          المسافات حول <span class="inline-code-block">[ ]</span> إجبارية لأنه برنامج تنفيذي وليس جزءاً من قواعد الشل.
+        </div>
+        <div class="review-item">
+          علامات الاقتباس المزدوجة حول المتغيرات في <span class="inline-code-block">[ ]</span> ضرورية لتجنب خطأ <span class="en-term">Syntax error</span> عند قيم فارغة.
+        </div>
+        <div class="review-item">
+          <span class="en-term">Bashisms</span> هي مزايا خاصة بـ <span class="en-term">Bash</span> غير موجودة في معيار <span class="en-term">POSIX</span> وتسبب فشل السكربتات في الأنظمة المدمجة.
+        </div>
+        <div class="review-item">
+          الأنظمة المدمجة تستخدم <span class="en-term">ash</span> / <span class="en-term">dash</span> داخل <span class="en-term">BusyBox</span> — خفيفة وتلتزم بـ <span class="en-term">POSIX</span> صارماً.
+        </div>
+      </div>
+    </div>
+
+    <!-- Important Definitions -->
+    <div class="quick-review-section">
+      <h4><i data-lucide="book-open" style="width:18px;height:18px;color:var(--primary);"></i> التعريفات المهمة</h4>
+      <div class="review-grid">
+        <div class="review-item">
+          <strong><span class="en-term">ioctl</span> (<span class="en-term">Input/Output Control</span>):</strong> نداء نظام خاص لإرسال أوامر مخصصة لبرامج تعريف الكيرنل.
+        </div>
+        <div class="review-item">
+          <strong><span class="en-term">Kernel Headers</span>:</strong> ملفات ترويسة <span class="en-term">.h</span> مكتوبة بلغة <span class="en-term">C</span> تُستخرج من الكيرنل وتُتاح لمساحة المستخدم.
+        </div>
+        <div class="review-item">
+          <strong><span class="en-term">Exit Status</span>:</strong> القيمة الراجعة من أي أمر — <span class="inline-code-block">0</span> نجاح، أي قيمة أخرى فشل.
+        </div>
+        <div class="review-item">
+          <strong><span class="en-term">Wildcard</span> (<span class="inline-code-block">*</span>):</strong> رمز في الشل يعني "كل شيء" ويُستخدم لمطابقة أسماء الملفات.
+        </div>
+        <div class="review-item">
+          <strong><span class="en-term">Bashisms</span>:</strong> مزايا إضافية في <span class="en-term">Bash</span> ليست جزءاً من معيار <span class="en-term">POSIX</span>.
+        </div>
+        <div class="review-item">
+          <strong><span class="en-term">POSIX</span>:</strong> معيار قياسي يضمن قابلية النقل <span class="en-term">Portability</span> للسكربتات عبر مختلف الأنظمة.
+        </div>
+      </div>
+    </div>
+
+    <!-- Common Mistakes -->
+    <div class="quick-review-section">
+      <h4><i data-lucide="alert-triangle" style="width:18px;height:18px;color:var(--danger);"></i> أخطاء شائعة</h4>
+      <div class="review-grid">
+        <div class="review-item review-item-error">
+          كتابة <span class="inline-code-block">if VAR == 1</span> — الـ <span class="en-term">if</span> تنتظر أمراً وليس مقارنة رياضية مباشرة.
+        </div>
+        <div class="review-item review-item-error">
+          كتابة <span class="inline-code-block">[$A -eq $B]</span> بدون مسافات — الشل لن يتعرف على الأمر.
+        </div>
+        <div class="review-item review-item-error">
+          نسيان علامات الاقتباس المزدوجة: <span class="inline-code-block">[ -z $NAME ]</span> بدلاً من <span class="inline-code-block">[ -z "$NAME" ]</span>.
+        </div>
+        <div class="review-item review-item-error">
+          استخدام <span class="en-term">Bashisms</span> مثل <span class="inline-code-block">[[ ]]</span> أو <span class="inline-code-block">for (( ))</span> في سكربتات الأنظمة المدمجة.
+        </div>
+      </div>
+    </div>
+
+    <!-- Interview Notes -->
+    <div class="quick-review-section">
+      <h4><i data-lucide="message-square" style="width:18px;height:18px;color:#7C3AED;"></i> ملاحظات المقابلة الوظيفية</h4>
+      <div class="review-grid">
+        <div class="review-item">
+          <strong>سؤال:</strong> كيف تتواصل تطبيقات الـ <span class="en-term">User Space</span> مع الـ <span class="en-term">Kernel Drivers</span> للتحكم المخصص في العتاد؟
+          <br><strong>الجواب:</strong> عبر نداء النظام <span class="en-term">ioctl</span> الذي يرسل معرفات <span class="en-term">IDs</span> محددة معرّفة في <span class="en-term">Kernel Headers</span>.
+        </div>
+        <div class="review-item">
+          <strong>سؤال:</strong> لماذا الـ <span class="en-term">if</span> في الشل مختلفة عن <span class="en-term">C</span>؟
+          <br><strong>الجواب:</strong> لأن الشل يقيّم الأوامر لا التعبيرات — يتحقق من <span class="en-term">Exit Status</span> وليس من القيمة المنطقية.
+        </div>
+        <div class="review-item">
+          <strong>سؤال:</strong> ما الفرق بين <span class="inline-code-block">[</span> و <span class="inline-code-block">[[</span>؟
+          <br><strong>الجواب:</strong> <span class="inline-code-block">[</span> هو أمر <span class="en-term">POSIX</span> قياسي، بينما <span class="inline-code-block">[[</span> هو <span class="en-term">Bashism</span> خاص ولا يعمل على الأنظمة المدمجة.
+        </div>
+        <div class="review-item">
+          <strong>سؤال:</strong> لماذا لا نستخدم <span class="en-term">Bash</span> في الأنظمة المدمجة؟
+          <br><strong>الجواب:</strong> لأنه ثقيل على الذاكرة والتخزين، والبديل هو <span class="en-term">ash</span> / <span class="en-term">dash</span> داخل <span class="en-term">BusyBox</span> والخفيف.
+        </div>
+      </div>
+    </div>
+
+    <!-- Memory Tips -->
+    <div class="quick-review-section">
+      <h4><i data-lucide="brain" style="width:18px;height:18px;color:var(--secondary);"></i> نصائح للحفظ</h4>
+      <div class="review-grid">
+        <div class="review-item review-item-tip">
+          <strong><span class="en-term">fi</span> = <span class="en-term">if</span> معكوسة:</strong> تذكر أن إغلاق الـ <span class="en-term">if</span> هو كتابتها بالعكس — تماماً كيف أن <span class="inline-code-block">done</span> يغلق <span class="inline-code-block">do</span>.
+        </div>
+        <div class="review-item review-item-tip">
+          <strong>المسافات حول <span class="inline-code-block">[ ]</span>:</strong> تذكّر أن <span class="inline-code-block">[</span> هو "اسم برنامج" — تحتاج مسافة بعد الاسم كما تفعل مع أي أمر.
+        </div>
+        <div class="review-item review-item-tip">
+          <strong>الاقتباس المزدوج:</strong> "المتغير الفارغ = كارثة بدون علامات اقتباس" — هذه القاعدة تحميك من <span class="en-term">99%</span> من أخطاء المبتدئين.
+        </div>
+        <div class="review-item review-item-tip">
+          <strong><span class="en-term">POSIX</span> = الأمان:</strong> في الأنظمة المدمجة، اكتب كما لو أن <span class="en-term">Bash</span> غير موجود — استخدم فقط ما يفهمه <span class="en-term">sh</span>.
+        </div>
+      </div>
+    </div>
+
+    <!-- Exam Tips -->
+    <div class="quick-review-section">
+      <h4><i data-lucide="file-check" style="width:18px;height:18px;color:var(--warning);"></i> نصائح الامتحان</h4>
+      <div class="review-grid">
+        <div class="review-item review-item-success">
+          يُختبر كثيراً: الفرق بين <span class="inline-code-block">test</span> و <span class="inline-code-block">[</span> (الجواب: هما نفس البرنامج).
+        </div>
+        <div class="review-item review-item-success">
+          يُختبر كثيراً: لماذا المسافات حول <span class="inline-code-block">[ ]</span> إجبارية (الجواب: لأنه أمر وليس syntax).
+        </div>
+        <div class="review-item review-item-success">
+          يُختبر كثيراً: جدول خيارات <span class="en-term">test</span> (<span class="inline-code-block">-z</span>، <span class="inline-code-block">-n</span>، <span class="inline-code-block">-eq</span>، <span class="inline-code-block">-lt</span>، <span class="inline-code-block">-gt</span>، <span class="inline-code-block">-d</span>، <span class="inline-code-block">-f</span>).
+        </div>
+        <div class="review-item review-item-success">
+          يُختبر كثيراً: تعريف <span class="en-term">Bashisms</span> وخطرها في <span class="en-term">Embedded Linux</span>.
+        </div>
+      </div>
+    </div>
+
+    <!-- Revision Checklist -->
+    <div class="quick-review-section">
+      <h4><i data-lucide="check-square" style="width:18px;height:18px;color:var(--success);"></i> قائمة المراجعة — <span class="en-term">Revision Checklist</span></h4>
+      <ul class="checklist">
+        <li>أفهم كيف يعمل <span class="en-term">ioctl</span> وما علاقته بـ <span class="en-term">Kernel Headers</span></li>
+        <li>أستطيع شرح الفرق بين <span class="en-term">if</span> في الشل و <span class="en-term">if</span> في <span class="en-term">C</span></li>
+        <li>أعرف أن <span class="en-term">Exit Status 0</span> يعني نجاح وأي رقم آخر يعني فشل</li>
+        <li>أحفظ الهيكل الكامل لـ <span class="inline-code-block">if...then...elif...else...fi</span></li>
+        <li>أفهم قاعدة الفاصلة المنقوطة عند كتابة <span class="en-term">if</span> و <span class="en-term">then</span> في سطر واحد</li>
+        <li>أعرف أن <span class="inline-code-block">[</span> هو أمر تنفيذي وليس جزءاً من <span class="en-term">Syntax</span></li>
+        <li>أحفظ جدول خيارات <span class="en-term">test</span> كاملاً (<span class="inline-code-block">-z</span>، <span class="inline-code-block">-n</span>، <span class="inline-code-block">=</span>، <span class="inline-code-block">-eq</span>، <span class="inline-code-block">-lt</span>، <span class="inline-code-block">-gt</span>، <span class="inline-code-block">-d</span>، <span class="inline-code-block">-f</span>)</li>
+        <li>أفهم لماذا المسافات حول <span class="inline-code-block">[ ]</span> إجبارية تقنياً</li>
+        <li>أفهم لماذا علامات الاقتباس المزدوجة حول المتغيرات ضرورية</li>
+        <li>أستطيع كتابة حلقة <span class="en-term">for</span> بثلاث طرق مختلفة لإنشاء القائمة</li>
+        <li>أفهم كيف يعمل <span class="en-term">Wildcard</span> <span class="inline-code-block">*</span> مع <span class="en-term">for</span></li>
+        <li>أستطيع كتابة حلقة <span class="en-term">while</span> وحلقة لا نهائية باستخدام <span class="inline-code-block">true</span></li>
+        <li>أعرف طريقتي العمليات الحسابية في الشل: <span class="inline-code-block">$(( ))</span> و <span class="en-term">expr</span></li>
+        <li>أفهم الفرق بين <span class="en-term">POSIX</span> و <span class="en-term">Bashisms</span> وأمثل على كل منهما</li>
+        <li>أفهم لماذا الأنظمة المدمجة تستخدم <span class="en-term">ash</span> / <span class="en-term">dash</span> بدلاً من <span class="en-term">Bash</span></li>
+        <li>ألتزم بمعيار <span class="en-term">POSIX</span> في جميع سكربتاتي</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="text-align: center; margin-top: 32px; padding: 20px; color: var(--text-muted); font-size: 10.5pt; border-top: 2px solid var(--border);">
+    <p style="font-weight: 600; color: var(--primary); margin-bottom: 4px;">نهاية ملخص الدرس الخامس</p>
+    <p><span class="en-term">Embedded Linux & Shell Programming — POSIX Compliance (Part 3)</span></p>
+    <p style="margin-top: 8px; font-size: 9.5pt;">المدرب: سالم بالحاج طلال — <span class="en-term">Embedded Linux Architect</span></p>
+  </div>
+
+  <div class="page-footer">
+    <span>الإصدار 1.0 — Embedded Linux Architect Course</span>
+    <span class="page-num">8</span>
+  </div>
+</div>
+
+<script>
+  lucide.createIcons();
+</script>
+</body>
+</html>

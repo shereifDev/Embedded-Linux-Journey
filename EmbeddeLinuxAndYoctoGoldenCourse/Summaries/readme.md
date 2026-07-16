@@ -10,11 +10,11 @@ This repository serves as a comprehensive, well-structured, and visually appeali
 | Lecture | Topic / Description | Status | Interactive Link |
 | :---: | :--- | :---: | :---: |
 | **Lec 1** | Introduction to Embedded Linux & System Architecture | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec1/index.html) |
-| **Lec 2** | Bootloaders, U-Boot, and Hardware Initialization | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec2/index.html) |
-| **Lec 3** | Linux Kernel Configuring, Compiling, and Device Trees | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddedLinuxAndYoctoGoldenCourse/Summaries/lec3/index.html) |
-| **Lec 4** | Creating a Custom Root Filesystem (Rootfs) from Scratch | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddedLinuxAndYoctoGoldenCourse/Summaries/lec4/index.html) |
-| **Lec 5** | Embedded Linux Build Systems: Deep Dive into Buildroot | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddedLinuxAndYoctoGoldenCourse/Summaries/lec5/index.html) |
-| **Lec 6** | Introduction to the Yocto Project & Poky Distribution | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddedLinuxAndYoctoGoldenCourse/Summaries/lec6/index.html) |
-| **Lec 7** | Writing Custom Layers, Recipes, and BitBake Basics | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddedLinuxAndYoctoGoldenCourse/Summaries/lec7/index.html) |
+| **Lec 2** | Embedded Linux Architecture in details | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec2/index.html) |
+| **Lec 3** | Shell & Root File System   | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec3/index.html) |
+| **Lec 4** | Shell Utilities & File System Internals | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec4/index.html) |
+| **Lec 5** | Shell Programming & POSIX Compliance | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec5/index.html) |
+| **Lec 6** | Shell Scripting Advanced & Permissions | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec6/index.html) |
+
 
 ---

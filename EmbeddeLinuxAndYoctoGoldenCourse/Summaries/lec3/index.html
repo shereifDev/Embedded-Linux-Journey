@@ -1,0 +1,2115 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الدرس الثالث: Shell & Root File System — Embedded Linux & Yocto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #0F4C81;
+    --primary-light: #1a6bb5;
+    --primary-dark: #0a3a63;
+    --secondary: #14B8A6;
+    --secondary-light: #2dd4bf;
+    --accent: #F59E0B;
+    --accent-light: #fbbf24;
+    --success: #16A34A;
+    --success-light: #22c55e;
+    --warning: #EA580C;
+    --warning-light: #f97316;
+    --danger: #DC2626;
+    --danger-light: #ef4444;
+    --bg: #F8FAFC;
+    --bg-card: #FFFFFF;
+    --text: #1E293B;
+    --text-secondary: #475569;
+    --text-muted: #94A3B8;
+    --border: #E2E8F0;
+    --border-light: #F1F5F9;
+    --code-bg: #1E293B;
+    --code-text: #E2E8F0;
+    --purple: #7C3AED;
+    --purple-light: #8B5CF6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  @page {
+    size: A4;
+    margin: 2cm;
+  }
+
+  body {
+    font-family: 'IBM Plex Sans Arabic', 'Cairo', sans-serif;
+    font-size: 12.5pt;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+    direction: rtl;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ===== PAGE CONTAINER ===== */
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    background: var(--bg-card);
+    padding: 2cm;
+    position: relative;
+    box-shadow: 0 0 40px rgba(0,0,0,0.08);
+    margin-bottom: 2px;
+  }
+
+  /* ===== HEADER & FOOTER ===== */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary);
+    margin-bottom: 24px;
+    direction: rtl;
+  }
+  .page-header .course-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--primary);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .page-header .chapter-name {
+    font-size: 9pt;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .page-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+    direction: rtl;
+  }
+  .page-footer .page-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--primary);
+    background: var(--bg);
+    padding: 2px 10px;
+    border-radius: 10px;
+  }
+  .page-footer .version {
+    font-size: 8pt;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ===== TABLE OF CONTENTS ===== */
+  .toc-page { padding-top: 1cm; }
+  .toc-title {
+    font-size: 24pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 8px;
+  }
+  .toc-subtitle {
+    font-size: 11pt;
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 3px solid var(--primary);
+  }
+  .toc-list { list-style: none; }
+  .toc-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px dotted var(--border);
+    direction: rtl;
+  }
+  .toc-list li.toc-chapter {
+    font-size: 13pt;
+    font-weight: 700;
+    color: var(--primary);
+    padding-top: 16px;
+    border-bottom: 1px solid var(--border);
+    margin-top: 8px;
+  }
+  .toc-list li.toc-section {
+    font-size: 11.5pt;
+    font-weight: 600;
+    color: var(--text);
+    padding-right: 20px;
+  }
+  .toc-list li.toc-subsection {
+    font-size: 10.5pt;
+    font-weight: 400;
+    color: var(--text-secondary);
+    padding-right: 40px;
+  }
+  .toc-list li span.toc-num {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    margin-left: 8px;
+    color: var(--primary);
+  }
+  .toc-list li span.toc-page {
+    font-family: 'Inter', sans-serif;
+    font-size: 10pt;
+    color: var(--text-muted);
+    min-width: 30px;
+    text-align: left;
+    direction: ltr;
+  }
+
+  /* ===== CHAPTER OPENING ===== */
+  .chapter-opening {
+    text-align: center;
+    padding: 20px 0 30px;
+    border-bottom: 4px solid var(--primary);
+    margin-bottom: 30px;
+    position: relative;
+  }
+  .chapter-opening::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    right: 50%;
+    transform: translateX(50%);
+    width: 60px;
+    height: 8px;
+    background: var(--secondary);
+    border-radius: 4px;
+  }
+  .chapter-number {
+    font-family: 'Inter', sans-serif;
+    font-size: 14pt;
+    font-weight: 700;
+    color: var(--secondary);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+  .chapter-icon {
+    font-size: 42pt;
+    margin: 10px 0;
+    display: block;
+  }
+  .chapter-title {
+    font-size: 24pt;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1.4;
+    margin-bottom: 6px;
+  }
+  .chapter-subtitle {
+    font-size: 13pt;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+  .chapter-instructor {
+    margin-top: 16px;
+    font-size: 10.5pt;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .chapter-instructor strong {
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  /* ===== ANIMATED CHAPTER OVERVIEW ===== */
+  .chapter-overview {
+    background: linear-gradient(135deg, #f0f9ff 0%, #f5f3ff 50%, #f0fdfa 100%);
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .chapter-overview::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 6px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--primary), var(--secondary), var(--accent));
+    border-radius: 0 16px 16px 0;
+  }
+  .overview-title {
+    font-size: 14pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .overview-title svg { flex-shrink: 0; }
+  .overview-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+  .flow-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    position: relative;
+    padding-bottom: 20px;
+  }
+  .flow-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 23px;
+    top: 48px;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--primary), var(--secondary));
+    opacity: 0.3;
+  }
+  .flow-step-num {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 16pt;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+  .flow-step:nth-child(1) .flow-step-num { background: var(--primary); }
+  .flow-step:nth-child(2) .flow-step-num { background: var(--primary-light); }
+  .flow-step:nth-child(3) .flow-step-num { background: var(--secondary); }
+  .flow-step:nth-child(4) .flow-step-num { background: var(--secondary); }
+  .flow-step:nth-child(5) .flow-step-num { background: var(--accent); }
+  .flow-step:nth-child(6) .flow-step-num { background: var(--warning); }
+  .flow-step:nth-child(7) .flow-step-num { background: var(--purple); }
+  .flow-step-content {
+    flex: 1;
+    background: white;
+    border-radius: 12px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .flow-step-content h4 {
+    font-size: 11.5pt;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .flow-step-content p {
+    font-size: 10pt;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+  .flow-step-content .eng-term {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    display: inline-block;
+    background: var(--bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  /* ===== SECTION HEADINGS ===== */
+  .section-num {
+    font-family: 'Inter', sans-serif;
+    font-size: 10pt;
+    font-weight: 700;
+    color: var(--secondary);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  h2.section-title {
+    font-size: 20pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .section-divider {
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(to left, var(--primary), var(--secondary));
+    border-radius: 2px;
+    margin-bottom: 20px;
+  }
+  h3.subsection-title {
+    font-size: 17pt;
+    font-weight: 700;
+    color: var(--primary-dark);
+    margin-top: 28px;
+    margin-bottom: 12px;
+    padding-right: 14px;
+    border-right: 4px solid var(--secondary);
+  }
+  h4.sub-subsection {
+    font-size: 14pt;
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 20px;
+    margin-bottom: 10px;
+  }
+
+  /* ===== BODY TEXT ===== */
+  p.body-text {
+    text-align: justify;
+    margin-bottom: 14px;
+    line-height: 1.75;
+  }
+  .eng {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    display: inline-block;
+    unicode-bidi: embed;
+  }
+
+  /* ===== CALLOUT BOXES ===== */
+  .callout {
+    border-radius: 12px;
+    margin: 18px 0;
+    overflow: hidden;
+    border: 1px solid;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .callout-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    font-size: 11.5pt;
+    font-weight: 700;
+  }
+  .callout-body {
+    padding: 14px 18px;
+    font-size: 11.5pt;
+    line-height: 1.7;
+  }
+  .callout-body p { margin-bottom: 8px; }
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  /* Blue - Concept */
+  .callout-concept {
+    border-color: #bfdbfe;
+    background: #f0f9ff;
+  }
+  .callout-concept .callout-header {
+    background: var(--primary);
+    color: white;
+  }
+  .callout-concept .callout-body {
+    background: #f8fbff;
+    color: var(--text);
+  }
+
+  /* Green - Key Takeaway */
+  .callout-takeaway {
+    border-color: #bbf7d0;
+    background: #f0fdf4;
+  }
+  .callout-takeaway .callout-header {
+    background: var(--success);
+    color: white;
+  }
+  .callout-takeaway .callout-body {
+    background: #f8fff9;
+    color: var(--text);
+  }
+
+  /* Orange - Tip */
+  .callout-tip {
+    border-color: #fed7aa;
+    background: #fffbeb;
+  }
+  .callout-tip .callout-header {
+    background: var(--accent);
+    color: white;
+  }
+  .callout-tip .callout-body {
+    background: #fffef8;
+    color: var(--text);
+  }
+
+  /* Red - Important/Warning */
+  .callout-warning {
+    border-color: #fecaca;
+    background: #fef2f2;
+  }
+  .callout-warning .callout-header {
+    background: var(--danger);
+    color: white;
+  }
+  .callout-warning .callout-body {
+    background: #fffbfb;
+    color: var(--text);
+  }
+
+  /* Gray - Definition */
+  .callout-definition {
+    border-color: #e2e8f0;
+    background: #f8fafc;
+  }
+  .callout-definition .callout-header {
+    background: #64748b;
+    color: white;
+  }
+  .callout-definition .callout-body {
+    background: #fafbfd;
+    color: var(--text);
+  }
+
+  /* Purple - Deep Understanding */
+  .callout-deep {
+    border-color: #ddd6fe;
+    background: #faf5ff;
+  }
+  .callout-deep .callout-header {
+    background: var(--purple);
+    color: white;
+  }
+  .callout-deep .callout-body {
+    background: #fdfaff;
+    color: var(--text);
+  }
+
+  /* Dark - Practical Example */
+  .callout-practical {
+    border-color: #334155;
+    background: var(--code-bg);
+  }
+  .callout-practical .callout-header {
+    background: #0f172a;
+    color: var(--code-text);
+  }
+  .callout-practical .callout-body {
+    background: #1a2332;
+    color: var(--code-text);
+  }
+
+  /* ===== CODE BLOCKS ===== */
+  .code-block {
+    background: var(--code-bg);
+    border-radius: 10px;
+    margin: 16px 0;
+    overflow: hidden;
+    border: 1px solid #334155;
+    direction: ltr;
+    text-align: left;
+  }
+  .code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    background: #0f172a;
+    border-bottom: 1px solid #334155;
+  }
+  .code-lang {
+    font-family: 'Inter', sans-serif;
+    font-size: 8.5pt;
+    font-weight: 600;
+    color: var(--secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .code-dots {
+    display: flex;
+    gap: 6px;
+  }
+  .code-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .code-dots span:nth-child(1) { background: #ef4444; }
+  .code-dots span:nth-child(2) { background: #f59e0b; }
+  .code-dots span:nth-child(3) { background: #22c55e; }
+  .code-content {
+    padding: 16px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10pt;
+    line-height: 1.8;
+    color: var(--code-text);
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-content .kw { color: #c084fc; }
+  .code-content .str { color: #34d399; }
+  .code-content .cmd { color: #60a5fa; }
+  .code-content .opt { color: #fbbf24; }
+  .code-content .path { color: #fb923c; }
+  .code-content .cmt { color: #64748b; font-style: italic; }
+  .code-content .var { color: #f472b6; }
+
+  /* Inline code */
+  code.inline-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10pt;
+    background: #f1f5f9;
+    color: var(--primary);
+    padding: 2px 8px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    direction: ltr;
+    display: inline-block;
+    unicode-bidi: embed;
+  }
+
+  /* ===== TABLES ===== */
+  .table-wrapper {
+    margin: 18px 0;
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  table.prof-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11pt;
+  }
+  table.prof-table thead th {
+    background: var(--primary);
+    color: white;
+    padding: 12px 16px;
+    font-weight: 600;
+    text-align: right;
+    white-space: nowrap;
+  }
+  table.prof-table thead th:first-child { border-radius: 0 11px 0 0; }
+  table.prof-table thead th:last-child { border-radius: 11px 0 0 0; }
+  table.prof-table tbody td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    text-align: right;
+    vertical-align: top;
+  }
+  table.prof-table tbody tr:nth-child(even) { background: #f8fafc; }
+  table.prof-table tbody tr:last-child td:first-child { border-radius: 0 0 0 11px; }
+  table.prof-table tbody tr:last-child td:last-child { border-radius: 0 0 11px 0; }
+  table.prof-table .eng-cell {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    text-align: left;
+    unicode-bidi: embed;
+  }
+  table.prof-table .num-cell {
+    font-family: 'Inter', sans-serif;
+    text-align: center;
+    direction: ltr;
+  }
+
+  /* ===== DIAGRAMS ===== */
+  .diagram-container {
+    margin: 24px 0;
+    padding: 24px;
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: 16px;
+    text-align: center;
+  }
+  .diagram-title {
+    font-size: 12pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  .arch-layer {
+    width: 70%;
+    margin: 0 auto;
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11pt;
+    font-weight: 600;
+    color: white;
+    position: relative;
+    direction: ltr;
+  }
+  .arch-arrow {
+    text-align: center;
+    font-size: 18pt;
+    color: var(--text-muted);
+    line-height: 1.2;
+  }
+  .arch-label {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    font-size: 9pt;
+    color: var(--text-muted);
+    direction: rtl;
+    margin-top: 2px;
+  }
+
+  /* ===== BULLET LISTS ===== */
+  ul.styled-list, ol.styled-list {
+    margin: 10px 0 14px 0;
+    padding-right: 24px;
+  }
+  ul.styled-list li, ol.styled-list li {
+    margin-bottom: 8px;
+    padding-right: 8px;
+    line-height: 1.7;
+  }
+  ul.styled-list li::marker {
+    color: var(--secondary);
+    font-size: 1.2em;
+  }
+  ol.styled-list li::marker {
+    color: var(--primary);
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+  }
+  ul.sub-list {
+    margin: 6px 0 6px 0;
+    padding-right: 28px;
+  }
+  ul.sub-list li {
+    font-size: 11.5pt;
+    color: var(--text-secondary);
+  }
+  ul.sub-list li::marker {
+    color: var(--accent);
+  }
+
+  /* ===== QUICK REVIEW ===== */
+  .quick-review {
+    margin-top: 36px;
+    border: 2px solid var(--primary);
+    border-radius: 16px;
+    overflow: hidden;
+    background: white;
+  }
+  .quick-review-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    color: white;
+    padding: 16px 24px;
+    font-size: 16pt;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .qr-section {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .qr-section:last-child { border-bottom: none; }
+  .qr-section-title {
+    font-size: 12pt;
+    font-weight: 700;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .qr-section-title.green { color: var(--success); }
+  .qr-section-title.blue { color: var(--primary); }
+  .qr-section-title.orange { color: var(--accent); }
+  .qr-section-title.red { color: var(--danger); }
+  .qr-section-title.purple { color: var(--purple); }
+  .qr-section-title.teal { color: var(--secondary); }
+  .qr-checklist {
+    list-style: none;
+    padding: 0;
+  }
+  .qr-checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+  .qr-checklist li .check-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-size: 10pt;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .qr-checklist li .check-icon.checked {
+    background: var(--success);
+    border-color: var(--success);
+  }
+
+  /* ===== COMPARISON TABLE ===== */
+  table.comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11pt;
+  }
+  table.comp-table thead th {
+    background: var(--primary-dark);
+    color: white;
+    padding: 14px 18px;
+    font-weight: 600;
+    text-align: center;
+  }
+  table.comp-table thead th:first-child {
+    text-align: right;
+    border-radius: 0 11px 0 0;
+  }
+  table.comp-table thead th:last-child { border-radius: 11px 0 0 0; }
+  table.comp-table tbody td {
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+    vertical-align: top;
+  }
+  table.comp-table tbody td:first-child {
+    text-align: right;
+    font-weight: 600;
+    color: var(--primary);
+    background: #f8fafc;
+  }
+  table.comp-table tbody tr:nth-child(even) td:not(:first-child) { background: #f8fafc; }
+  table.comp-table tbody tr:last-child td:first-child { border-radius: 0 0 0 11px; }
+  table.comp-table tbody tr:last-child td:last-child { border-radius: 0 0 11px 0; }
+
+  /* ===== TIMELINE ===== */
+  .timeline {
+    position: relative;
+    margin: 20px 0;
+    padding-right: 40px;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    right: 14px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(to bottom, var(--primary), var(--secondary));
+    border-radius: 2px;
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+    padding-right: 24px;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    right: -32px;
+    top: 6px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--primary);
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px var(--primary);
+  }
+  .timeline-item h5 {
+    font-size: 11pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 4px;
+  }
+  .timeline-item p {
+    font-size: 10.5pt;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+
+  /* ===== PATH VISUAL ===== */
+  .path-visual {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin: 12px 0;
+    padding: 14px 18px;
+    background: #f0f9ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    direction: ltr;
+    justify-content: flex-start;
+  }
+  .path-segment {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5pt;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+  .path-segment.root { background: var(--primary); color: white; }
+  .path-segment.dir { background: #e0f2fe; color: var(--primary); }
+  .path-segment.file { background: var(--accent); color: white; }
+  .path-slash { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 12pt; }
+
+  /* ===== PRINT ===== */
+  @media print {
+    body { background: white; }
+    .page { box-shadow: none; margin: 0; page-break-after: always; }
+    .callout, .diagram-container, .table-wrapper { break-inside: avoid; }
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media screen and (max-width: 800px) {
+    .page { width: 100%; padding: 1.5cm; min-height: auto; }
+    .chapter-title { font-size: 20pt; }
+    .arch-layer { width: 90%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================== -->
+<!-- PAGE 1: TABLE OF CONTENTS      -->
+<!-- ============================== -->
+<div class="page toc-page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">ملخص الدرس الثالث</span>
+  </div>
+
+  <div class="toc-title">فهرس المحتويات</div>
+  <div class="toc-subtitle">Shell & Root File System — الجزء الأول</div>
+
+  <ul class="toc-list">
+    <li class="toc-chapter">
+      <span><span class="toc-num">03</span>الدرس الثالث: Shell & Root File System</span>
+      <span class="toc-page">2</span>
+    </li>
+    <li class="toc-section">
+      <span><span class="toc-num">3.1</span>ربط مفاهيم الذاكرة إلى وحدة التخزين</span>
+      <span class="toc-page">3</span>
+    </li>
+    <li class="toc-subsection">
+      <span>أين توجد <span class="eng">User Space</span> فعلياً؟</span>
+      <span class="toc-page">3</span>
+    </li>
+    <li class="toc-section">
+      <span><span class="toc-num">3.2</span>نظام الملفات في لينكس <span class="eng">Root File System</span></span>
+      <span class="toc-page">4</span>
+    </li>
+    <li class="toc-subsection">
+      <span>كيف يتم تنظيم الملفات في وحدة التخزين؟</span>
+      <span class="toc-page">4</span>
+    </li>
+    <li class="toc-subsection">
+      <span>أهم المجلدات القياسية تحت الجذر <span class="eng">/</span></span>
+      <span class="toc-page">4</span>
+    </li>
+    <li class="toc-section">
+      <span><span class="toc-num">3.3</span>بنية الأوامر في لينكس <span class="eng">Linux Command Structure</span></span>
+      <span class="toc-page">6</span>
+    </li>
+    <li class="toc-subsection">
+      <span>القاعدة الأولى: تركيبة الأمر السليمة</span>
+      <span class="toc-page">6</span>
+    </li>
+    <li class="toc-section">
+      <span><span class="toc-num">3.4</span>القاعدة الذهبية والمسارات <span class="eng">Paths</span></span>
+      <span class="toc-page">7</span>
+    </li>
+    <li class="toc-subsection">
+      <span>القاعدة الذهبية للمهندس</span>
+      <span class="toc-page">7</span>
+    </li>
+    <li class="toc-subsection">
+      <span>أنواع المسارات <span class="eng">Paths</span></span>
+      <span class="toc-page">7</span>
+    </li>
+    <li class="toc-subsection">
+      <span>الملفات والمجلدات المخفية</span>
+      <span class="toc-page">8</span>
+    </li>
+    <li class="toc-section">
+      <span><span class="toc-num">3.5</span>الأوامر الأساسية في لينكس <span class="eng">Basic Linux Commands</span></span>
+      <span class="toc-page">9</span>
+    </li>
+    <li class="toc-section">
+      <span><span class="toc-num">3.6</span>السلوك المتقدم لأوامر النقل والنسخ <span class="eng">mv & cp</span></span>
+      <span class="toc-page">11</span>
+    </li>
+    <li class="toc-subsection">
+      <span>كيف يتصرف الأمران بناءً على <span class="eng">Destination</span>؟</span>
+      <span class="toc-page">11</span>
+    </li>
+    <li class="toc-subsection">
+      <span>أمثلة عملية لفهم السلوك</span>
+      <span class="toc-page">12</span>
+    </li>
+    <li class="toc-section">
+      <span><span class="toc-num">3.7</span>لماذا نستخدم <span class="eng">./</span> لتشغيل البرامج والنصوص البرمجية <span class="eng">Scripts</span>؟</span>
+      <span class="toc-page">13</span>
+    </li>
+    <li class="toc-subsection">
+      <span>التفسير التقني</span>
+      <span class="toc-page">13</span>
+    </li>
+    <li class="toc-section">
+      <span><span class="toc-num">—</span>مراجعة سريعة <span class="eng">Quick Review</span></span>
+      <span class="toc-page">14</span>
+    </li>
+  </ul>
+
+  <div class="page-footer">
+    <span class="page-num">1</span>
+    <span class="version">v1.0 — Embedded Linux & Yocto Course</span>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE 2: CHAPTER OPENING         -->
+<!-- ============================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الثالث: Shell & Root File System</span>
+  </div>
+
+  <div class="chapter-opening">
+    <div class="chapter-number">CHAPTER 03</div>
+    <span class="chapter-icon">🖥️</span>
+    <div class="chapter-title">Shell & Root File System</div>
+    <div class="chapter-subtitle">نظام الملفات في لينكس، بناء قواعد الأوامر، المسارات المطلقة والنسبية، وأساسيات الشل</div>
+    <div class="chapter-instructor">
+      <span>👨‍🏫 المدرب:</span>
+      <strong>سالم بالحاج طلال</strong>
+      <span style="color:var(--text-muted);">—</span>
+      <span class="eng" style="font-size:9pt;color:var(--text-muted);">Embedded Linux Architect</span>
+    </div>
+  </div>
+
+  <p class="body-text">
+    يعتمد هذا الدرس على ما تعلمناه سابقاً، حيث فهمينا أن تطبيقات الـ <span class="eng">User Space</span> تحتاج إلى الـ <span class="eng">Kernel</span> للعمل. الآن سنفهم كيف نستخدم الـ <span class="eng">Shell</span> للتعامل معها وكيف تخزين التطبيقات معها.
+  </p>
+
+  <!-- ANIMATED CHAPTER OVERVIEW -->
+  <div class="chapter-overview">
+    <div class="overview-title">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      خريطة الدرس — مسار التعلم
+    </div>
+    <div class="overview-flow">
+      <div class="flow-step">
+        <div class="flow-step-num">1</div>
+        <div class="flow-step-content">
+          <h4>💾 ربط الذاكرة بالتخزين</h4>
+          <p>أين توجد <span class="eng-term">User Space</span> فعلياً؟ كيف ينتقل الكود من التخزين إلى الذاكرة <span class="eng-term">RAM</span> ثم إلى المعالج للتنفيذ؟</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">2</div>
+        <div class="flow-step-content">
+          <h4>📁 نظام الملفات <span class="eng-term">Root File System</span></h4>
+          <p>هيكل الشجرة الواحد في لينكس، المجلدات القياسية <span class="eng-term">/bin, /lib, /boot, /home</span>، والفلسفة المختلفة عن <span class="eng-term">Windows</span></p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">3</div>
+        <div class="flow-step-content">
+          <h4>⌨️ بنية الأوامر <span class="eng-term">Command Structure</span></h4>
+          <p>القاعدة الثلاثية: <span class="eng-term">Command + Options + Arguments</span>، الفرق بين الخيارات القصيرة والطويلة</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">4</div>
+        <div class="flow-step-content">
+          <h4>🛤️ المسارات <span class="eng-term">Paths</span></h4>
+          <p>المسار المطلق <span class="eng-term">Absolute Path</span> والمسار النسبي <span class="eng-term">Relative Path</span>، النقطة <span class="eng-term">.</span> والنقطتان <span class="eng-term">..</span>، والملفات المخفية</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">5</div>
+        <div class="flow-step-content">
+          <h4>🔧 الأوامر الأساسية <span class="eng-term">Basic Commands</span></h4>
+          <p><span class="eng-term">pwd, ls, cd, mkdir, touch, rm, man</span> — كل أمر بمهمة واحدة</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">6</div>
+        <div class="flow-step-content">
+          <h4>📦 النقل والنسخ <span class="eng-term">mv & cp</span></h4>
+          <p>سلوك الأمرين بناءً على حالة الـ <span class="eng-term">Destination</span>: مجلد موجود، مسار غير موجود، أو ملف موجود</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-step-num">7</div>
+        <div class="flow-step-content">
+          <h4>▶️ لماذا نستخدم <span class="eng-term">./</span>؟</h4>
+          <p>آلية بحث الـ <span class="eng-term">Shell</span> في المسارات المجهزة، ولماذا لا يبحث في المجلد الحالي تلقائياً</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="page-num">2</span>
+    <span class="version">v1.0 — Embedded Linux & Yocto Course</span>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE 3: SECTION 3.1             -->
+<!-- ============================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الثالث: Shell & Root File System</span>
+  </div>
+
+  <div class="section-num">SECTION 3.1</div>
+  <h2 class="section-title">ربط مفاهيم الذاكرة إلى وحدة التخزين</h2>
+  <div class="section-divider"></div>
+
+  <p class="body-text">
+    قبل أن نتعلم الأوامر، يجب أن نفهم أين تعيش التطبيقات.
+  </p>
+
+  <h3 class="subsection-title">أين توجد <span class="eng">User Space</span> فعلياً؟</h3>
+
+  <p class="body-text">
+    في الرسم الهندسي <span class="eng">Linux Architecture</span> الذي رسمناه سابقاً، نرى الـ <span class="eng">User Space</span> وكأنها تعمل حالياً. ولكن في الواقع <span class="eng">(In reality)</span> كافة التطبيقات (مثل الـ <span class="eng">Shell</span>) والمكتبات (مثل <span class="eng">Glibc</span>) هي عبارة عن ملفات <span class="eng">Files</span> مخزنة داخل وحدة التخزين <span class="eng">Storage Device</span> مثل الـ Hard Disk أو SD بطاقة.
+  </p>
+
+  <p class="body-text">
+    عندما يقرر الكيرنل تشغيل تطبيق، يستخدم نظام إدارة الملفات <span class="eng">File System Management</span> وإدارة الذاكرة <span class="eng">Memory Management</span> لنقل هذا الملف الثنائي <span class="eng">Binary File</span> من وحدة التخزين إلى الذاكرة العشوائية <span class="eng">RAM</span> ثم يوجه المعالج عبر الـ <span class="eng">Program Counter</span> لتنفيذ أوامره.
+  </p>
+
+  <!-- Architecture Diagram -->
+  <div class="diagram-container">
+    <div class="diagram-title">كيف ينتقل التطبيق من التخزين إلى التنفيذ</div>
+    <div class="arch-layer" style="background: var(--primary); width: 50%;">
+      Storage Device (SD Card / Hard Disk)
+    </div>
+    <div class="arch-label">وحدة التخزين — التطبيقات مخزنة كملفات ثنائية هنا</div>
+    <div class="arch-arrow">↓</div>
+    <div class="arch-layer" style="background: var(--secondary); width: 55%;">
+      File System Management + Memory Management
+    </div>
+    <div class="arch-label">الكيرنل يدير عملية النقل من التخزين إلى الذاكرة</div>
+    <div class="arch-arrow">↓</div>
+    <div class="arch-layer" style="background: var(--accent); width: 60%;">
+      RAM (Random Access Memory)
+    </div>
+    <div class="arch-label">الملف الثنائي Binary File يُنسخ إلى الذاكرة</div>
+    <div class="arch-arrow">↓</div>
+    <div class="arch-layer" style="background: var(--success); width: 65%;">
+      CPU — Program Counter → Execute
+    </div>
+    <div class="arch-label">المعالج ينفذ الأوامر واحداً تلو الآخر</div>
+  </div>
+
+  <div class="callout callout-concept">
+    <div class="callout-header">
+      <span>📘</span> مفهوم أساسي
+    </div>
+    <div class="callout-body">
+      <p>التطبيقات في لينكس لا "تعيش" في الذاكرة بشكل دائم. إنها ملفات مخزنة على وحدة التخزين، وعند الحاجة لتشغيلها يقوم الكيرنل بنسخها إلى الـ <span class="eng">RAM</span> ثم توجيه المعالج لتنفيذها عبر الـ <span class="eng">Program Counter</span>. هذه العملية تتم في كل مرة تشغل فيها أي أمر أو برنامج.</p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="page-num">3</span>
+    <span class="version">v1.0 — Embedded Linux & Yocto Course</span>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE 4: SECTION 3.2             -->
+<!-- ============================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الثالث: Shell & Root File System</span>
+  </div>
+
+  <div class="section-num">SECTION 3.2</div>
+  <h2 class="section-title">نظام الملفات في لينكس <span class="eng">Root File System</span></h2>
+  <div class="section-divider"></div>
+
+  <h3 class="subsection-title">كيف يتم تنظيم الملفات في وحدة التخزين؟</h3>
+
+  <p class="body-text">
+    الـ <span class="eng">File System</span> هو النظام والتصميم الذي يحدد كيف وأين يتم تخزين الملفات والمجلدات.
+  </p>
+
+  <div class="table-wrapper">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th style="text-align:right;">النظام</th>
+          <th>هيكل الجذور</th>
+          <th>الرمز</th>
+          <th>الفلسفة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="eng">Windows</span></td>
+          <td class="eng-cell">توجد عدة جذور أو أقراص مثل <span class="eng">C:</span> و <span class="eng">D:</span></td>
+          <td class="eng-cell"><span class="eng">C:\ , D:\</span></td>
+          <td>كل قرص مستقل بجذره الخاص</td>
+        </tr>
+        <tr>
+          <td><span class="eng">Linux</span></td>
+          <td class="eng-cell">يوجد فقط واحد جذر تماماً، وتتفرع منه كل الملفات والمجلدات</td>
+          <td class="eng-cell" style="font-size:16pt;font-weight:700;color:var(--primary);">/</td>
+          <td>شجرة واحدة تبدأ من جذر واحد (<span class="eng">Slash</span>)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Root File System Diagram -->
+  <div class="diagram-container">
+    <div class="diagram-title">هيكل الـ Root File System في لينكس</div>
+    <div style="direction:ltr;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10pt;line-height:2;color:var(--text);">
+      <span style="background:var(--primary);color:white;padding:6px 24px;border-radius:8px;font-weight:700;font-size:12pt;">/ &nbsp; Root</span>
+      <br>┌──────────┬──────────┬──────────┬──────────┬──────────┬──────────┐
+      <br>│ &nbsp;&nbsp;<span style="color:var(--secondary);font-weight:600;">bin</span> &nbsp;&nbsp;│ &nbsp;&nbsp;<span style="color:var(--secondary);font-weight:600;">sbin</span> &nbsp;│ &nbsp;&nbsp;<span style="color:var(--accent);font-weight:600;">lib</span> &nbsp;&nbsp;│ &nbsp;<span style="color:var(--success);font-weight:600;">boot</span> &nbsp;│ &nbsp;<span style="color:var(--purple);font-weight:600;">home</span> &nbsp;│ &nbsp;&nbsp;<span style="color:var(--warning);font-weight:600;">...</span> &nbsp;&nbsp;│
+      <br>└──────────┴──────────┴──────────┴──────────┴────┬─────┴──────────┘
+      <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│
+      <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;┌───┴────┐
+      <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│<span style="color:var(--purple);font-weight:600;">techleef</span>│
+      <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└────────┘
+    </div>
+  </div>
+
+  <h3 class="subsection-title">أهم المجلدات القياسية تحت الجذر <span class="eng">/</span></h3>
+
+  <div class="table-wrapper">
+    <table class="prof-table">
+      <thead>
+        <tr>
+          <th style="width:15%;">المسار</th>
+          <th style="width:15%;">الاختصار</th>
+          <th>الوظيفة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="eng-cell" style="font-weight:700;color:var(--primary);">/bin & /sbin</td>
+          <td class="eng-cell"><span class="eng">Binaries</span></td>
+          <td>تحتوي على الملفات التنفيذية (التطبيقات وأوامر النظام الأساسية).</td>
+        </tr>
+        <tr>
+          <td class="eng-cell" style="font-weight:700;color:var(--primary);">/lib</td>
+          <td class="eng-cell"><span class="eng">Libraries</span></td>
+          <td>تحتوي على مكتبات النظام (مثل الـ <span class="eng">DLL</span> في ویندوز).</td>
+        </tr>
+        <tr>
+          <td class="eng-cell" style="font-weight:700;color:var(--primary);">/boot</td>
+          <td class="eng-cell"><span class="eng">Boot</span></td>
+          <td>يحتوي على ملفات الإقلاع الضرورية لبدء تشغيل النظام مثل <span class="eng">Linux Kernel</span> و<span class="eng">Bootloader</span>.</td>
+        </tr>
+        <tr>
+          <td class="eng-cell" style="font-weight:700;color:var(--primary);">/home</td>
+          <td class="eng-cell"><span class="eng">Home</span></td>
+          <td>المجلد المخصص لملفات المستخدمين (يعادل <span class="eng">Users</span> في ویندوز)، وكل مستخدم له مجلد فرعي بداخله (مثال: <code class="inline-code">/home/techleef</code>).</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-takeaway">
+    <div class="callout-header">
+      <span>✅</span> ماذا يجب أن تتذكر؟
+    </div>
+    <div class="callout-body">
+      <p>لينكس لا يستخدم الحروف للأقراص (<span class="eng">C, D</span>)، بل كل شيء يبدأ من الجذر الأكبر <span class="eng">Root Directory</span> وهو <span class="eng">/</span> ويستخدم الشرطة المائلة العادية <span class="eng">/</span> وليس العكسية <span class="eng">\</span>.</p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="page-num">4</span>
+    <span class="version">v1.0 — Embedded Linux & Yocto Course</span>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE 5: SECTION 3.3             -->
+<!-- ============================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الثالث: Shell & Root File System</span>
+  </div>
+
+  <div class="section-num">SECTION 3.3</div>
+  <h2 class="section-title">بنية الأوامر في لينكس <span class="eng">Linux Command Structure</span></h2>
+  <div class="section-divider"></div>
+
+  <p class="body-text">
+    الـ <span class="eng">Shell</span> هو مترجم <span class="eng">Interpreter</span> يأخذ ما تكتبه، يحلله، وينفذه. واجهة الأوامر سطر <span class="eng">Terminal</span> هي عبارة عن تطبيق رسومي يشغل الـ <span class="eng">Shell</span> بداخلة.
+  </p>
+
+  <h3 class="subsection-title">القاعدة الأولى: تركيبة الأمر السليمة</h3>
+
+  <p class="body-text">
+    أي أمر في لينكس يتكون من ثلاثة أجزاء يفصل بينها مسافة <span class="eng">Space</span>:
+  </p>
+
+  <!-- Command Structure Diagram -->
+  <div class="diagram-container">
+    <div class="diagram-title">تركيب الأمر في لينكس</div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;direction:ltr;">
+      <div style="background:var(--primary);color:white;padding:14px 24px;border-radius:10px;text-align:center;min-width:140px;">
+        <div style="font-family:'Inter',sans-serif;font-size:9pt;opacity:0.8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Command</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13pt;font-weight:700;">ls</div>
+      </div>
+      <div style="display:flex;align-items:center;font-size:18pt;color:var(--text-muted);">+</div>
+      <div style="background:var(--secondary);color:white;padding:14px 24px;border-radius:10px;text-align:center;min-width:140px;">
+        <div style="font-family:'Inter',sans-serif;font-size:9pt;opacity:0.8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Options</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13pt;font-weight:700;">-a -l</div>
+      </div>
+      <div style="display:flex;align-items:center;font-size:18pt;color:var(--text-muted);">+</div>
+      <div style="background:var(--accent);color:white;padding:14px 24px;border-radius:10px;text-align:center;min-width:140px;">
+        <div style="font-family:'Inter',sans-serif;font-size:9pt;opacity:0.8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Arguments</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13pt;font-weight:700;">/home</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;font-family:'JetBrains Mono',monospace;font-size:11pt;direction:ltr;background:var(--code-bg);color:var(--code-text);display:inline-block;padding:8px 20px;border-radius:8px;">
+      <span class="cmd">ls</span> <span class="opt">-a -l</span> <span class="path">/home</span>
+    </div>
+  </div>
+
+  <ol class="styled-list">
+    <li>
+      <strong style="color:var(--primary);">الكلمة المفتاحية <span class="eng">Command</span>:</strong> اسم التطبيق المراد تشغيله (مثل <code class="inline-code">ls</code> أو <code class="inline-code">cd</code>).
+    </li>
+    <li>
+      <strong style="color:var(--secondary);">الخيارات <span class="eng">Options</span>:</strong> تتحكم في سلوك الأمر وتغيّر طريقة عمله.
+      <ul class="sub-list">
+        <li><span class="eng">Short Option</span>: يُكتب بشرطة واحدة مثل <code class="inline-code">-a</code> أو <code class="inline-code">-l</code>.</li>
+        <li><span class="eng">Long Option</span>: يُكتب بشرطتين مثل <code class="inline-code">--help</code> أو <code class="inline-code">--all</code>.</li>
+      </ul>
+    </li>
+    <li>
+      <strong style="color:var(--accent);">المدخلات <span class="eng">Arguments</span>:</strong> هو الإدخال <span class="eng">Input</span> الذي سيعمل عليه الأمر (غالبا ما يكون مساراً لملف أو مجلد).
+    </li>
+  </ol>
+
+  <div class="callout callout-warning">
+    <div class="callout-header">
+      <span>⚠️</span> أخطاء شائعة
+    </div>
+    <div class="callout-body">
+      <p>نسيان وضع مسافة <span class="eng">Space</span> بين الأمر والخيارات والمدخلات سيؤدي للخطأ (مثال خاطئ: <code class="inline-code">ls-a</code>).</p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="page-num">5</span>
+    <span class="version">v1.0 — Embedded Linux & Yocto Course</span>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE 6: SECTION 3.4             -->
+<!-- ============================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الثالث: Shell & Root File System</span>
+  </div>
+
+  <div class="section-num">SECTION 3.4</div>
+  <h2 class="section-title">القاعدة الذهبية والمسارات <span class="eng">Paths</span></h2>
+  <div class="section-divider"></div>
+
+  <h3 class="subsection-title">القاعدة الذهبية للمهندس</h3>
+
+  <p class="body-text">
+    عندما ترید القیام بأي مھمة في الـ <span class="eng">Terminal</span>، اسأل نفسك دائماً سؤالین:
+  </p>
+
+  <div class="callout callout-tip">
+    <div class="callout-header">
+      <span>💡</span> القاعدة الذهبية — بالغة الأهمية
+    </div>
+    <div class="callout-body">
+      <p><strong>1. ما هو الأمر <span class="eng">Command</span> المناسب لهذه المھمة؟</strong></p>
+      <p><strong>2. كيف أستخدمه؟ (كيف أمرر الـ <span class="eng">Options</span> والـ <span class="eng">Arguments</span> له؟)</strong></p>
+    </div>
+  </div>
+
+  <h3 class="subsection-title">أنواع المسارات <span class="eng">Paths</span></h3>
+
+  <p class="body-text">
+    في لينكس، المدخلات <span class="eng">Arguments</span> التي تمررها للأوامر هي في أغلب الأحيان مسارات <span class="eng">Paths</span>، وهناك نوعان للمسارات:
+  </p>
+
+  <!-- Absolute Path -->
+  <div class="callout callout-definition">
+    <div class="callout-header">
+      <span>📌</span> المسار المطلق <span class="eng">Absolute Path</span>
+    </div>
+    <div class="callout-body">
+      <p><strong>تعريفه:</strong> هو المسار الذي يبدأ دائماً من الجذر <span class="eng">/</span>.</p>
+      <p><strong>مثال:</strong></p>
+      <div class="path-visual">
+        <span class="path-segment root">/</span>
+        <span class="path-slash">/</span>
+        <span class="path-segment dir">home</span>
+        <span class="path-slash">/</span>
+        <span class="path-segment dir">techleef</span>
+        <span class="path-slash">/</span>
+        <span class="path-segment dir">desktop</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Relative Path -->
+  <div class="callout callout-definition">
+    <div class="callout-header">
+      <span>📌</span> المسار النسبي <span class="eng">Relative Path</span>
+    </div>
+    <div class="callout-body">
+      <p><strong>تعريفه:</strong> هو المسار الذي يبدأ من الحالي المجلد الذي تقف فيه الآن (ولا يبدأ بـ <span class="eng">/</span>).</p>
+      <p><strong>مثال:</strong> إذا كنت تقف في <span class="eng">/home/techleef/</span> وأردت الدخول للسطح المكتب تكتب فقط:</p>
+      <div class="path-visual">
+        <span class="path-segment dir">desktop</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison Table -->
+  <div class="table-wrapper">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th style="text-align:right;">الخاصية</th>
+          <th>المسار المطلق <span class="eng">Absolute Path</span></th>
+          <th>المسار النسبي <span class="eng">Relative Path</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>نقطة البداية</td>
+          <td class="eng-cell">الجذر <span class="eng">/</span> دائماً</td>
+          <td class="eng-cell">المجلد الحالي</td>
+        </tr>
+        <tr>
+          <td>يبدأ بـ</td>
+          <td class="eng-cell" style="font-size:14pt;font-weight:700;color:var(--primary);">/</td>
+          <td class="eng-cell">اسم مجلد أو <span class="eng">.</span> أو <span class="eng">..</span></td>
+        </tr>
+        <tr>
+          <td>يعتمد على الموقع الحالي</td>
+          <td style="text-align:center;">لا</td>
+          <td style="text-align:center;">نعم</td>
+        </tr>
+        <tr>
+          <td>مثال</td>
+          <td class="eng-cell"><code class="inline-code">/home/techleef/desktop</code></td>
+          <td class="eng-cell"><code class="inline-code">desktop</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="page-footer">
+    <span class="page-num">6</span>
+    <span class="version">v1.0 — Embedded Linux & Yocto Course</span>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE 7: Hidden Files + Section 3.5 -->
+<!-- ============================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الثالث: Shell & Root File System</span>
+  </div>
+
+  <h4 class="sub-subsection">الملفات والمجلدات المخفية</h4>
+
+  <div class="callout callout-concept">
+    <div class="callout-header">
+      <span>📘</span> مفهوم: الملفات المخفية <span class="eng">Hidden Files</span>
+    </div>
+    <div class="callout-body">
+      <p>أي ملف أو مجلد اسمه يبدأ بنقطة (مثل <code class="inline-code">.config</code>) هو ملف مخفي، ولن يظهره الأمر <span class="eng">ls</span> العادي.</p>
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table class="prof-table">
+      <thead>
+        <tr>
+          <th style="width:20%;">الرمز</th>
+          <th style="width:25%;">المعنى</th>
+          <th>الشرح</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="eng-cell" style="font-size:16pt;font-weight:700;color:var(--primary);">.</td>
+          <td class="eng-cell"><span class="eng">Current Directory</span></td>
+          <td>نسبي مسار يشير إلى الحالي المجلد.</td>
+        </tr>
+        <tr>
+          <td class="eng-cell" style="font-size:16pt;font-weight:700;color:var(--primary);">..</td>
+          <td class="eng-cell"><span class="eng">Parent Directory</span></td>
+          <td>نسبي مسار يشير إلى السابق / الأب المجلد.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-takeaway">
+    <div class="callout-header">
+      <span>✅</span> ماذا يجب أن تتذكر؟
+    </div>
+    <div class="callout-body">
+      <p>عندما تستخدم أمر <code class="inline-code">ls /home</code> فأنت لا تمرر مجلداً للأمر، بل تمرر مساراً <span class="eng">Path</span>، والأمر <span class="eng">ls</span> ذكي بما يكفي ليتأكد هل هذا المسار موجود؟ وهل هو مجلد ليقرأ محتواه؟</p>
+    </div>
+  </div>
+
+  <div class="callout callout-warning">
+    <div class="callout-header">
+      <span>⚠️</span> أخطاء شائعة
+    </div>
+    <div class="callout-body">
+      <p>خلط المطلق والنسبي المسار سيؤدي للخطأ لأن النظام سيبحث عن <span class="eng">desktop</span> مباشرة تحت الجذر <span class="eng">/</span> وليس في مسارك الحالي.</p>
+      <p>مثال: كتابة <code class="inline-code">cd /desktop</code> وأنت تقصد مجلداً أمامك.</p>
+    </div>
+  </div>
+
+  <!-- SECTION 3.5 -->
+  <div class="section-num">SECTION 3.5</div>
+  <h2 class="section-title">الأوامر الأساسية في لينكس <span class="eng">Basic Linux Commands</span></h2>
+  <div class="section-divider"></div>
+
+  <p class="body-text">
+    إليك أهم الأوامر الأساسية بناءً على فلسفة <span class="eng">Unix</span> (كل أمر يقوم بمهمة واحدة فقط ويقوم بامتياز):
+  </p>
+
+  <!-- pwd -->
+  <h4 class="sub-subsection">الأمر <code class="inline-code">pwd</code></h4>
+  <ul class="styled-list">
+    <li><strong>الوظيفة:</strong> طباعة المسار الحالي الذي تقف فيه <span class="eng">Print Working Directory</span>.</li>
+    <li><strong>الاستخدام:</strong> يعطيك دائماً المسار المطلق <span class="eng">Absolute Path</span> لمكانك الحالي.</li>
+  </ul>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Shell</span>
+    </div>
+    <div class="code-content"><span class="cmd">pwd</span>
+<span class="path">/home/techleef</span></div>
+  </div>
+
+  <div class="page-footer">
+    <span class="page-num">7</span>
+    <span class="version">v1.0 — Embedded Linux & Yocto Course</span>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE 8: ls, cd                  -->
+<!-- ============================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الثالث: Shell & Root File System</span>
+  </div>
+
+  <!-- ls -->
+  <h4 class="sub-subsection">الأمر <code class="inline-code">ls [Option] [Path]</code></h4>
+  <ul class="styled-list">
+    <li><strong>الوظيفة:</strong> عرض محتوى الممرر له المسار. إذا لم تمرر مساراً، سيعرض محتوى المجلد الحالي <span class="eng">List</span>.</li>
+    <li><strong>خيارات مهمة:</strong>
+      <ul class="sub-list">
+        <li><code class="inline-code">ls -a</code>: يعرض الملفات كافة بما فيها التي المخفية (التي تبدأ بنقطة) <span class="eng">(All)</span>.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Shell</span>
+    </div>
+    <div class="code-content"><span class="cmt"># عرض محتوى المجلد الحالي</span>
+<span class="cmd">ls</span>
+document  image  script.sh
+
+<span class="cmt"># عرض جميع الملفات بما فيها المخفية</span>
+<span class="cmd">ls</span> <span class="opt">-a</span>
+.  ..  document  image  script.sh  .bashrc  .config</div>
+  </div>
+
+  <!-- cd -->
+  <h4 class="sub-subsection">الأمر <code class="inline-code">cd [Path]</code></h4>
+  <ul class="styled-list">
+    <li><strong>الوظيفة:</strong> الانتقال من مسار إلى آخر <span class="eng">Change Directory</span>.</li>
+    <li><strong>أمثلة:</strong>
+      <ul class="sub-list">
+        <li><code class="inline-code">cd /home</code>: انتقال بمسار مطلق.</li>
+        <li><code class="inline-code">cd desktop</code>: انتقال بمسار نسبي.</li>
+        <li><code class="inline-code">cd ..</code>: الرجوع للخلف خطوة (للمجلد الأب).</li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Shell</span>
+    </div>
+    <div class="code-content"><span class="cmt"># الانتقال بمسار مطلق</span>
+<span class="cmd">cd</span> <span class="path">/home</span>
+
+<span class="cmt"># الانتقال بمسار نسبي</span>
+<span class="cmd">cd</span> <span class="path">desktop</span>
+
+<span class="cmt"># الرجوع للمجلد الأب</span>
+<span class="cmd">cd</span> <span class="path">..</span></div>
+  </div>
+
+  <!-- mkdir -->
+  <h4 class="sub-subsection">الأمر <code class="inline-code">mkdir [Path]</code></h4>
+  <ul class="styled-list">
+    <li><strong>الوظيفة:</strong> إنشاء مجلد جديد فارغ <span class="eng">Make Directory</span>.</li>
+    <li><strong>ملاحظة:</strong> إذا كان المجلد مسبقاً موجوداً أو حاولت إنشاؤه في مسار لا تملك فيه صلاحية (مثل مباشرة تحت الـ <span class="eng">Slash</span> <span class="eng">/</span> بدون سلاش) سيظهر خطأ.</li>
+  </ul>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Shell</span>
+    </div>
+    <div class="code-content"><span class="cmd">mkdir</span> <span class="path">new_folder</span></div>
+  </div>
+
+  <div class="page-footer">
+    <span class="page-num">8</span>
+    <span class="version">v1.0 — Embedded Linux & Yocto Course</span>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE 9: touch, rm, man          -->
+<!-- ============================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الثالث: Shell & Root File System</span>
+  </div>
+
+  <!-- touch -->
+  <h4 class="sub-subsection">الأمر <code class="inline-code">touch [Path]</code></h4>
+  <ul class="styled-list">
+    <li><strong>الوظيفة:</strong> إنشاء ملف نصي فارغ <span class="eng">Text File</span>.</li>
+  </ul>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Shell</span>
+    </div>
+    <div class="code-content"><span class="cmd">touch</span> <span class="path">myfile.txt</span></div>
+  </div>
+
+  <!-- rm -->
+  <h4 class="sub-subsection">الأمر <code class="inline-code">rm [Option] [Path]</code></h4>
+  <ul class="styled-list">
+    <li><strong>الوظيفة:</strong> مسح ملف <span class="eng">Remove</span>.</li>
+    <li><strong>خيارات مهمة:</strong>
+      <ul class="sub-list">
+        <li><code class="inline-code">rm -r [Directory]</code>: إجباري لمسح المجلدات؛ لأنه يمسح المجلد وكافة محتویاته الداخلیة بشكل متسلسل <span class="eng">(Recursive)</span>.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Shell</span>
+    </div>
+    <div class="code-content"><span class="cmt"># مسح ملف</span>
+<span class="cmd">rm</span> <span class="path">myfile.txt</span>
+
+<span class="cmt"># مسح مجلد وكامل محتوياته</span>
+<span class="cmd">rm</span> <span class="opt">-r</span> <span class="path">old_folder</span></div>
+  </div>
+
+  <div class="callout callout-warning">
+    <div class="callout-header">
+      <span>⚠️</span> تحذير مهم
+    </div>
+    <div class="callout-body">
+      <p>أمر <code class="inline-code">rm -r</code> لا يضع الملفات في سلة المحذوفات. المحذوفات تُحذف نهائياً. استخدمه بحذر شديد.</p>
+    </div>
+  </div>
+
+  <!-- man -->
+  <h4 class="sub-subsection">الأمر <code class="inline-code">man [Command]</code></h4>
+  <ul class="styled-list">
+    <li><strong>الوظيفة:</strong> عرض الكتيب الإرشادي <span class="eng">Manual</span> لأي أمر للتعرف على جميع خياراته <span class="eng">Options</span> وطريقة استخدامه.</li>
+    <li><strong>بديل سريع:</strong> استخدام خيار المساعدة <code class="inline-code">--help</code> مع أي أمر (مثال: <code class="inline-code">ls --help</code>).</li>
+  </ul>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Shell</span>
+    </div>
+    <div class="code-content"><span class="cmt"># عرض الكتيب الإرشادي الكامل</span>
+<span class="cmd">man</span> <span class="opt">ls</span>
+
+<span class="cmt"># بديل سريع للمساعدة</span>
+<span class="cmd">ls</span> <span class="opt">--help</span></div>
+  </div>
+
+  <!-- Commands Summary Table -->
+  <div class="table-wrapper">
+    <table class="prof-table">
+      <thead>
+        <tr>
+          <th style="width:18%;">الأمر</th>
+          <th style="width:30%;">الوظيفة</th>
+          <th>مثال</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="eng-cell" style="font-weight:700;"><code class="inline-code">pwd</code></td>
+          <td>طباعة المسار الحالي <span class="eng">Print Working Directory</span></td>
+          <td class="eng-cell"><code class="inline-code">pwd</code></td>
+        </tr>
+        <tr>
+          <td class="eng-cell" style="font-weight:700;"><code class="inline-code">ls</code></td>
+          <td>عرض محتوى المجلد <span class="eng">List</span></td>
+          <td class="eng-cell"><code class="inline-code">ls -a</code></td>
+        </tr>
+        <tr>
+          <td class="eng-cell" style="font-weight:700;"><code class="inline-code">cd</code></td>
+          <td>الانتقال بين المجلدات <span class="eng">Change Directory</span></td>
+          <td class="eng-cell"><code class="inline-code">cd /home</code></td>
+        </tr>
+        <tr>
+          <td class="eng-cell" style="font-weight:700;"><code class="inline-code">mkdir</code></td>
+          <td>إنشاء مجلد جديد <span class="eng">Make Directory</span></td>
+          <td class="eng-cell"><code class="inline-code">mkdir new_folder</code></td>
+        </tr>
+        <tr>
+          <td class="eng-cell" style="font-weight:700;"><code class="inline-code">touch</code></td>
+          <td>إنشاء ملف نصي فارغ</td>
+          <td class="eng-cell"><code class="inline-code">touch file.txt</code></td>
+        </tr>
+        <tr>
+          <td class="eng-cell" style="font-weight:700;"><code class="inline-code">rm</code></td>
+          <td>مسح ملف <span class="eng">Remove</span></td>
+          <td class="eng-cell"><code class="inline-code">rm -r folder</code></td>
+        </tr>
+        <tr>
+          <td class="eng-cell" style="font-weight:700;"><code class="inline-code">man</code></td>
+          <td>عرض الكتيب الإرشادي <span class="eng">Manual</span></td>
+          <td class="eng-cell"><code class="inline-code">man ls</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="page-footer">
+    <span class="page-num">9</span>
+    <span class="version">v1.0 — Embedded Linux & Yocto Course</span>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE 10: SECTION 3.6            -->
+<!-- ============================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الثالث: Shell & Root File System</span>
+  </div>
+
+  <div class="section-num">SECTION 3.6</div>
+  <h2 class="section-title">السلوك المتقدم لأوامر النقل والنسخ <span class="eng">mv & cp</span></h2>
+  <div class="section-divider"></div>
+
+  <p class="body-text">
+    الأمران نقل/إعادة تسمية <span class="eng">mv (Move)</span> ونسخ <span class="eng">cp (Copy)</span> يحتاجان إلى مدخلين <span class="eng">Arguments</span>: المصدر <span class="eng">Source</span> والوجهة <span class="eng">Destination</span>.
+  </p>
+
+  <!-- mv & cp Structure -->
+  <div class="diagram-container">
+    <div class="diagram-title">بنية أوامر النقل والنسخ</div>
+    <div style="display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;direction:ltr;">
+      <div style="background:var(--primary);color:white;padding:14px 28px;border-radius:10px;text-align:center;">
+        <div style="font-family:'Inter',sans-serif;font-size:9pt;opacity:0.8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Command</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:14pt;font-weight:700;">mv / cp</div>
+      </div>
+      <div style="font-size:20pt;color:var(--text-muted);">→</div>
+      <div style="background:var(--secondary);color:white;padding:14px 28px;border-radius:10px;text-align:center;">
+        <div style="font-family:'Inter',sans-serif;font-size:9pt;opacity:0.8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Source</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:14pt;font-weight:700;">example.txt</div>
+      </div>
+      <div style="font-size:20pt;color:var(--text-muted);">→</div>
+      <div style="background:var(--accent);color:white;padding:14px 28px;border-radius:10px;text-align:center;">
+        <div style="font-family:'Inter',sans-serif;font-size:9pt;opacity:0.8;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Destination</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:14pt;font-weight:700;">desktop/lab/</div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="subsection-title">كيف يتصرف الأمران بناءً على <span class="eng">Destination</span>؟</h3>
+
+  <p class="body-text">
+    سلوك الأمر (مثال <span class="eng">mv</span>) يتغير حسب حالة الـ <span class="eng">Destination</span>:
+  </p>
+
+  <div class="table-wrapper">
+    <table class="prof-table">
+      <thead>
+        <tr>
+          <th style="width:25%;">حالة الـ <span class="eng">Destination</span></th>
+          <th style="width:40%;">السلوك</th>
+          <th>النتيجة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="font-weight:600;">مجلد موجود <span class="eng">Existing Directory</span></td>
+          <td>ينقل الملف المصدر داخل هذا المجلد بنفس اسمه</td>
+          <td>نقل فقط</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;">مسار غير موجود <span class="eng">Doesn't Exist</span></td>
+          <td>ينقل الملف المصدر إلى المسار الجديد ويقوم بإعادة تسميته</td>
+          <td>نقل + إعادة تسمية <span class="eng">Rename</span> للاسم الممرر الجديد</td>
+        </tr>
+        <tr>
+          <td style="font-weight:600;">ملف موجود مسبقاً <span class="eng">Existing File</span></td>
+          <td>يقوم بالكتابة فوقه وإلغاء القدیم (وقد يطلب تأكيداً حسب إعدادات الشل)</td>
+          <td>استبدال <span class="eng">Overwrite</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Decision Flow -->
+  <div class="diagram-container">
+    <div class="diagram-title">مخطط قرارة سلوك الأمر <span class="eng">mv</span> حسب الوجهة</div>
+    <div style="direction:ltr;text-align:center;font-family:'Inter',sans-serif;font-size:10pt;">
+      <div style="display:inline-block;background:var(--primary);color:white;padding:10px 24px;border-radius:10px;font-weight:600;">mv source destination</div>
+      <div style="font-size:18pt;color:var(--text-muted);line-height:1.2;">↓</div>
+      <div style="display:inline-block;background:#f1f5f9;border:2px solid var(--border);padding:10px 20px;border-radius:10px;font-weight:600;color:var(--text);">Destination is...?</div>
+      <div style="display:flex;justify-content:center;gap:20px;margin-top:8px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:140px;max-width:180px;">
+          <div style="font-size:18pt;color:var(--text-muted);">↙</div>
+          <div style="background:var(--success);color:white;padding:10px 14px;border-radius:8px;font-weight:600;font-size:9pt;">Existing Directory</div>
+          <div style="font-size:18pt;color:var(--text-muted);">↓</div>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:8px 12px;border-radius:6px;font-size:9pt;color:var(--text);">Move inside<br>(same name)</div>
+        </div>
+        <div style="flex:1;min-width:140px;max-width:180px;">
+          <div style="font-size:18pt;color:var(--text-muted);">↓</div>
+          <div style="background:var(--accent);color:white;padding:10px 14px;border-radius:8px;font-weight:600;font-size:9pt;">Doesn't Exist</div>
+          <div style="font-size:18pt;color:var(--text-muted);">↓</div>
+          <div style="background:#fffbeb;border:1px solid #fed7aa;padding:8px 12px;border-radius:6px;font-size:9pt;color:var(--text);">Move + Rename<br>(new name)</div>
+        </div>
+        <div style="flex:1;min-width:140px;max-width:180px;">
+          <div style="font-size:18pt;color:var(--text-muted);">↘</div>
+          <div style="background:var(--danger);color:white;padding:10px 14px;border-radius:8px;font-weight:600;font-size:9pt;">Existing File</div>
+          <div style="font-size:18pt;color:var(--text-muted);">↓</div>
+          <div style="background:#fef2f2;border:1px solid #fecaca;padding:8px 12px;border-radius:6px;font-size:9pt;color:var(--text);">Overwrite<br>(may ask confirm)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="page-num">10</span>
+    <span class="version">v1.0 — Embedded Linux & Yocto Course</span>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE 11: mv & cp Examples        -->
+<!-- ============================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الثالث: Shell & Root File System</span>
+  </div>
+
+  <h3 class="subsection-title">أمثلة عملية لفهم السلوك</h3>
+
+  <p class="body-text">
+    نفترض أننا لدينا ملف <code class="inline-code">example.txt</code> ولدینا في مجلد <code class="inline-code">techleef</code>:
+  </p>
+
+  <!-- Example 1: mv -->
+  <div class="callout callout-practical">
+    <div class="callout-header">
+      <span>🚀</span> مثال عملي 1: نقل وتغيير الاسم
+    </div>
+    <div class="callout-body">
+      <p style="margin-bottom:10px;color:var(--code-text);">نريد نقل <code class="inline-code" style="background:#334155;border-color:#475569;">example.txt</code> إلى مجلد <code class="inline-code" style="background:#334155;border-color:#475569;">lab</code> الموجود داخل <code class="inline-code" style="background:#334155;border-color:#475569;">desktop</code> وتغيير اسمه إلى <code class="inline-code" style="background:#334155;border-color:#475569;">t1.txt</code>:</p>
+      <div style="background:#0f172a;border-radius:8px;padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:10.5pt;direction:ltr;text-align:left;color:var(--code-text);margin-top:8px;">
+        <span class="cmd">mv</span> <span class="path">example.txt</span> <span class="path">desktop/lab/t1.txt</span>
+      </div>
+      <p style="margin-top:10px;color:#94a3b8;">هنا استخدمنا المسار النسبي، والأمر سينقل الملف ويغير اسمه في نفس الخطوة.</p>
+    </div>
+  </div>
+
+  <!-- Example 2: cp -->
+  <div class="callout callout-practical">
+    <div class="callout-header">
+      <span>🚀</span> مثال عملي 2: نسخ مع النقطة
+    </div>
+    <div class="callout-body">
+      <p style="margin-bottom:10px;color:var(--code-text);">نريد أخذ نسخة من <code class="inline-code" style="background:#334155;border-color:#475569;">t1.txt</code> الموجود في <code class="inline-code" style="background:#334155;border-color:#475569;">lab</code> ووضعها في مجلدنا الحالي (<code class="inline-code" style="background:#334155;border-color:#475569;">techleef</code>) بنفس اسمها:</p>
+      <div style="background:#0f172a;border-radius:8px;padding:12px 16px;font-family:'JetBrains Mono',monospace;font-size:10.5pt;direction:ltr;text-align:left;color:var(--code-text);margin-top:8px;">
+        <span class="cmd">cp</span> <span class="path">desktop/lab/t1.txt</span> <span class="path">.</span>
+      </div>
+      <p style="margin-top:10px;color:#94a3b8;">هنا استخدمنا النقطة كوجهة، مما يعني "انسخ الملف وضعه في المجلد الذي أقف فيه الآن".</p>
+    </div>
+  </div>
+
+  <div class="callout callout-deep">
+    <div class="callout-header">
+      <span>🧠</span> فهم عميق: النقطة <span class="eng">.</span> كوجهة
+    </div>
+    <div class="callout-body">
+      <p>عند استخدام النقطة <span class="eng">.</span> كـ <span class="eng">Destination</span> في أمر <code class="inline-code">cp</code>، فأنت تخبر النظام: "الوجهة هي المجلد الحالي". الملف سيُنسخ بنفس اسمه الأصلي إلى المكان الذي تقف فيه حالياً. هذا نمط شائع جداً في العمل اليومي مع لينكس.</p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="page-num">11</span>
+    <span class="version">v1.0 — Embedded Linux & Yocto Course</span>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE 12: SECTION 3.7            -->
+<!-- ============================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الثالث: Shell & Root File System</span>
+  </div>
+
+  <div class="section-num">SECTION 3.7</div>
+  <h2 class="section-title">لماذا نستخدم <span class="eng">./</span> لتشغيل البرامج والنصوص البرمجية <span class="eng">Scripts</span>؟</h2>
+  <div class="section-divider"></div>
+
+  <p class="body-text">
+    سؤال مهم: عندما نشغل أمراً نكتبه مباشرة مثل <code class="inline-code">ls</code>، ولكن لتشغيل سكربت (مثلاً قمنا بكتابته <code class="inline-code">script.sh</code> موجود في مجلدنا الحالي) نضطر لكتابة <code class="inline-code">./script.sh</code>؟ لماذا؟
+  </p>
+
+  <h3 class="subsection-title">التفسير التقني</h3>
+
+  <ol class="styled-list">
+    <li>عندما تكتب أمراً مثل <code class="inline-code">cp</code>، فإن الـ <span class="eng">Shell</span> يبحث عنه في المسارات المجهزة مسبقاً في النظام (مثل <code class="inline-code">/bin</code> و <code class="inline-code">/usr/bin</code>).
+    </li>
+    <li>لكن الشل لا يبحث في مجلدك الحالي لدواعي أمنیة وتنظیمیة.
+    </li>
+    <li>لذلك، إذا كان لديك برنامج تنفيذي <span class="eng">Executable</span> في مجلدك الحالي، يجب أن توجه الشل إلى مساره يدوياً لكي يبحث عنه في نظام المسارات.
+    </li>
+    <li>استخدمنا النقطة (التي تعني المجلد الحالي) ودمجناھا مع <span class="eng">/</span> لتكوين مسار نسبي:
+      <div class="path-visual" style="margin-top:8px;">
+        <span class="path-segment dir">.</span>
+        <span class="path-slash">/</span>
+        <span class="path-segment file">script.sh</span>
+      </div>
+    </li>
+    <li>قم بتشغيل الملف حرفياً في هذا المجلد.
+    </li>
+  </ol>
+
+  <!-- Diagram: Shell Search Path -->
+  <div class="diagram-container">
+    <div class="diagram-title">آلية بحث الـ <span class="eng">Shell</span> عن الأوامر</div>
+    <div style="direction:ltr;text-align:center;">
+      <div style="display:inline-block;background:var(--primary);color:white;padding:10px 20px;border-radius:10px;font-weight:600;font-family:'Inter',sans-serif;">تكتب أمراً في Terminal</div>
+      <div style="font-size:18pt;color:var(--text-muted);line-height:1.2;">↓</div>
+      <div style="display:inline-block;background:#f1f5f9;border:2px solid var(--border);padding:10px 20px;border-radius:10px;font-weight:600;color:var(--text);font-family:'Inter',sans-serif;">Shell يبحث في $PATH</div>
+      <div style="display:flex;justify-content:center;gap:12px;margin-top:8px;flex-wrap:wrap;">
+        <div style="background:var(--secondary);color:white;padding:8px 16px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:9.5pt;">/bin</div>
+        <div style="background:var(--secondary);color:white;padding:8px 16px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:9.5pt;">/usr/bin</div>
+        <div style="background:var(--secondary);color:white;padding:8px 16px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:9.5pt;">/sbin</div>
+        <div style="background:var(--secondary);color:white;padding:8px 16px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:9.5pt;">/usr/local/bin</div>
+      </div>
+      <div style="font-size:18pt;color:var(--text-muted);line-height:1.2;">↓</div>
+      <div style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;">
+        <div style="text-align:center;">
+          <div style="background:var(--success);color:white;padding:8px 16px;border-radius:8px;font-family:'Inter',sans-serif;font-size:9pt;font-weight:600;">وجد؟ ✓</div>
+          <div style="font-size:18pt;color:var(--text-muted);">↓</div>
+          <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:6px 14px;border-radius:6px;font-size:9pt;color:var(--text);">تنفيذ الأمر</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="background:var(--danger);color:white;padding:8px 16px;border-radius:8px;font-family:'Inter',sans-serif;font-size:9pt;font-weight:600;">لم يجد؟ ✗</div>
+          <div style="font-size:18pt;color:var(--text-muted);">↓</div>
+          <div style="background:#fef2f2;border:1px solid #fecaca;padding:6px 14px;border-radius:6px;font-size:9pt;color:var(--text);">command not found</div>
+        </div>
+      </div>
+      <div style="margin-top:14px;padding:10px;background:#fffbeb;border:1px solid #fed7aa;border-radius:8px;font-size:9.5pt;color:var(--text);max-width:400px;margin-left:auto;margin-right:auto;">
+        <strong style="color:var(--accent);">الحل:</strong> المجلد الحالي ليس في <span class="eng">$PATH</span>، لذلك نستخدم <code class="inline-code">./script.sh</code> لنخبر الشل بمكان الملف تحديداً
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-takeaway">
+    <div class="callout-header">
+      <span>✅</span> ماذا يجب أن تتذكر؟
+    </div>
+    <div class="callout-body">
+      <p>الرمز <code class="inline-code">./</code> ليس "أمر تشغيل"، بل هو مجرد مسار نسبي <span class="eng">Relative Path</span> يخبر الشل بدقة بمكان التنفيذي الملف. يمكنك تشغيل الملف نفسه بشكل طبيعي باستخدام مساره المطلق (مثال: <code class="inline-code">/home/user/script.sh</code>) وسيعمل.</p>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="page-num">12</span>
+    <span class="version">v1.0 — Embedded Linux & Yocto Course</span>
+  </div>
+</div>
+
+<!-- ============================== -->
+<!-- PAGE 13: QUICK REVIEW           -->
+<!-- ============================== -->
+<div class="page">
+  <div class="page-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">الدرس الثالث: Shell & Root File System</span>
+  </div>
+
+  <div class="quick-review">
+    <div class="quick-review-header">
+      <span>📋</span> مراجعة سريعة — Quick Review
+    </div>
+
+    <!-- Main Concepts -->
+    <div class="qr-section">
+      <div class="qr-section-title green">✅ المفاهيم الرئيسية</div>
+      <ul class="qr-checklist">
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>التطبيقات في لينكس هي ملفات مخزنة على وحدة التخزين، ينسخها الكيرنل إلى الـ <span class="eng">RAM</span> عند التشغيل.</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>نظام الملفات في لينكس شجرة واحدة تبدأ من جذر واحد <span class="eng">/</span>، على عكس <span class="eng">Windows</span> الذي يستخدم عدة أقراص.</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>أي أمر في لينكس يتكون من: <span class="eng">Command + Options + Arguments</span>، وتفصل بينها مسافات.</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>المسار المطلق يبدأ من <span class="eng">/</span> دائماً، والمسار النسبي يبدأ من المجلد الحالي.</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>النقطة <span class="eng">.</span> تعني المجلد الحالي، والنقطتان <span class="eng">..</span> تعني المجلد الأب.</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>أمر <span class="eng">mv</span> يتصرف بشكل مختلف حسب حالة الوجهة: مجلد موجود (نقل)، مسار غير موجود (نقل + إعادة تسمية)، ملف موجود (استبدال).</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>الرمز <span class="eng">./</span> يُستخدم لأن الـ <span class="eng">Shell</span> لا يبحث في المجلد الحالي تلقائياً لأسباب أمنية.</li>
+      </ul>
+    </div>
+
+    <!-- Important Definitions -->
+    <div class="qr-section">
+      <div class="qr-section-title blue">📌 تعريفات مهمة</div>
+      <ul class="styled-list" style="font-size:11pt;">
+        <li><strong><span class="eng">Root File System:</span></strong> نظام تنظيم الملفات في لينكس الذي يبدأ من الجذر <span class="eng">/</span> وتتفرع منه كل المجلدات.</li>
+        <li><strong><span class="eng">Shell:</span></strong> مترجم <span class="eng">Interpreter</span> يأخذ الأوامر النصية ويحللها وينفذها عبر الكيرنل.</li>
+        <li><strong><span class="eng">Absolute Path:</span></strong> مسار يبدأ دائماً من الجذر <span class="eng">/</span> ويحدد موقع الملف بشكل كامل ودون غموض.</li>
+        <li><strong><span class="eng">Relative Path:</span></strong> مسار يبدأ من المجلد الحالي ويعتمد على موقعك الحالي في الشجرة.</li>
+        <li><strong><span class="eng">Hidden Files:</span></strong> ملفات أو مجلدات أسماؤها تبدأ بنقطة <span class="eng">.</span> ولا تظهر مع <span class="eng">ls</span> العادي.</li>
+      </ul>
+    </div>
+
+    <!-- Common Mistakes -->
+    <div class="qr-section">
+      <div class="qr-section-title red">⚠️ أخطاء شائعة</div>
+      <ul class="styled-list" style="font-size:11pt;">
+        <li>نسيان المسافة <span class="eng">Space</span> بين أجزاء الأمر: <code class="inline-code">ls-a</code> خطأ، الصحيح <code class="inline-code">ls -a</code>.</li>
+        <li>خلط المسار المطلق مع النسبي: <code class="inline-code">cd /desktop</code> سيبحث تحت الجذر مباشرة وليس في مسارك الحالي.</li>
+        <li>محاولة كتابة <code class="inline-code">script.sh</code> مباشرة بدون <code class="inline-code">./</code> — الشل لن يجده لأن المجلد الحالي ليس في <span class="eng">$PATH</span>.</li>
+        <li>استخدام <code class="inline-code">rm</code> لمجلد بدون <code class="inline-code">-r</code> — لن يعمل لأن <code class="inline-code">rm</code> العادي يتعامل مع الملفات فقط.</li>
+      </ul>
+    </div>
+
+    <!-- Interview Notes -->
+    <div class="qr-section">
+      <div class="qr-section-title purple">🧠 ملاحظات للمقابلات</div>
+      <ul class="styled-list" style="font-size:11pt;">
+        <li>سؤال: "لماذا لينكس يستخدم شجرة واحدة بينما <span class="eng">Windows</span> يستخدم عدة أقراص؟" — الإجابة: فلسفة <span class="eng">Unix</span> تؤمن بأن كل شيء هو ملف، والشجرة الموحدة تسهل إدارة الصلاحيات والتصmount.</li>
+        <li>سؤال: "لماذا <span class="eng">./</span> ضروري لتشغيل السكربتات؟" — الإجابة: أسباب أمنية، الـ <span class="eng">Shell</span> لا يبحث في المجلد الحالي ضمن <span class="eng">$PATH</span> لتجنب تنفيذ ملفات خبيثة.</li>
+        <li>سؤال: "ما الفرق بين <span class="eng">/bin</span> و <span class="eng">/sbin</span>؟" — <span class="eng">/bin</span> أوامر لكل المستخدمين، <span class="eng">/sbin</span> أوامر للـ <span class="eng">root</span> (إدارية).</li>
+      </ul>
+    </div>
+
+    <!-- Memory Tips -->
+    <div class="qr-section">
+      <div class="qr-section-title orange">💡 نصائح للحفظ</div>
+      <ul class="styled-list" style="font-size:11pt;">
+        <li><strong>المسار المطلق:</strong> يبدأ بـ <span class="eng">/</span> = "مطلق" = من الأعلى (الجذر).</li>
+        <li><strong>المسار النسبي:</strong> لا يبدأ بـ <span class="eng">/</span> = "نسبي" = من هنا (حيث أنا).</li>
+        <li><strong><span class="eng">pwd</span>:</strong> <span class="eng">Print Working Directory</span> = "أين أنا الآن؟".</li>
+        <li><strong><span class="eng">cd</span>:</strong> <span class="eng">Change Directory</span> = "أريد الذهاب إلى...".</li>
+        <li><strong><span class="eng">./</span>:</strong> "هنا في هذا المجلد" = النقطة = مكانك الحالي.</li>
+        <li><strong><span class="eng">..</span>:</strong> "للخلف" = نقطتان = المجلد الأب.</li>
+      </ul>
+    </div>
+
+    <!-- Exam Tips -->
+    <div class="qr-section">
+      <div class="qr-section-title teal">📝 نصائح للامتحانات</div>
+      <ul class="styled-list" style="font-size:11pt;">
+        <li>قد يُسأل عن الفرق بين المسار المطلق والنسبي مع أمثلة — تأكد من إعطاء أمثلة صحيحة.</li>
+        <li>قد يُطلب منك كتابة أمر كامل لنقل ملف وإعادة تسميته في خطوة واحدة — استخدم <code class="inline-code">mv</code> مع وجهة غير موجودة.</li>
+        <li>توقع سؤالاً عن وظيفة كل مجلد من <span class="eng">/bin, /lib, /boot, /home</span>.</li>
+        <li>قد يُسأل: "ماذا يحدث إذا كتبت <code class="inline-code">ls /home</code>؟" — الجواب: يمرر مساراً وليس مجلداً، والـ <span class="eng">ls</span> يتحقق من وجوده ثم يعرض محتواه.</li>
+      </ul>
+    </div>
+
+    <!-- Revision Checklist -->
+    <div class="qr-section">
+      <div class="qr-section-title green">✅ قائمة المراجعة</div>
+      <ul class="qr-checklist">
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>أفهم أين توجد تطبيقات <span class="eng">User Space</span> فعلياً (وحدة التخزين).</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>أستطيع شرح الفرق بين هيكل لينكس وهيكل <span class="eng">Windows</span> للملفات.</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>أعرف وظيفة <span class="eng">/bin, /lib, /boot, /home</span>.</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>أستطيع كتابة أي أمر بالتركيبة الصحيحة <span class="eng">Command + Options + Arguments</span>.</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>أفرق بين المسار المطلق والنسبي وأعطي أمثلة.</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>أعرف معنى <span class="eng">.</span> و <span class="eng">..</span> واستخدامهما.</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>أستخدم <span class="eng">pwd, ls, cd, mkdir, touch, rm, man</span> بثقة.</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>أفهم السلوك الثلاثي لـ <span class="eng">mv</span> حسب حالة الوجهة.</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>أشرح لماذا <span class="eng">./</span> ضروري وأعمل بدونها.</li>
+        <li><span class="check-icon" onclick="this.classList.toggle('checked')">✓</span>أستخدم النقطة <span class="eng">.</span> كوجهة في <code class="inline-code">cp</code> لنسخ ملف إلى المجلد الحالي.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span class="page-num">13</span>
+    <span class="version">v1.0 — Embedded Linux & Yocto Course</span>
+  </div>
+</div>
+
+</body>
+</html>

@@ -10,7 +10,7 @@ This repository serves as a comprehensive, well-structured, and visually appeali
 | Lecture | Topic / Description | Status | Interactive Link |
 | :---: | :--- | :---: | :---: |
 | **Lec 1** | Introduction to Embedded Linux & System Architecture | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec1/index.html) |
-| **Lec 2** | Bootloaders, U-Boot, and Hardware Initialization | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec2/index.html) |
+| **Lec 2** | Bootloaders, U-Boot, and Hardware Initialization | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec2/index.md) |
 | **Lec 3** | Linux Kernel Configuring, Compiling, and Device Trees | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddedLinuxAndYoctoGoldenCourse/Summaries/lec3/index.html) |
 | **Lec 4** | Creating a Custom Root Filesystem (Rootfs) from Scratch | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddedLinuxAndYoctoGoldenCourse/Summaries/lec4/index.html) |
 | **Lec 5** | Embedded Linux Build Systems: Deep Dive into Buildroot | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddedLinuxAndYoctoGoldenCourse/Summaries/lec5/index.html) |

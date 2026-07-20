@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ملخص الدرس السادس - Shell Scripting: Permissions & Advanced</title>
+<style>
+  :root{
+    --primary:#0F4C81;
+    --secondary:#14B8A6;
+    --accent:#F59E0B;
+    --success:#16A34A;
+    --warning:#EA580C;
+    --danger:#DC2626;
+    --bg:#F8FAFC;
+    --card:#FFFFFF;
+    --text:#1E293B;
+    --muted:#64748B;
+    --border:#E2E8F0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Tahoma','Segoe UI',Arial,sans-serif;
+    line-height:1.8;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:24px;}
+  header.hero{
+    background:linear-gradient(135deg,var(--primary),#1B6FAE);
+    color:#fff;
+    border-radius:16px;
+    padding:32px 28px;
+    margin-bottom:28px;
+  }
+  header.hero .eyebrow{
+    font-size:14px;
+    opacity:.85;
+    margin-bottom:6px;
+    letter-spacing:.5px;
+  }
+  header.hero h1{
+    margin:0 0 8px 0;
+    font-size:26px;
+  }
+  header.hero p{
+    margin:4px 0;
+    font-size:15px;
+    opacity:.95;
+  }
+  header.hero .ltr{direction:ltr;display:inline-block;font-family:'Consolas','JetBrains Mono',monospace;}
+
+  nav.toc{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:18px 22px;
+    margin-bottom:32px;
+  }
+  nav.toc h2{
+    font-size:16px;
+    color:var(--primary);
+    margin:0 0 10px 0;
+  }
+  nav.toc ol{margin:0;padding-inline-start:20px;}
+  nav.toc li{margin:4px 0;}
+  nav.toc a{color:var(--text);text-decoration:none;}
+  nav.toc a:hover{color:var(--primary);text-decoration:underline;}
+
+  section.chapter{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:26px 28px;
+    margin-bottom:26px;
+  }
+  section.chapter h2{
+    color:var(--primary);
+    font-size:20px;
+    border-bottom:3px solid var(--secondary);
+    padding-bottom:10px;
+    margin-top:0;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  section.chapter h2 .num{
+    background:var(--primary);
+    color:#fff;
+    width:30px;height:30px;
+    border-radius:50%;
+    display:inline-flex;
+    align-items:center;justify-content:center;
+    font-size:14px;
+    flex:none;
+  }
+  h3{
+    color:var(--secondary);
+    font-size:17px;
+    margin-top:22px;
+  }
+  p{margin:10px 0;}
+
+  code, .ltr-code{
+    font-family:'Consolas','JetBrains Mono',monospace;
+    direction:ltr;
+    unicode-bidi:embed;
+    background:#F1F5F9;
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:1px 6px;
+    font-size:13.5px;
+    color:#0F172A;
+  }
+  pre{
+    background:#0F172A;
+    color:#E2E8F0;
+    border-radius:10px;
+    padding:16px 18px;
+    overflow-x:auto;
+    direction:ltr;
+    text-align:left;
+    font-family:'Consolas','JetBrains Mono',monospace;
+    font-size:13.5px;
+    margin:14px 0;
+  }
+
+  .box{
+    border-radius:10px;
+    padding:14px 18px;
+    margin:16px 0;
+    border-right:5px solid;
+  }
+  .box .box-title{
+    font-weight:bold;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-bottom:6px;
+  }
+  .box.concept{background:#EFF6FF;border-color:var(--primary);}
+  .box.concept .box-title{color:var(--primary);}
+  .box.takeaway{background:#F0FDF4;border-color:var(--success);}
+  .box.takeaway .box-title{color:var(--success);}
+  .box.tip{background:#FFFBEB;border-color:var(--accent);}
+  .box.tip .box-title{color:#B45309;}
+  .box.warning{background:#FEF2F2;border-color:var(--danger);}
+  .box.warning .box-title{color:var(--danger);}
+  .box.review{background:#F5F3FF;border-color:#7C3AED;}
+  .box.review .box-title{color:#6D28D9;}
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:16px 0;
+    font-size:14px;
+  }
+  th, td{
+    border:1px solid var(--border);
+    padding:10px 12px;
+    text-align:right;
+  }
+  th{
+    background:var(--primary);
+    color:#fff;
+  }
+  tr:nth-child(even){background:#F8FAFC;}
+
+  .flow{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px;
+    margin:16px 0;
+    direction:ltr;
+    justify-content:flex-start;
+  }
+  .flow .step{
+    background:#EFF6FF;
+    border:1px solid var(--primary);
+    color:var(--primary);
+    padding:8px 14px;
+    border-radius:8px;
+    font-size:13.5px;
+    font-family:'Consolas',monospace;
+  }
+  .flow .arrow{color:var(--secondary);font-size:18px;}
+
+  ul, ol{padding-inline-start:26px;}
+  li{margin:6px 0;}
+
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    padding:24px 0;
+  }
+
+  @media (max-width:600px){
+    .wrap{padding:14px;}
+    section.chapter{padding:18px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">ملخص الدرس السادس — قسم الشل (الجزء الرابع)</div>
+    <h1>Shell Scripting: Permissions &amp; Advanced Parameter Expansion</h1>
+    <p>المدرب: طالل بالحاج سالم — <span class="ltr">Architect Linux Embedded</span></p>
+    <p>موضوع الدرس: التلاعب المتقدم بالمتغيرات (<span class="ltr">Parameter Expansion</span>)، تشغيل السكربتات والـ <span class="ltr">Shebang</span>، نظام الصلاحيات في لينكس (<span class="ltr">chmod &amp; Permissions</span>)، الأوامر الداخلية والخارجية (<span class="ltr">Built-in vs External</span>)، والتعامل مع مدخلات سطر الأوامر (<span class="ltr">Command Line Arguments</span>).</p>
+  </header>
+
+  <nav class="toc">
+    <h2>محتويات الدرس</h2>
+    <ol>
+      <li><a href="#sec1">تشغيل الأوامر المتداخلة (Command Substitution)</a></li>
+      <li><a href="#sec2">التلاعب بالنصوص والمتغيرات (Parameter/String Expansion)</a></li>
+      <li><a href="#sec3">السكربتات وتشغيلها (Shell Scripting &amp; Execution)</a></li>
+      <li><a href="#sec4">الصلاحيات والمستخدمون (Linux Permissions)</a></li>
+      <li><a href="#sec5">الأوامر الداخلية مقابل الخارجية (Built-in vs External Commands)</a></li>
+      <li><a href="#sec6">مدخلات سطر الأوامر (Command Line Arguments)</a></li>
+    </ol>
+  </nav>
+
+  <!-- SECTION 1 -->
+  <section class="chapter" id="sec1">
+    <h2><span class="num">1</span> تشغيل الأوامر المتداخلة (Command Substitution)</h2>
+    <p>كيف يمكننا أخذ نتيجة (Output) أمر معين واستخدامها كمدخل (Input) أو جزء من أمر آخر؟</p>
+
+    <h3>⚙️ كيف تعمل؟</h3>
+    <p>يوفر الـ Shell ميزة "استبدال الأوامر" (Command Substitution)، حيث يقوم أولاً بتشغيل الأمر الداخلي، ثم يستبدل الكود بنتيجة هذا الأمر ليتم تشغيل الأمر الخارجي.</p>
+
+    <ul>
+      <li><strong>الطريقة القديمة (Backticks):</strong> كان يُستخدم رمز الـ Backtick (<code>`</code>) الموجود تحت حرف الذال في لوحة المفاتيح.
+        <pre>echo `pwd`</pre>
+      </li>
+      <li><strong>الطريقة الحديثة (أقواس الدولار $()):</strong> هي الطريقة الأفضل والأكثر توافقية.
+        <pre>echo $(pwd)</pre>
+      </li>
+    </ul>
+
+    <div class="box tip">
+      <div class="box-title">💡 أفضل الممارسات (Best Practices)</div>
+      يُفضل دائماً استخدام <code>$()</code> وتجنب الـ Backticks (<code>`</code>). السبب: الـ Backticks تجعل من الصعب جداً أو المستحيل كتابة أوامر متداخلة معقدة (Nested Commands) — أمر داخل أمر داخل أمر — بينما الأقواس <code>$()</code> تدعم التداخل بسهولة ووضوح مقروء للمبرمج.
+    </div>
+
+    <div class="box takeaway">
+      <div class="box-title">✅ ماذا يجب أن تتذكر؟</div>
+      استخدم دائماً <code>$(Command)</code> لأخذ نتيجة أي أمر واستخدامها في أمر آخر أو حفظها في متغير.
+    </div>
+
+    <div class="box warning">
+      <div class="box-title">⚠️ أخطاء شائعة</div>
+      الخلط بين <code>$()</code> التي تشغّل أمراً، وبين <code>${}</code> التي تستدعي محتوى متغير.
+    </div>
+
+    <div class="box review">
+      <div class="box-title">⚡ مراجعة سريعة</div>
+      <ul>
+        <li><code>$(ls)</code>: ينفذ الأمر <code>ls</code> ويعيد نتيجته.</li>
+        <li><code>${VAR}</code>: يستدعي قيمة المتغير <code>VAR</code>.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SECTION 2 -->
+  <section class="chapter" id="sec2">
+    <h2><span class="num">2</span> التلاعب بالنصوص والمتغيرات (Parameter/String Expansion)</h2>
+    <p>يوفر الـ Shell إمكانيات قوية للتعديل على محتوى المتغيرات أثناء استدعائها دون الحاجة لأوامر خارجية. يتم ذلك عبر إضافة رموز خاصة داخل الأقواس المتعرجة <code>${}</code>.</p>
+
+    <h3>🔧 عمليات شائعة على المتغيرات</h3>
+
+    <p><strong>1. معرفة طول النص (String Length):</strong> نستخدم رمز الـ Hash <code>#</code> قبل اسم المتغير.</p>
+    <pre>NAME="Talal"
+echo ${#NAME}
+# النتيجة ستكون 5 (عدد الحروف)</pre>
+
+    <p><strong>2. تحديد قيمة افتراضية (Default Value):</strong> مفيد جداً في السكربتات لحماية البرنامج إذا نسي المستخدم إدخال قيمة المتغير.</p>
+    <pre>echo ${PLACE:-Tunisia}
+# إذا كان المتغير PLACE فارغاً، سيطبع "Tunisia". وإلا سيطبع قيمته.</pre>
+
+    <p><strong>3. الاستبدال (Search and Replace):</strong> استبدال كلمة بأخرى داخل المتغير.</p>
+    <pre>MSG="Hello from TechLeef"
+echo ${MSG/Hello/Hi}
+# النتيجة: Hi from TechLeef</pre>
+
+    <p><strong>4. قص النصوص (Trimming / Slicing):</strong></p>
+    <ul>
+      <li>القص من اليسار لليمين: نستخدم الـ Hash <code>#</code>.
+        <ul>
+          <li><code>${VAR#pattern}</code> — يحذف أقصر تطابق من اليسار.</li>
+          <li><code>${VAR##pattern}</code> — يحذف أطول تطابق من اليسار.</li>
+        </ul>
+      </li>
+      <li>القص من اليمين لليسار: نستخدم علامة النسبة <code>%</code>.
+        <ul>
+          <li><code>${VAR%pattern}</code> — يحذف أقصر تطابق من اليمين.</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h3>📁 أمثلة استخراج أسماء الملفات والمسارات</h3>
+    <p>بدلاً من التلاعب المعقد بقص المسارات بـ <code>#</code> و <code>%</code> (والذي قد يكون Bashism غير متوافق مع POSIX)، يُنصح باستخدام أوامر لينكس القياسية المخصصة لذلك:</p>
+    <table>
+      <tr><th>الأمر</th><th>الوظيفة</th><th>مثال</th><th>النتيجة</th></tr>
+      <tr><td><code>basename</code></td><td>يستخرج اسم الملف النهائي فقط من المسار بالكامل</td><td><code>basename /home/techleef/script.sh</code></td><td><code>script.sh</code></td></tr>
+      <tr><td><code>dirname</code></td><td>يستخرج مسار المجلد الذي يحتوي على الملف، ويحذف اسم الملف</td><td><code>dirname /home/techleef/script.sh</code></td><td><code>/home/techleef</code></td></tr>
+    </table>
+
+    <div class="box takeaway">
+      <div class="box-title">✅ ماذا يجب أن تتذكر؟</div>
+      ميزات الـ Parameter Expansion سريعة وتتم داخل الشل نفسه، لكن بعضها المتقدم يعمل فقط في bash. إذا أردت توافقية 100% مع POSIX، استخدم الأوامر المساعدة مثل <code>basename</code> و <code>dirname</code>.
+    </div>
+
+    <div class="box warning">
+      <div class="box-title">⚠️ أخطاء شائعة</div>
+      استخدام مسافات داخل أقواس التلاعب <code>${ }</code> مما يسبب أخطاء في الـ Syntax.
+    </div>
+
+    <div class="box review">
+      <div class="box-title">⚡ مراجعة سريعة</div>
+      <ul>
+        <li><code>${#VAR}</code>: طول النص.</li>
+        <li><code>${VAR:-default}</code>: قيمة افتراضية.</li>
+        <li><code>unset VAR</code>: مسح المتغير نهائياً من الذاكرة.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SECTION 3 -->
+  <section class="chapter" id="sec3">
+    <h2><span class="num">3</span> السكربتات وتشغيلها (Shell Scripting &amp; Execution)</h2>
+
+    <h3>📄 ما هو الـ Script؟</h3>
+    <p>السكربت هو ببساطة ملف نصي عادي (Text File) يحتوي على مجموعة من أوامر لينكس والتعليمات البرمجية. يقرؤه الـ Interpreter (مثل الشل) وينفذ الأوامر سطراً بسطر كما لو كنت تكتبها بيدك.</p>
+
+    <h3>⚙️ كيف يتم تشغيل السكربت؟ (خطوات العمل)</h3>
+    <p>هناك طريقتان لتشغيل أي سكربت:</p>
+
+    <p><strong>الطريقة الأولى: الاستدعاء المباشر للمترجم (Interpreter)</strong><br>
+    تقوم بكتابة اسم المترجم وتمرر له السكربت كمدخل (Argument).</p>
+    <pre>bash script.sh
+# أو
+sh script.sh</pre>
+    <p>في هذه الحالة، أنت تخبر النظام صراحةً بمن يجب أن يقرأ هذا الملف.</p>
+
+    <p><strong>الطريقة الثانية: التشغيل الذاتي كبرنامج (Self-Execution)</strong><br>
+    نريد تشغيل الملف كبرنامج مباشر باستخدام مساره:</p>
+    <pre>./script.sh</pre>
+    <p>لكي تنجح هذه الطريقة، يجب توفر شرطين:</p>
+    <ol>
+      <li>أن يمتلك الملف صلاحية التشغيل (Execute Permission).</li>
+      <li>أن يحتوي السطر الأول على الـ Shebang (<code>#!</code>).</li>
+    </ol>
+
+    <h3>🪄 ما هو الـ Shebang (<code>#!</code>)؟</h3>
+    <p>هو سطر سحري يجب أن يكون أول سطر تماماً في ملف السكربت (لا يسبقه حتى سطر فارغ).</p>
+    <p><strong>كيف يعمل؟</strong> عندما تطلب من الـ Kernel تشغيل الملف، يقرأ أول حرفين. إذا وجد <code>#!</code>، يدرك فوراً أن هذا الملف يحتاج لوسيط (مترجم). يقرأ المسار الذي يلي الرمز، ثم يشغل ذلك المترجم ويمرر له الملف.</p>
+
+    <div class="flow">
+      <div class="step">#!</div><div class="arrow">→</div>
+      <div class="step">Absolute_Path_To_Interpreter</div>
+    </div>
+
+    <p><strong>أمثلة:</strong></p>
+    <ul>
+      <li>لسكربت الشل: <code>#!/bin/sh</code> أو <code>#!/bin/bash</code></li>
+      <li>لسكربت بايثون: <code>#!/usr/bin/python3</code></li>
+    </ul>
+
+    <div class="box takeaway">
+      <div class="box-title">✅ ماذا يجب أن تتذكر؟</div>
+      صيغة الملف (Extension) مثل <code>.sh</code> أو <code>.py</code> ليس لها أي قيمة تشغيلية في لينكس. الـ Kernel لا يكترث للصيغة، بل يكترث لسطر الـ Shebang ولصلاحيات الملف.
+    </div>
+
+    <div class="box warning">
+      <div class="box-title">⚠️ أخطاء شائعة</div>
+      ترك سطر فارغ قبل الـ <code>#!</code>، مما يفقده ميزته السحرية ويعتبره الشل مجرد تعليق (Comment).
+    </div>
+
+    <div class="box review">
+      <div class="box-title">⚡ مراجعة سريعة</div>
+      <ul>
+        <li><code>bash script.sh</code>: تجاوز الـ Shebang واستخدام bash.</li>
+        <li><code>./script.sh</code>: الاعتماد على الـ Shebang لمعرفة المترجم.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- SECTION 4 -->
+  <section class="chapter" id="sec4">
+    <h2><span class="num">4</span> الصلاحيات والمستخدمون (Linux Permissions)</h2>
+    <p>لماذا يُظهر لك النظام أحياناً "Permission Denied"؟ لأن لينكس مصمم نظاماً ذو طبقات حماية للملفات بناءً على هوية المستخدم.</p>
+
+    <h3>👥 الفئات الثلاث للمستخدمين (User Categories)</h3>
+    <p>كل ملف في لينكس يتم تقييمه بناءً على ثلاث فئات:</p>
+    <ol>
+      <li><strong>المالك (Owner / u):</strong> المستخدم الذي قام بإنشاء الملف (وهو صاحب أقوى الصلاحيات عادة).</li>
+      <li><strong>المجموعة (Group / g):</strong> مجموعة من المستخدمين ينتمون لنفس التصنيف مع المالك (مثل زملاء في نفس المشروع).</li>
+      <li><strong>الآخرون (Others / o):</strong> أي مستخدم آخر في النظام ليس هو المالك ولا ضمن المجموعة.</li>
+    </ol>
+
+    <h3>🔑 أنواع الصلاحيات (Permissions)</h3>
+    <p>كل فئة من الفئات أعلاه تمتلك ثلاثة أنواع من الصلاحيات:</p>
+    <ul>
+      <li><strong>قراءة (Read / r):</strong> لعرض محتوى الملف.</li>
+      <li><strong>كتابة (Write / w):</strong> لتعديل محتوى الملف أو حفظه.</li>
+      <li><strong>تشغيل (Execute / x):</strong> لتشغيل الملف كبرنامج (إذا كان سكربت أو ملف ثنائي).</li>
+    </ul>
+
+    <h3>🖥️ أوامر متعلقة بالصلاحيات والمستخدمين</h3>
+    <p><code>whoami</code> — يطبع اسم المستخدم الحالي الذي تعمل به في الـ Terminal (لمعرفة من أنت بالنسبة للملف).</p>
+
+    <p><code>ls -l</code> — عرض الملفات بتنسيق مفصل (Long Format) يُظهر الصلاحيات.</p>
+    <p><strong>كيفية القراءة</strong> (مثال: <code>-rwxr-xr--</code>):</p>
+    <table>
+      <tr><th>الجزء</th><th>المعنى</th></tr>
+      <tr><td>الحرف الأول <code>-</code></td><td>نوع الملف (إذا كان <code>-</code> فهو ملف عادي، وإذا كان <code>d</code> فهو مجلد Directory)</td></tr>
+      <tr><td>الحروف 2-4 <code>rwx</code></td><td>صلاحيات المالك (Owner) — يستطيع القراءة والكتابة والتشغيل</td></tr>
+      <tr><td>الحروف 5-7 <code>r-x</code></td><td>صلاحيات الـ Group — يقرأ ويشغل فقط، لا يمكنه الكتابة (مكان الـ w يوجد <code>-</code>)</td></tr>
+      <tr><td>الحروف 8-10 <code>r--</code></td><td>صلاحيات الـ Others — يقرأ فقط</td></tr>
+    </table>
+
+    <p><code>chmod [Category][Operator][Permission] [File]</code> — (Change Mode) تغيير صلاحيات ملف أو مجلد.</p>
+    <ul>
+      <li><strong>الفئات (Categories):</strong> <code>u</code> (User/Owner), <code>g</code> (Group), <code>o</code> (Others), <code>a</code> (All)</li>
+      <li><strong>العملية (Operator):</strong> <code>+</code> (إضافة صلاحية)، <code>-</code> (سحب صلاحية)، <code>=</code> (تخصيص الصلاحيات متجاهلاً القديم)</li>
+    </ul>
+    <p><strong>أمثلة:</strong></p>
+    <pre>chmod u+x script.sh   # يعطي صلاحية التشغيل للمالك
+chmod o-r script.sh    # يسحب صلاحية القراءة من الآخرين
+chmod a+x script.sh    # يعطي صلاحية التشغيل للجميع</pre>
+
+    <div class="box takeaway">
+      <div class="box-title">✅ ماذا يجب أن تتذكر؟</div>
+      المستخدم الجذري (Root / Administrator) يمتلك صلاحيات خارقة تتجاوز كافة قواعد الصلاحيات. يمكن للروت قراءة وتعديل أي ملف حتى لو لم يكن مالكه.
+    </div>
+
+    <div class="box warning">
+      <div class="box-title">⚠️ أخطاء شائعة</div>
+      منح صلاحية كاملة للجميع <code>chmod a+rwx</code> لحل مشاكل الـ Permission Denied بسرعة. هذه كارثة أمنية خطيرة — امنح الصلاحيات بـ "مبدأ أقل الامتيازات" (Least Privilege).
+    </div>
+  </section>
+
+  <!-- SECTION 5 -->
+  <section class="chapter" id="sec5">
+    <h2><span class="num">5</span> الأوامر الداخلية مقابل الخارجية (Built-in vs External Commands)</h2>
+
+    <h3>📊 المقارنة بين الأوامر</h3>
+    <table>
+      <tr><th>وجه المقارنة</th><th>الأوامر الداخلية (Built-in)</th><th>الأوامر الخارجية (External)</th></tr>
+      <tr><td>التعريف</td><td>أوامر مبنية ومدمجة (Hardcoded) داخل الكود المصدري للمترجم (الشل) نفسه</td><td>أوامر عبارة عن ملفات تنفيذية (Binaries) مستقلة موجودة في المجلدات (مثل <code>/bin</code>)</td></tr>
+      <tr><td>السرعة</td><td>سريعة جداً (لا تتطلب إنشاء Process جديد)</td><td>أبطأ نسبياً (تتطلب البحث في المسار وإنشاء Process)</td></tr>
+      <tr><td>طريقة طلب المساعدة</td><td>نستخدم أمر <code>help</code> (مثال: <code>help test</code> أو <code>help read</code>)</td><td>نستخدم أمر <code>man</code> (مثال: <code>man ls</code>)</td></tr>
+      <tr><td>أمثلة</td><td><code>cd, echo, test, read, type</code></td><td><code>ls, mkdir, cp, chmod</code></td></tr>
+    </table>
+
+    <h3>🔎 أوامر الاستعلام والإدخال</h3>
+    <p><code>type [Command]</code> — يخبرك ما إذا كان الأمر داخلياً (Built-in) أو خارجياً (ويعطيك مساره).</p>
+    <p><code>read [Options] [Variable_Name]</code> — (Built-in) يوقف تنفيذ السكربت وينتظر من المستخدم إدخال نص من لوحة المفاتيح (Standard Input) ويحفظه في المتغير.</p>
+    <p><strong>خيارات مهمة:</strong></p>
+    <ul>
+      <li><code>-p "Prompt Message"</code>: لعرض رسالة للمستخدم في نفس السطر قبل الإدخال.</li>
+    </ul>
+    <pre>read -p "Enter your name: " NAME</pre>
+  </section>
+
+  <!-- SECTION 6 -->
+  <section class="chapter" id="sec6">
+    <h2><span class="num">6</span> مدخلات سطر الأوامر (Command Line Arguments)</h2>
+    <p>السكربت القوي هو السكربت التفاعلي الذي يقبل معطيات (Arguments) من المستخدم عند تشغيله (مثال: <code>./script.sh arg1 arg2</code>).</p>
+
+    <h3>🆚 مقارنة الـ Arguments بين لغة C ولغة Shell</h3>
+    <p>مفهوم التعامل مع المعطيات في الشل يشبه لغة C جداً، ولكن باستخدام متغيرات خاصة تبدأ بـ <code>$</code>.</p>
+    <table>
+      <tr><th>الوظيفة / المعنى</th><th>في لغة Shell</th><th>في لغة C</th></tr>
+      <tr><td>عدد المدخلات التي مررها المستخدم</td><td><code>$#</code></td><td><code>argc</code></td></tr>
+      <tr><td>اسم السكربت / البرنامج نفسه</td><td><code>$0</code></td><td><code>argv[0]</code> (ملاحظة: الشل لا يحسبها ضمن <code>$#</code>، عكس لغة C)</td></tr>
+      <tr><td>المدخل (الوسيط) الأول</td><td><code>$1</code></td><td><code>argv[1]</code></td></tr>
+      <tr><td>المدخل (الوسيط) الثاني</td><td><code>$2</code></td><td><code>argv[2]</code></td></tr>
+      <tr><td>مصفوفة (List/Array) تحتوي على جميع المدخلات معاً — مفيدة لاستخدامها في حلقة for</td><td><code>$*</code> أو <code>$@</code></td><td>-</td></tr>
+    </table>
+    <p><em>(وهكذا إلى <code>$9</code>، وبعدها <code>${10}</code>)</em></p>
+
+    <h3>↩️ أمر shift</h3>
+    <p><code>shift</code> — يقوم بعمل إزاحة (Shift) للمتغيرات إلى اليسار خطوة واحدة.</p>
+    <p><strong>كيف يعمل؟</strong> عند تنفيذ <code>shift</code>، تُحذف قيمة <code>$1</code> نهائياً، وتنتقل قيمة <code>$2</code> لتصبح هي <code>$1</code>، وقيمة <code>$3</code> تصبح <code>$2</code>، وينقص العداد <code>$#</code> بمقدار 1.</p>
+    <p><strong>متى يُستخدم؟</strong> يُستخدم بكثرة في السكربتات المتقدمة مع حلقة while لفحص ومعالجة الـ Arguments واحداً تلو الآخر، خاصة إذا كان المستخدم قد يمرر المعطيات بترتيب عشوائي أو بأعداد غير معروفة مسبقاً.</p>
+
+    <div class="box takeaway">
+      <div class="box-title">✅ ماذا يجب أن تتذكر؟</div>
+      عند برمجة سكربت يعتمد على الـ Arguments، قم دائماً بالتحقق الأمني من العدد الإجمالي للمدخلات باستخدام <code>$#</code> قبل البدء، لتجنب حدوث أعطال في حال نسي المستخدم تمرير المدخلات.
+      <pre>if [ "$#" -lt 2 ]; then echo "Usage: $0 arg1 arg2"; exit 1; fi</pre>
+    </div>
+
+    <div class="box warning">
+      <div class="box-title">⚠️ أخطاء شائعة</div>
+      الخلط بين <code>$0</code> (اسم الملف) وبين المدخلات الفعلية <code>$1</code>. وتذكر أن <code>$#</code> لا تتضمن اسم الملف في عدّها.
+    </div>
+
+    <div class="box review">
+      <div class="box-title">⚡ مراجعة سريعة</div>
+      <ul>
+        <li><code>$#</code>: العدد (Count).</li>
+        <li><code>$@</code>: الكل (All).</li>
+        <li><code>$1</code>: المدخل الأول (First Argument).</li>
+        <li><code>shift</code>: حذف الأول وإزاحة الباقي لليسار.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    نهاية ملخص الدرس السادس (نهاية قسم الشل) — المدرب: طالل بالحاج سالم
+  </footer>
+
+</div>
+</body>
+</html>

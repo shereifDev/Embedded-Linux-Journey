@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>الدرس السابع — إدارة الحزم وبرمجة الشل | Embedded Linux</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Cairo:wght@400;600;700;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --primary:#0F4C81;
+  --primary-ink:#0A3660;
+  --secondary:#14B8A6;
+  --accent:#F59E0B;
+  --success:#16A34A;
+  --warning:#EA580C;
+  --danger:#DC2626;
+  --bg:#F8FAFC;
+  --card:#FFFFFF;
+  --ink:#1E2A3A;
+  --muted:#5B6B7F;
+  --line:#E2E8F0;
+  --code-bg:#0B1E33;
+  --code-ink:#DCE8F5;
+  --font-ar:'IBM Plex Sans Arabic','Cairo',sans-serif;
+  --font-en:'Inter',sans-serif;
+  --font-code:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--font-ar);
+  font-size:12.5pt;
+  line-height:1.7;
+  direction:rtl;
+}
+[lang="en"], .ltr, code, pre, .mono{ direction:ltr; unicode-bidi:isolate; font-family:var(--font-code); }
+.page{ max-width:900px; margin:0 auto; padding:40px 28px 100px; }
+
+/* ============ HEADER / RUNNING BAR ============ */
+.book-bar{
+  background:var(--primary-ink);
+  color:#EAF2FB;
+  font-family:var(--font-en);
+  font-size:11px;
+  letter-spacing:.04em;
+  padding:8px 0;
+}
+.book-bar .inner{
+  max-width:900px;margin:0 auto;padding:0 28px;
+  display:flex;justify-content:space-between;align-items:center;
+  direction:ltr;
+}
+.book-bar b{color:var(--secondary);}
+
+/* ============ TOC ============ */
+.toc{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:36px 32px;
+  box-shadow:0 1px 3px rgba(15,76,129,.06);
+}
+.toc-eyebrow{
+  font-family:var(--font-en);
+  font-size:12px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--secondary); font-weight:700; direction:ltr; text-align:left;
+}
+.toc h1{
+  font-size:28pt; margin:6px 0 4px; color:var(--primary-ink); font-weight:700;
+}
+.toc .sub{ color:var(--muted); font-size:12.5pt; margin-bottom:26px; }
+.toc-meta{
+  display:flex; gap:24px; flex-wrap:wrap; margin-bottom:26px;
+  padding:16px 18px; background:var(--bg); border-radius:12px; border:1px dashed var(--line);
+}
+.toc-meta div{font-size:11.5pt;}
+.toc-meta span{display:block; font-family:var(--font-en); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); direction:ltr; text-align:right;}
+ol.toc-list{ list-style:none; margin:0; padding:0; counter-reset:tocnum; }
+ol.toc-list > li{ counter-increment:tocnum; margin-bottom:6px; }
+.toc-row{
+  display:flex; align-items:baseline; gap:10px;
+  padding:11px 8px; border-radius:10px; text-decoration:none; color:var(--ink);
+}
+.toc-row:hover{background:var(--bg);}
+.toc-num{
+  font-family:var(--font-en); color:var(--primary); font-weight:700; min-width:26px;
+}
+.toc-title{ flex:1; font-weight:600; }
+.toc-dots{ flex:1; border-bottom:1.5px dotted var(--line); margin:0 4px; transform:translateY(-4px); }
+.toc-page{ font-family:var(--font-en); color:var(--muted); font-size:11px; }
+.toc-sub{ padding-right:36px; }
+.toc-sub .toc-row{ font-weight:400; font-size:11pt; color:var(--muted); padding:5px 8px;}
+
+/* ============ CHAPTER OPENER ============ */
+.chapter-opener{ margin-top:56px; }
+.chapter-eyebrow{
+  display:flex; align-items:center; gap:14px;
+  font-family:var(--font-en); color:var(--secondary); font-weight:700;
+  font-size:13px; letter-spacing:.12em; text-transform:uppercase; direction:ltr; justify-content:flex-end;
+}
+.chapter-eyebrow .chip{
+  width:46px;height:46px;border-radius:12px;
+  background:linear-gradient(145deg,var(--primary),var(--primary-ink));
+  color:#fff; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-en); font-weight:800; font-size:18px;
+}
+.chapter-opener h2.chapter-title{
+  font-size:24pt; margin:14px 0 2px; color:var(--primary-ink); font-weight:700; line-height:1.3;
+}
+.chapter-subtitle{ color:var(--muted); font-size:13pt; margin:0 0 18px; }
+.divider{ height:5px; border-radius:4px; background:linear-gradient(90deg,var(--primary),var(--secondary),var(--accent)); margin:0 0 22px; }
+.chapter-intro{
+  background:var(--card); border-radius:16px; border:1px solid var(--line);
+  padding:20px 24px; font-size:12.5pt; color:var(--ink);
+  border-inline-start:5px solid var(--primary);
+}
+
+/* ============ CHAPTER OVERVIEW (roadmap) ============ */
+.overview-wrap{ margin:30px 0 10px; }
+.overview-label{ font-family:var(--font-en); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); text-align:left; direction:ltr; margin-bottom:8px;}
+.roadmap{ display:flex; flex-direction:column; gap:0; }
+.rm-item{
+  display:flex; align-items:flex-start; gap:16px; position:relative; padding-bottom:22px;
+}
+.rm-item:last-child{padding-bottom:0;}
+.rm-item:not(:last-child)::before{
+  content:''; position:absolute; right:23px; top:48px; bottom:0; width:2px;
+  background:repeating-linear-gradient(180deg,var(--line) 0 6px, transparent 6px 12px);
+}
+.rm-num{
+  flex:none; width:48px;height:48px;border-radius:50%;
+  background:var(--card); border:2px solid var(--primary);
+  color:var(--primary-ink); font-family:var(--font-en); font-weight:800; font-size:16px;
+  display:flex; align-items:center; justify-content:center; direction:ltr;
+}
+.rm-body{ background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 16px; flex:1; }
+.rm-body h4{ margin:0 0 4px; font-size:12.5pt; color:var(--primary-ink); }
+.rm-body p{ margin:0; font-size:11pt; color:var(--muted); }
+
+/* ============ SECTIONS ============ */
+.section{ margin-top:44px; }
+.section h3{
+  font-size:20pt; color:var(--primary-ink); border-bottom:3px solid var(--secondary);
+  padding-bottom:10px; margin-bottom:16px; display:flex; align-items:center; gap:10px;
+}
+.section h3 .sec-icon{
+  width:34px;height:34px;border-radius:9px;background:var(--secondary);
+  color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:16px; flex:none;
+}
+.section h4{ font-size:17pt; color:var(--primary); margin:26px 0 10px; }
+.section p{ margin:0 0 14px; }
+.section ul, .section ol{ margin:0 0 16px; padding-inline-start:24px; }
+.section li{ margin-bottom:6px; }
+
+/* ============ CALLOUT BOXES ============ */
+.callout{
+  border-radius:14px; padding:16px 20px; margin:20px 0; border:1px solid var(--line);
+  background:var(--card); box-shadow:0 1px 2px rgba(15,23,42,.04);
+}
+.callout .co-head{
+  display:flex; align-items:center; gap:8px; font-weight:700; font-size:11.5pt; margin-bottom:8px;
+}
+.callout .co-icon{ font-size:15px; }
+.callout p, .callout ul{ margin:0; }
+.co-concept{ border-inline-start:5px solid var(--primary); }
+.co-concept .co-head{ color:var(--primary-ink); }
+.co-key{ border-inline-start:5px solid var(--success); background:#F0FBF4; }
+.co-key .co-head{ color:var(--success); }
+.co-tip{ border-inline-start:5px solid var(--accent); background:#FFFBEB; }
+.co-tip .co-head{ color:#92400E; }
+.co-warn{ border-inline-start:5px solid var(--danger); background:#FEF2F2; }
+.co-warn .co-head{ color:var(--danger); }
+.co-def{ border-inline-start:5px solid var(--muted); background:#F8FAFC; }
+.co-def .co-head{ color:var(--muted); }
+.co-deep{ border-inline-start:5px solid #7C3AED; background:#FAF5FF; }
+.co-deep .co-head{ color:#6D28D9; }
+.co-example{ background:var(--code-bg); color:var(--code-ink); border:none; }
+.co-example .co-head{ color:#7DD3FC; }
+
+/* ============ TABLES ============ */
+.table-wrap{ overflow-x:auto; margin:20px 0; border-radius:14px; border:1px solid var(--line); }
+table{ width:100%; border-collapse:collapse; background:var(--card); font-size:11.5pt; }
+thead th{
+  background:var(--primary); color:#fff; font-family:var(--font-en); font-weight:600;
+  padding:12px 14px; text-align:right; font-size:11pt;
+}
+tbody td{ padding:11px 14px; border-top:1px solid var(--line); }
+tbody tr:nth-child(even){ background:#F5F9FC; }
+tbody td.mono-cell, tbody td[lang="en"]{ direction:ltr; text-align:center; font-family:var(--font-code); font-size:10.5pt; color:var(--primary-ink);}
+
+/* ============ CODE ============ */
+.code-block{
+  background:var(--code-bg); color:var(--code-ink); border-radius:12px; margin:16px 0;
+  overflow:hidden; direction:ltr; text-align:left;
+}
+.code-head{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 16px; font-family:var(--font-en); font-size:10.5px; letter-spacing:.06em;
+  color:#7DD3FC; background:rgba(255,255,255,.04); text-transform:uppercase;
+}
+.code-block pre{ margin:0; padding:16px; overflow-x:auto; font-family:var(--font-code); font-size:11pt; line-height:1.65; }
+.inline-code{ background:#EAF1F8; color:var(--primary-ink); border-radius:5px; padding:1.5px 6px; font-family:var(--font-code); font-size:10.5pt; direction:ltr; unicode-bidi:isolate; }
+
+/* ============ QUICK REVIEW ============ */
+.quick-review{
+  margin-top:56px; background:var(--primary-ink); color:#EAF2FB; border-radius:20px; padding:34px 30px;
+}
+.quick-review h3{
+  color:#fff; font-size:21pt; margin:0 0 6px; border:none; padding:0;
+}
+.quick-review > p.qr-tag{ color:#9FC4E5; margin:0 0 26px; font-size:11.5pt;}
+.qr-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.qr-card{
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:14px; padding:16px 18px;
+}
+.qr-card h5{ margin:0 0 8px; font-size:12.5pt; display:flex; align-items:center; gap:8px; color:#67E8DE;}
+.qr-card ul{ margin:0; padding-inline-start:20px; font-size:11pt; color:#E3ECF5;}
+.qr-card li{ margin-bottom:5px;}
+.checklist li{ list-style:none; padding-inline-start:0; margin-inline-start:0; display:flex; gap:8px; align-items:flex-start;}
+.checklist li::before{ content:'☐'; color:#67E8DE; flex:none; }
+
+@media (max-width:640px){
+  .qr-grid{grid-template-columns:1fr;}
+  .toc h1{font-size:22pt;}
+  .chapter-opener h2.chapter-title{font-size:19pt;}
+}
+footer.book-footer{
+  text-align:center; font-family:var(--font-en); font-size:10.5px; color:var(--muted);
+  letter-spacing:.05em; margin-top:60px; direction:ltr;
+}
+</style>
+</head>
+<body>
+
+<div class="book-bar"><div class="inner">
+  <span><b>Embedded Linux Architect</b> · Course Series</span>
+  <span>Lesson 07 — Debian Packaging &amp; Shell Scripting</span>
+</div></div>
+
+<div class="page">
+
+  <!-- ============ TABLE OF CONTENTS ============ -->
+  <nav class="toc" id="toc" aria-label="Table of contents">
+    <div class="toc-eyebrow">Lesson 07 · Handbook</div>
+    <h1>الدرس السابع: إدارة الحزم وبرمجة الشل</h1>
+    <p class="sub">Debian Packages · Environment Variables · Shell Functions · ShellCheck &amp; POSIX</p>
+
+    <div class="toc-meta">
+      <div><span>Instructor</span>طلال بالحاج سالم</div>
+      <div><span>Track</span>Embedded Linux Architect</div>
+      <div><span>Focus</span>مدخل عملي لأداة Yocto</div>
+    </div>
+
+    <ol class="toc-list">
+      <li>
+        <a class="toc-row" href="#s1"><span class="toc-num">01</span><span class="toc-title">ما هي الحزم (Packages) ولماذا نحتاجها؟</span><span class="toc-dots"></span><span class="toc-page">3</span></a>
+      </li>
+      <li>
+        <a class="toc-row" href="#s2"><span class="toc-num">02</span><span class="toc-title">عائلات مديري الحزم (Package Managers Families)</span><span class="toc-dots"></span><span class="toc-page">5</span></a>
+      </li>
+      <li>
+        <a class="toc-row" href="#s3"><span class="toc-num">03</span><span class="toc-title">دورة حياة بناء وتثبيت حزمة ديبيان (.deb)</span><span class="toc-dots"></span><span class="toc-page">6</span></a>
+      </li>
+      <li>
+        <a class="toc-row" href="#s4"><span class="toc-num">04</span><span class="toc-title">المتغيرات البيئية (Environment Variables) والـ PATH</span><span class="toc-dots"></span><span class="toc-page">9</span></a>
+      </li>
+      <li>
+        <a class="toc-row" href="#s5"><span class="toc-num">05</span><span class="toc-title">الدوال في الشل (Shell Functions)</span><span class="toc-dots"></span><span class="toc-page">10</span></a>
+      </li>
+      <li>
+        <a class="toc-row" href="#s6"><span class="toc-num">06</span><span class="toc-title">إخفاء المخرجات (Output Redirection) و /dev/null</span><span class="toc-dots"></span><span class="toc-page">11</span></a>
+      </li>
+      <li>
+        <a class="toc-row" href="#s7"><span class="toc-num">07</span><span class="toc-title">أداة الفحص الثابت shellcheck وتوافقية POSIX</span><span class="toc-dots"></span><span class="toc-page">12</span></a>
+      </li>
+      <li>
+        <a class="toc-row" href="#review"><span class="toc-num">◆</span><span class="toc-title">مراجعة نهائية سريعة (Quick Review)</span><span class="toc-dots"></span><span class="toc-page">14</span></a>
+      </li>
+    </ol>
+  </nav>
+
+  <!-- ============ CHAPTER OPENER ============ -->
+  <header class="chapter-opener">
+    <div class="chapter-eyebrow"><span>Chapter 07</span><div class="chip">07</div></div>
+    <h2 class="chapter-title">إدارة الحزم في لينكس وأساسيات الـ Shell المتقدمة</h2>
+    <p class="chapter-subtitle">Debian Packages · Shell Functions · ShellCheck — الطريق نحو Yocto</p>
+    <div class="divider"></div>
+    <div class="chapter-intro">
+      يعتبر هذا الدرس تطبيقاً عملياً متقدماً لما تعلمناه في الـ <span lang="en">Shell</span>، وهو المدخل الأساسي
+      والمحوري لفهم أداة <span lang="en">Yocto</span> لاحقاً، حيث أن <span lang="en">Yocto</span> يعتمد بالأساس على
+      بناء وإدارة الحزم.
+    </div>
+  </header>
+
+  <!-- ============ VISUAL OVERVIEW / ROADMAP ============ -->
+  <div class="overview-wrap">
+    <div class="overview-label">Chapter Roadmap — نظرة سريعة قبل التفاصيل</div>
+    <div class="roadmap">
+      <div class="rm-item"><div class="rm-num">1</div><div class="rm-body"><h4>لماذا الحزم (Packages)؟</h4><p>حل مشكلة تشتت ملفات البرنامج عبر /usr/bin ،/etc ،/lib باستخدام مدير حزم مركزي.</p></div></div>
+      <div class="rm-item"><div class="rm-num">2</div><div class="rm-body"><h4>عائلات مديري الحزم</h4><p>Debian (dpkg/apt) مقابل RedHat (rpm/yum-dnf) مقابل Yocto (opkg).</p></div></div>
+      <div class="rm-item"><div class="rm-num">3</div><div class="rm-body"><h4>بناء حزمة .deb</h4><p>محاكاة RootFS، ملف DEBIAN/control، ثم dpkg -b للبناء.</p></div></div>
+      <div class="rm-item"><div class="rm-num">4</div><div class="rm-body"><h4>PATH والمتغيرات البيئية</h4><p>كيف يجد الشل الأوامر تلقائياً، ولماذا export ضروري.</p></div></div>
+      <div class="rm-item"><div class="rm-num">5</div><div class="rm-body"><h4>دوال الشل (Functions)</h4><p>تقسيم السكربتات الطويلة دون أنواع إرجاع أو معاملات صريحة.</p></div></div>
+      <div class="rm-item"><div class="rm-num">6</div><div class="rm-body"><h4>إخفاء المخرجات</h4><p>توجيه المخرجات والأخطاء إلى /dev/null والاعتماد على $?.</p></div></div>
+      <div class="rm-item"><div class="rm-num">7</div><div class="rm-body"><h4>shellcheck و POSIX</h4><p>فحص ثابت للسكربتات وضمان توافقها مع الأنظمة المدمجة.</p></div></div>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 1 ============ -->
+  <section class="section" id="s1">
+    <h3><span class="sec-icon">📦</span>1. ما هي الحزم (Packages) ولماذا نحتاجها؟</h3>
+    <p>لفهم نظام الحزم، يجب أولاً فهم المشكلة الكبيرة التي تواجهنا عند تثبيت البرامج، وكيف جاء هذا النظام ليحلها.</p>
+
+    <h4>المشكلة: تشتت ملفات البرامج في نظام <span lang="en">Root Filesystem</span></h4>
+    <p>
+      عندما تقوم بتطوير أو تثبيت برنامج معقد (مثل لعبة <span lang="en">Game1</span>)، فإن هذا البرنامج لا يتكون من
+      ملف تنفيذي (<span lang="en">Binary</span>) واحد فقط، بل يتكون من:
+    </p>
+    <ol>
+      <li>ملفات تنفيذية (<span lang="en">Binaries</span>).</li>
+      <li>مكتبات برمجية (<span lang="en">Libraries</span> - <span class="inline-code">.so</span>).</li>
+      <li>ملفات إعدادات (<span lang="en">Configuration files</span> - <span class="inline-code">.conf</span>).</li>
+      <li>ملفات تعليمات (<span lang="en">Manuals</span> - <span class="inline-code">man</span>).</li>
+    </ol>
+    <p>وفقاً لهيكلية لينكس القياسية، لا توضع هذه الملفات في مجلد واحد، بل توزع:</p>
+    <ul>
+      <li>الباينري يذهب إلى <span class="inline-code">/usr/bin</span>.</li>
+      <li>الإعدادات تذهب إلى <span class="inline-code">/etc</span>.</li>
+      <li>المكتبات تذهب إلى <span class="inline-code">/lib</span>.</li>
+    </ul>
+
+    <div class="callout co-warn">
+      <div class="co-head"><span class="co-icon">⚠️</span> Important — الكارثة</div>
+      <p>إذا أردت حذف هذا البرنامج لاحقاً (أو تحديثه)... كيف ستتذكر أين تناثرت كل هذه الملفات؟
+      ماذا لو تعارض ملف إعدادات مع برنامج آخر؟ تتبع هذا يدوياً شبه مستحيل.</p>
+    </div>
+
+    <h4>الحل: مدير الحزم (<span lang="en">Package Manager</span>) — تشبيه المكتبة</h4>
+    <div class="callout co-concept">
+      <div class="co-head"><span class="co-icon">📘</span> Concept</div>
+      <ul>
+        <li><b>المكتبة:</b> تخيل أن لديك مكتبة ضخمة. وضع الكتب على الرفوف بشكل عشوائي يجعل من المستحيل العثور عليها أو تحديثها.</li>
+        <li><b>أمين المكتبة (<span lang="en">Package Manager</span>):</b> هو برنامج يمتلك قاعدة بيانات (<span lang="en">Database</span>) يسجل فيها: اسم الكتاب، رقم إصداره، الرف الذي وُضع فيه، وما إذا كان يعتمد على كتب أخرى.</li>
+        <li><b>الحزمة (<span lang="en">Package</span>):</b> هي عبارة عن "صندوق مغلق ومضغوط" يحوي الملف الفعلي للبرنامج، مرفق معه "بطاقة تعريفية" تحتوي كل التفاصيل التي تحتاجها المكتبة لفهرستها.</li>
+      </ul>
+    </div>
+
+    <h4>كيف تعمل الحزمة؟</h4>
+    <p>الحزمة (<span lang="en">Package</span>) تحتوي على شيئين أساسيين:</p>
+    <ol>
+      <li>شجرة الملفات (<span lang="en">Directory Tree</span>): الملفات مرتبة بنفس الهيكلية التي ستُزرع بها داخل الـ (<span lang="en">Root Filesystem</span>).</li>
+      <li>ملف التحكم (<span lang="en">Control File</span>): ملف نصي يحتوي على البيانات الوصفية (<span lang="en">Metadata</span>) مثل: اسم البرنامج، الإصدار، الاعتماديات (<span lang="en">Dependencies</span>)، المعمارية (<span lang="en">Architecture</span>).</li>
+    </ol>
+
+    <div class="callout co-key">
+      <div class="co-head"><span class="co-icon">✅</span> Key Takeaway</div>
+      <p>الحزمة (<span lang="en">Package</span>) تشبه ملفات <span class="inline-code">.exe</span> أو <span class="inline-code">.msi</span> في ويندوز. هي ملف مضغوط يحتوي على ملفات البرنامج وتعليمات التثبيت، ومدير الحزم هو المسؤول عن فك الضغط وتوزيع الملفات وتسجيلها في قاعدة البيانات.</p>
+    </div>
+
+    <div class="callout co-example">
+      <div class="co-head"><span class="co-icon">⚡</span> مراجعة سريعة</div>
+      <ul>
+        <li><b lang="en">Package</b>: الصندوق المضغوط (يحتوي الملفات + <span lang="en">Control</span>).</li>
+        <li><b lang="en">Package Manager</b>: البرنامج الذي يقرأ الصندوق ويثبته (مثل <span lang="en">dpkg</span>).</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 2 ============ -->
+  <section class="section" id="s2">
+    <h3><span class="sec-icon">🗂️</span>2. عائلات مديري الحزم (<span lang="en">Package Managers Families</span>)</h3>
+    <p>
+      بما أن لينكس مفتوح المصدر (<span lang="en">Open Source</span>)، ظهرت العديد من التطبيقات
+      (<span lang="en">Implementations</span>) لنفس الفكرة. جميعها تقوم بنفس الهدف، لكنها تختلف في بعض المميزات وطريقة الضغط.
+    </p>
+
+    <h4>جدول مقارنة: أشهر مديري الحزم في لينكس</h4>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>العائلة (Family)</th>
+            <th>التوزيعات الشهيرة</th>
+            <th>الأداة الأساسية (Low-level)</th>
+            <th>أداة التغليف المتقدمة (Wrapper)</th>
+            <th>صيغة الملف</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Debian</td>
+            <td>Ubuntu, Linux Mint</td>
+            <td class="mono-cell">dpkg</td>
+            <td class="mono-cell">apt</td>
+            <td class="mono-cell">.deb</td>
+          </tr>
+          <tr>
+            <td>RedHat</td>
+            <td>Fedora, CentOS</td>
+            <td class="mono-cell">rpm</td>
+            <td class="mono-cell">yum / dnf</td>
+            <td class="mono-cell">.rpm</td>
+          </tr>
+          <tr>
+            <td>Yocto (Embedded)</td>
+            <td>مخصصة للأنظمة المدمجة</td>
+            <td class="mono-cell">opkg</td>
+            <td class="mono-cell">(تُستخدم الأداة الأساسية غالباً مباشرة)</td>
+            <td class="mono-cell">.ipk</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout co-warn">
+      <div class="co-head"><span class="co-icon">⚠️</span> أخطاء شائعة</div>
+      <p>
+        التعصب لمدير حزم معين (مثل تفضيل <span lang="en">apt</span> على <span lang="en">dnf</span> والعكس).
+        كمهندس أنظمة مدمجة، يجب أن تدرك أن جميعها تؤدي نفس الوظيفة (استبدال الملفات وتحديثها)، والاختيار يعتمد
+        فقط على طبيعة أو توزيعة النظام المدمج.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 3 ============ -->
+  <section class="section" id="s3">
+    <h3><span class="sec-icon">🛠️</span>3. دورة حياة بناء وتثبيت حزمة ديبيان (<span lang="en">.deb</span>)</h3>
+    <p>كيف نصنع حزمة دبيان من الصفر لتثبيت سكربت بسيط في مسار <span class="inline-code">/usr/bin</span>؟</p>
+
+    <div class="callout co-deep">
+      <div class="co-head"><span class="co-icon">🧠</span> Deep Understanding — خطوات العمل (Step-by-step Workflow)</div>
+      <ol>
+        <li><b>إنشاء مجلد المشروع (<span lang="en">Workspace</span>):</b> نصنع مجلداً يحمل اسم الحزمة.</li>
+        <li><b>محاكاة شجرة النظام (<span lang="en">RootFS Mirroring</span>):</b> يجب أن تصنع داخل المجلد نفس المسار الذي تود أن يستقر فيه الملف في النهاية داخل النظام.</li>
+        <li><b>وضع الملف التنفيذي في مساره:</b> ننقل السكربت أو البرنامج إلى المجلد الذي صنعناه.</li>
+        <li><b>إنشاء مجلد وملف التحكم (<span lang="en">Control File</span>):</b> تتطلب حزم دبيان وجود مجلد باسم <span class="inline-code">DEBIAN</span> (بحروف كبيرة، إجباري) ليحتوي على ملف <span class="inline-code">control</span>.</li>
+        <li><b>كتابة بيانات ملف التحكم (<span lang="en">Metadata</span>):</b> نكتب الحقول الإجبارية.</li>
+        <li><b>بناء الحزمة (<span lang="en">Build</span>):</b> نخرج من المجلد خطوة للخلف، ونستخدم أمر <span class="inline-code">dpkg</span> مع خيار البناء <span class="inline-code">-b</span>.</li>
+      </ol>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span>bash</span><span>1 — إنشاء مجلد المشروع</span></div>
+      <pre>mkdir techleef_pkg
+cd techleef_pkg</pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span>bash</span><span>2 — محاكاة شجرة النظام</span></div>
+      <pre>mkdir -p usr/bin</pre>
+    </div>
+    <div class="callout co-tip">
+      <div class="co-head"><span class="co-icon">💡</span> Tip</div>
+      <p>خيار <span class="inline-code">-p</span> في <span class="inline-code">mkdir</span> يصنع المجلدات المتداخلة دفعة واحدة.</p>
+    </div>
+    <div class="callout co-warn">
+      <div class="co-head"><span class="co-icon">⚠️</span> تنبيه</div>
+      <p>لاحظ أن <span class="inline-code">usr/bin</span> هنا مسار نسبي، وليس مساراً حقيقياً، فقط لمحاكاة شكل النظام جنباً إلى جنب.</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span>bash</span><span>3 — وضع الملف التنفيذي في مساره</span></div>
+      <pre>cp ../script.sh usr/bin/</pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span>bash</span><span>4 — إنشاء مجلد وملف التحكم</span></div>
+      <pre>mkdir DEBIAN
+nano DEBIAN/control</pre>
+    </div>
+
+    <div class="callout co-tip">
+      <div class="co-head"><span class="co-icon">💡</span> Tip</div>
+      <p>يُنصح دائماً بالبحث في Google عن <span class="inline-code">"Debian Control File Syntax"</span> عند نسيان صياغة الحقول.</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span>control</span><span>5 — بيانات ملف التحكم (Metadata)</span></div>
+      <pre>Package: techleef
+Version: 1.0
+Architecture: amd64
+Maintainer: TechLeef Community
+Description: A simple script package.</pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-head"><span>bash</span><span>6 — بناء الحزمة</span></div>
+      <pre>dpkg -b techleef_pkg
+# النتيجة: techleef_pkg.deb</pre>
+    </div>
+
+    <h4>أوامر التعامل مع الحزم (<span lang="en">dpkg</span>)</h4>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>الأمر</th><th>الوظيفة</th></tr></thead>
+        <tbody>
+          <tr><td class="mono-cell">dpkg -b [Directory]</td><td>(<span lang="en">Build</span>) يضغط المجلد ويحوّله إلى ملف حزمة <span class="inline-code">.deb</span>.</td></tr>
+          <tr><td class="mono-cell">dpkg -I [Package.deb]</td><td>(<span lang="en">Info</span>) يقرأ ويطبع المعلومات الوصفية من داخل ملف <span class="inline-code">control</span> دون تثبيت الحزمة.</td></tr>
+          <tr><td class="mono-cell">sudo dpkg -i [Package.deb]</td><td>(<span lang="en">Install</span>) يقوم بتثبيت الحزمة وتوزيع ملفاتها في الـ <span lang="en">RootFS</span>.</td></tr>
+          <tr><td class="mono-cell">dpkg-query -l [Package_Name]</td><td>(<span lang="en">List</span>) يستعلم من قاعدة البيانات عن حالة حزمة معينة، هل هي مثبتة أم لا، ويستعرض إصدارها.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout co-def">
+      <div class="co-head"><span class="co-icon">📌</span> ملاحظة</div>
+      <p>تثبيت الحزمة يتطلب <span class="inline-code">sudo</span> لأن مدير الحزم سيكتب في مجلدات النظام المحمية مثل <span class="inline-code">/usr/bin</span>.</p>
+    </div>
+
+    <div class="callout co-key">
+      <div class="co-head"><span class="co-icon">✅</span> Key Takeaway</div>
+      <p>هيكل مجلد بناء الحزمة يجب أن يعكس شكل مسارات النظام (<span lang="en">RootFS</span>)، ويجب أن يحتوي على مجلد البيانات الوصفية <span class="inline-code">DEBIAN/control</span>.</p>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 4 ============ -->
+  <section class="section" id="s4">
+    <h3><span class="sec-icon">🧭</span>4. المتغيرات البيئية (<span lang="en">Environment Variables</span>) و الـ <span lang="en">PATH</span></h3>
+    <p>
+      عندما نثبت برنامجاً في <span class="inline-code">/usr/bin</span> ونكتب اسمه في الشل (مثلاً
+      <span class="inline-code">script.sh</span>)، كيف يعمل فوراً دون كتابة مساره الكامل؟ الإجابة تكمن في الشل.
+    </p>
+
+    <div class="callout co-concept">
+      <div class="co-head"><span class="co-icon">📘</span> Concept — المتغير السحري PATH</div>
+      <ul>
+        <li><b>تعريف:</b> هو متغير بيئي (<span lang="en">Environment Variable</span>) يحتوي على قائمة من المسارات (<span lang="en">Paths</span>) يفصل بينها رمز النقطتين الرأسيتين <span class="inline-code">:</span></li>
+        <li><b>وظيفته:</b> عندما تكتب أي أمر لا يبدأ بمسار مثل <span class="inline-code">ls</span> أو <span class="inline-code">script.sh</span>، يقوم الشل بالبحث داخل هذه المسارات المكتوبة في <span class="inline-code">PATH</span> بالترتيب (من اليسار لليمين) حتى يجد الملف التنفيذي ليقوم بتشغيله.</li>
+      </ul>
+    </div>
+
+    <h4>أمر <span lang="en">export</span></h4>
+    <p>
+      عندما تقوم بتعريف متغير عادي <span class="inline-code">VAR=1</span>، فإنه يعيش فقط داخل الشل الحالي.
+      ولن تتمكن البرامج والسكربتات التي تشغلها من رؤيته. لجعل المتغير "متغيراً بيئياً" مرئياً لجميع البرامج
+      والسكربتات الفرعية، يجب جعله باستخدام <span class="inline-code">export</span>.
+    </p>
+    <div class="code-block">
+      <div class="code-head"><span>bash</span><span>إضافة مسار جديد إلى PATH</span></div>
+      <pre>export PATH=$PATH:/new/directory/path</pre>
+    </div>
+    <p>الوظيفة: يضيف مساراً جديداً إلى متغير الـ <span lang="en">PATH</span>، ويصدّره ليكون متاحاً للبيئة كاملة.</p>
+
+    <div class="callout co-warn">
+      <div class="co-head"><span class="co-icon">⚠️</span> Important — خطأ كارثي</div>
+      <p>
+        كتابة <span class="inline-code">export PATH=/new/directory</span> (بدون إضافة <span class="inline-code">$PATH</span>).
+        هذا يقوم بمسح كافة مسارات النظام الأساسية! أوامر <span class="inline-code">ls</span> و<span class="inline-code">cd</span>
+        ستتوقف عن العمل ولن يجد النظام أياً منها.
+      </p>
+    </div>
+    <div class="callout co-tip">
+      <div class="co-head"><span class="co-icon">💡</span> Tip — الحل</div>
+      <p>أغلق نافذة الـ <span lang="en">Terminal</span> وافتحها من جديد ليعود الـ <span lang="en">PATH</span> لحالته الافتراضية.</p>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 5 ============ -->
+  <section class="section" id="s5">
+    <h3><span class="sec-icon">🧩</span>5. الدوال في الشل (<span lang="en">Shell Functions</span>)</h3>
+    <p>
+      في السكربتات الطويلة (مثل سكربت يحاكي التثبيت)، نحتاج لتقسيم الكود إلى دوال (<span lang="en">Functions</span>)
+      لتجنب تكرار الأسطر وتسهيل القراءة.
+    </p>
+
+    <h4>كيف تعمل الدوال في الشل؟</h4>
+    <p>تختلف الدوال في الـ <span lang="en">Shell</span> عن لغة <span lang="en">C</span> أو <span lang="en">Python</span>:</p>
+    <ol>
+      <li><b>لا يوجد أنواع إرجاع (<span lang="en">No Return Types</span>):</b> لا تكتب <span class="inline-code">void</span> أو <span class="inline-code">int</span>.</li>
+      <li><b>أقواس فارغة دائماً:</b> لا تُمرَّر المتغيرات بين الأقواس <span class="inline-code">()</span>.</li>
+      <li><b>تُستدعى كالسكربتات:</b> للوصول إلى المدخلات داخل الدالة نستخدم <span class="inline-code">$1 $2</span> تماماً كما نفعل مع السكربت الخارجي.</li>
+    </ol>
+
+    <div class="code-block">
+      <div class="code-head"><span>bash</span><span>الهيكل العام (Syntax)</span></div>
+      <pre>function_name() {
+    # الكود الخاص بالدالة
+    echo "Running function with argument: $1"
+}
+
+# استدعاء الدالة
+function_name "Install"</pre>
+    </div>
+
+    <div class="callout co-warn">
+      <div class="co-head"><span class="co-icon">⚠️</span> أخطاء شائعة</div>
+      <p>
+        عدم وضع مسافة أو سطر جديد بعد فتح القوس المتعرج <span class="inline-code">{</span>. المترجم يحتاج لمسافات
+        ليفهم بداية البلوك. كذلك وضع الأقواس في منتصف سطر مع كود آخر دون فاصلة منقوطة <span class="inline-code">;</span>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 6 ============ -->
+  <section class="section" id="s6">
+    <h3><span class="sec-icon">🕳️</span>6. إخفاء المخرجات (<span lang="en">Output Redirection</span>) و <span lang="en">/dev/null</span></h3>
+    <p>
+      أحياناً نريد تشغيل أمر معين (مثل فحص حزمة) لمعرفة نتيجته (<span class="inline-code">$?</span>) فقط، ولا نريد
+      أن يُطبع أي شيء على الشاشة.
+    </p>
+
+    <div class="code-block">
+      <div class="code-head"><span>bash</span><span>إخفاء المخرجات والأخطاء</span></div>
+      <pre>dpkg-query -l package_name &gt; /dev/null 2&gt;&amp;1</pre>
+    </div>
+
+    <div class="callout co-concept">
+      <div class="co-head"><span class="co-icon">📘</span> Concept</div>
+      <ul>
+        <li><span class="inline-code">/dev/null</span>: يعيد توجيه المخرجات العادية (<span lang="en">Standard Output</span> - 1) إلى ملف خاص جداً يسمى <span class="inline-code">/dev/null</span> (وهو يمثل ثقباً أسود يبتلع أي بيانات تُرسل إليه).</li>
+        <li><span class="inline-code">2&gt;&amp;1</span>: يعيد توجيه رسائل الأخطاء (<span lang="en">Standard Error</span> - 2) إلى نفس المكان الذي تذهب إليه المخرجات العادية (1).</li>
+      </ul>
+    </div>
+
+    <div class="callout co-key">
+      <div class="co-head"><span class="co-icon">✅</span> Key Takeaway</div>
+      <p>سيتم تشغيل الأمر في صمت تام، ويمكننا بعدها استخدام <span class="inline-code">$?</span> للتحقق من نجاحه بسلام.</p>
+    </div>
+  </section>
+
+  <!-- ============ SECTION 7 ============ -->
+  <section class="section" id="s7">
+    <h3><span class="sec-icon">🔍</span>7. أداة الفحص الثابت (<span lang="en">shellcheck</span>) وتوافقية <span lang="en">POSIX</span></h3>
+    <p>
+      بما أن كتابة سكربتات الـ <span lang="en">Shell</span> مليئة بالفخاخ (مثل نسيان علامات الاقتباس حول المتغيرات)،
+      قام مبرمجون بصناعة أداة ذكية تكتشف هذه الأخطاء قبل التشغيل.
+    </p>
+
+    <div class="callout co-def">
+      <div class="co-head"><span class="co-icon">📌</span> Definition</div>
+      <p>
+        <b lang="en">shellcheck</b>: هي أداة تحليل ثابت (<span lang="en">Static Analysis Tool</span>) لسكربتات الـ
+        <span lang="en">Shell</span>. تقرأ الكود الخاص بك، وتكتشف الأخطاء المنطقية، ومشاكل الـ <span lang="en">Syntax</span>،
+        والممارسات السيئة، وتعطيك شرحاً ورابطاً إلكترونياً لسبب الخطأ.
+      </p>
+    </div>
+
+    <h4>أوامر الاستخدام</h4>
+    <div class="code-block">
+      <div class="code-head"><span>bash</span><span>تثبيت shellcheck</span></div>
+      <pre>sudo apt install shellcheck</pre>
+    </div>
+    <p>الوظيفة: تثبيت الأداة على التوزيعات المبنية على ديبيان.</p>
+
+    <div class="code-block">
+      <div class="code-head"><span>bash</span><span>فحص سكربت عادي</span></div>
+      <pre>shellcheck script.sh</pre>
+    </div>
+    <p>الوظيفة: فحص السكربت العادي وإظهار التحذيرات (<span lang="en">Warnings</span>).</p>
+
+    <div class="code-block">
+      <div class="code-head"><span>bash</span><span>فحص توافقية POSIX</span></div>
+      <pre>shellcheck -s sh script.sh</pre>
+    </div>
+
+    <div class="callout co-deep">
+      <div class="co-head"><span class="co-icon">🧠</span> Deep Understanding</div>
+      <p>
+        <span class="inline-code">-s sh</span> هو خيار (<span lang="en">Check Compliance POSIX</span>) سحري ومهم جداً
+        لمهندسي الأنظمة المدمجة. يجب على الأداة فحص السكربت لضمان توافقه بنسبة 100% مع معيار <span lang="en">POSIX sh</span>
+        (أي التأكد من عدم استخدام ميزات <span lang="en">bash</span> فقط).
+      </p>
+      <p>
+        الفائدة: إذا استخدمت ميزات خاصة بـ <span lang="en">bash</span> تُسمى (<span lang="en">Bashisms</span>) مثل
+        المصفوفات الترابطية (<span lang="en">Associative Arrays</span>) أو <span class="inline-code">[[ ]]</span>،
+        سينبّهك هذا لأن هذا لن يعمل في أنظمة مدمجة تفتقر <span lang="en">bash</span>.
+      </p>
+    </div>
+
+    <div class="callout co-key">
+      <div class="co-head"><span class="co-icon">✅</span> Key Takeaway</div>
+      <p>
+        اجعل <span lang="en">shellcheck</span> صديقك الدائم في أي شركة تعمل بها. لا تقم بتسليم سكربت لبيئة إنتاج
+        (<span lang="en">Production</span>) دون فحصه بهذه الأداة، خاصة مع خيار <span class="inline-code">-s</span>
+        إذا كان السكربت موجهاً للوحات مدمجة (<span lang="en">Embedded</span>).
+      </p>
+    </div>
+
+    <div class="callout co-example">
+      <div class="co-head"><span class="co-icon">⚡</span> مراجعة سريعة</div>
+      <ul>
+        <li><b lang="en">shellcheck</b>: يفحص الأخطاء المنطقية والمسافات وعلامات الاقتباس المفقودة.</li>
+        <li><b lang="en">-s sh</b>: يضمن أن الكود يعمل على أي مترجم قياسي دون الاعتماد على ميزات <span lang="en">bash</span> الثقيلة.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ QUICK REVIEW ============ -->
+  <section class="quick-review" id="review">
+    <h3>مراجعة نهائية سريعة</h3>
+    <p class="qr-tag">Quick Review — ملخص تعليمي إضافي، لا يغني عن قراءة الشرح الكامل أعلاه</p>
+    <div class="qr-grid">
+      <div class="qr-card">
+        <h5>🧩 المفاهيم الأساسية</h5>
+        <ul>
+          <li>الحزمة = ملفات البرنامج + ملف تحكم (Metadata) في صندوق واحد.</li>
+          <li>مدير الحزم يفهرس ويثبّت ويحدّث الحزم عبر قاعدة بيانات مركزية.</li>
+          <li>عائلات رئيسية: Debian (dpkg/apt)، RedHat (rpm/yum-dnf)، Yocto (opkg).</li>
+          <li>بناء حزمة .deb يحتاج شجرة ملفات + مجلد DEBIAN/control + dpkg -b.</li>
+          <li>PATH يحدد أين يبحث الشل عن الأوامر القابلة للتنفيذ.</li>
+          <li>دوال الشل بلا أنواع إرجاع ولا معاملات صريحة بين الأقواس.</li>
+        </ul>
+      </div>
+      <div class="qr-card">
+        <h5>📌 تعريفات مهمة</h5>
+        <ul>
+          <li><b lang="en">Package</b>: صندوق مضغوط يحوي الملفات وبطاقة تعريفية.</li>
+          <li><b lang="en">Control File</b>: بيانات وصفية عن اسم الحزمة وإصدارها واعتماديتها.</li>
+          <li><b lang="en">PATH</b>: متغير بيئي يحوي مسارات مفصولة بـ <span class="inline-code">:</span>.</li>
+          <li><b lang="en">shellcheck</b>: أداة تحليل ثابت لسكربتات الشل.</li>
+        </ul>
+      </div>
+      <div class="qr-card">
+        <h5>🚫 أخطاء شائعة</h5>
+        <ul>
+          <li>التعصب لمدير حزم معين بدل فهم أنها تؤدي نفس الوظيفة.</li>
+          <li>نسيان <span class="inline-code">$PATH</span> عند استخدام export فيمسح مسارات النظام بالكامل.</li>
+          <li>عدم وضع مسافة/سطر جديد بعد <span class="inline-code">{</span> في دوال الشل.</li>
+          <li>تسليم سكربتات دون فحصها بـ shellcheck قبل بيئة الإنتاج.</li>
+        </ul>
+      </div>
+      <div class="qr-card">
+        <h5>🎯 ملاحظات للمقابلات الوظيفية</h5>
+        <ul>
+          <li>اشرح الفرق بين dpkg (أداة منخفضة المستوى) وapt (أداة تغليف تحل الاعتماديات).</li>
+          <li>وضّح لماذا يعتمد Yocto عادة على opkg وصيغة .ipk في الأنظمة المدمجة.</li>
+          <li>اذكر خطر تجاوز $PATH عند استخدام export بشكل خاطئ.</li>
+          <li>اذكر أهمية خيار <span class="inline-code">-s sh</span> في shellcheck للأنظمة المدمجة.</li>
+        </ul>
+      </div>
+      <div class="qr-card">
+        <h5>🧠 تقنيات تذكّر</h5>
+        <ul>
+          <li>الحزمة = "طرد بريدي": محتوى + بطاقة شحن (control file).</li>
+          <li>PATH = "قائمة أماكن بحث" يفحصها الشل من اليسار لليمين.</li>
+          <li>2&gt;&amp;1 = "وجّه الأخطاء لنفس باب المخرجات العادية".</li>
+        </ul>
+      </div>
+      <div class="qr-card">
+        <h5>📝 نصائح للاختبار</h5>
+        <ul>
+          <li>ركّز على أوامر dpkg الأربعة: -b, -I, -i, -l (dpkg-query).</li>
+          <li>احفظ ترتيب خطوات بناء حزمة .deb من الصفر حتى dpkg -b.</li>
+          <li>ميّز بين متغير عادي (VAR=1) ومتغير مُصدَّر (export VAR=1).</li>
+        </ul>
+      </div>
+      <div class="qr-card">
+        <h5>✅ قائمة مراجعة</h5>
+        <ul class="checklist">
+          <li>أفهم لماذا تحتاج الأنظمة إلى مدير حزم.</li>
+          <li>أستطيع بناء حزمة .deb بسيطة من الصفر.</li>
+          <li>أفهم كيف يعمل PATH ولماذا export ضروري.</li>
+          <li>أستطيع كتابة دالة في الشل واستدعاءها بمعاملات.</li>
+          <li>أعرف كيفية إخفاء مخرجات أمر واستخدام $?.</li>
+          <li>أستخدم shellcheck -s sh قبل تسليم أي سكربت مدمج.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="book-footer">Embedded Linux Architect — Lesson 07 · نهاية ملخص الدرس السابع</footer>
+
+</div>
+</body>
+</html>

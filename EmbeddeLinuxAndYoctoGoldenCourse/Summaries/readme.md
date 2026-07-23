@@ -16,6 +16,7 @@ This repository serves as a comprehensive, well-structured, and visually appeali
 | **Lec 5** | Shell Programming & POSIX Compliance | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec5/index.html) |
 | **Lec 6** | Shell Scripting Advanced & Permissions | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec6/index.html) |
 | **Lec 7** | Shell Scripting & Debian Packages | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec7/index.html) |
+| **Lec 8** |  Compilation Process & GNU Toolchain Part1 | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec8/index.html) |
 
 
 ---

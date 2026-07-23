@@ -1,0 +1,2126 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embedded Linux &amp; Yocto — الدرس الثامن: Compilation Process</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ── CSS Variables ── */
+  :root {
+    --primary: #0F4C81;
+    --primary-light: #1a6bb5;
+    --primary-bg: #e8f0fa;
+    --secondary: #14B8A6;
+    --secondary-bg: #e6f9f7;
+    --accent: #F59E0B;
+    --accent-bg: #fef9ec;
+    --success: #16A34A;
+    --success-bg: #edf9f0;
+    --warning: #EA580C;
+    --warning-bg: #fff4ed;
+    --danger: #DC2626;
+    --danger-bg: #fef2f2;
+    --bg: #F8FAFC;
+    --card: #FFFFFF;
+    --text: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --border-light: #f1f5f9;
+    --code-bg: #1e293b;
+    --code-text: #e2e8f0;
+    --purple: #7c3aed;
+    --purple-bg: #f5f3ff;
+    --dark-card: #1e293b;
+    --dark-card-text: #f1f5f9;
+    --font-ar: 'IBM Plex Sans Arabic', 'Cairo', sans-serif;
+    --font-en: 'Inter', sans-serif;
+    --font-code: 'JetBrains Mono', monospace;
+  }
+
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { font-size: 12.5pt; scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-ar);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    direction: rtl;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Page Container ── */
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    background: var(--card);
+    padding: 2cm;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+    position: relative;
+  }
+
+  @media print {
+    .page { box-shadow: none; margin: 0; page-break-after: always; }
+    .no-print { display: none !important; }
+  }
+
+  @media screen and (max-width: 800px) {
+    .page { width: 100%; padding: 1.2cm; box-shadow: none; }
+  }
+
+  /* ── Running Header ── */
+  .running-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.6cm;
+    border-bottom: 1.5px solid var(--border);
+    margin-bottom: 0.8cm;
+    font-size: 9pt;
+    color: var(--text-muted);
+    font-family: var(--font-ar);
+  }
+  .running-header .course-name {
+    font-weight: 600;
+    color: var(--primary);
+    font-family: var(--font-en);
+    direction: ltr;
+    unicode-bidi: embed;
+  }
+  .running-header .chapter-name { font-weight: 500; }
+
+  /* ── Running Footer ── */
+  .running-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 0.6cm;
+    border-top: 1px solid var(--border-light);
+    margin-top: 1.2cm;
+    font-size: 8.5pt;
+    color: var(--text-muted);
+    font-family: var(--font-en);
+    direction: ltr;
+  }
+  .running-footer .version { font-family: var(--font-ar); direction: rtl; }
+
+  /* ── Table of Contents ── */
+  .toc-page { padding-top: 1cm; }
+  .toc-title {
+    font-size: 28pt;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 0.3cm;
+    font-family: var(--font-ar);
+  }
+  .toc-subtitle {
+    font-size: 13pt;
+    color: var(--text-secondary);
+    margin-bottom: 1.2cm;
+    font-weight: 400;
+  }
+  .toc-divider {
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 2px;
+    margin-bottom: 1cm;
+  }
+  .toc-list { list-style: none; }
+  .toc-item {
+    display: flex;
+    align-items: baseline;
+    padding: 0.35cm 0;
+    border-bottom: 1px dotted var(--border);
+    text-decoration: none;
+    color: var(--text);
+    transition: color 0.2s, background 0.2s;
+    border-radius: 4px;
+    padding-right: 0.3cm;
+    padding-left: 0.3cm;
+  }
+  .toc-item:hover { color: var(--primary); background: var(--primary-bg); }
+  .toc-number {
+    font-family: var(--font-en);
+    direction: ltr;
+    unicode-bidi: embed;
+    font-weight: 700;
+    color: var(--primary);
+    min-width: 40px;
+    font-size: 11pt;
+    margin-left: 0.3cm;
+  }
+  .toc-label { flex: 1; font-weight: 500; font-size: 11.5pt; }
+  .toc-page-num {
+    font-family: var(--font-en);
+    direction: ltr;
+    unicode-bidi: embed;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 10pt;
+    min-width: 30px;
+    text-align: left;
+  }
+  .toc-sub {
+    padding-right: 0.8cm;
+  }
+  .toc-sub .toc-label { font-weight: 400; font-size: 10.5pt; color: var(--text-secondary); }
+  .toc-sub .toc-number { font-weight: 500; color: var(--secondary); font-size: 10pt; }
+  .toc-subsub {
+    padding-right: 1.6cm;
+  }
+  .toc-subsub .toc-label { font-weight: 400; font-size: 10pt; color: var(--text-muted); }
+
+  /* ── Chapter Opening ── */
+  .chapter-opening {
+    text-align: center;
+    padding: 1.5cm 0 1cm;
+  }
+  .chapter-icon-wrap {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 0.8cm;
+    box-shadow: 0 8px 24px rgba(15,76,129,0.25);
+  }
+  .chapter-icon-wrap svg { width: 40px; height: 40px; fill: #fff; }
+  .chapter-num-label {
+    font-family: var(--font-en);
+    direction: ltr;
+    unicode-bidi: embed;
+    font-size: 11pt;
+    font-weight: 700;
+    color: var(--secondary);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 0.3cm;
+  }
+  .chapter-title {
+    font-size: 24pt;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1.4;
+    margin-bottom: 0.3cm;
+  }
+  .chapter-subtitle {
+    font-size: 13pt;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-bottom: 0.6cm;
+  }
+  .chapter-divider {
+    width: 120px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 2px;
+    margin: 0 auto 0.6cm;
+  }
+  .chapter-intro {
+    max-width: 85%;
+    margin: 0 auto;
+    font-size: 11.5pt;
+    color: var(--text-secondary);
+    line-height: 1.8;
+  }
+  .chapter-instructor {
+    margin-top: 0.6cm;
+    font-size: 10pt;
+    color: var(--text-muted);
+  }
+  .chapter-instructor strong { color: var(--primary); font-weight: 600; }
+
+  /* ── Animated Chapter Overview ── */
+  .overview-section {
+    background: linear-gradient(135deg, #f0f7ff 0%, #e6f9f7 100%);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 1.2cm;
+    margin: 0.8cm 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .overview-section::before {
+    content: '';
+    position: absolute;
+    top: -40px;
+    left: -40px;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(15,76,129,0.08), transparent 70%);
+    border-radius: 50%;
+  }
+  .overview-title {
+    font-size: 13pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.8cm;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .overview-title svg { width: 22px; height: 22px; flex-shrink: 0; }
+  .overview-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+  .overview-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    position: relative;
+    padding-bottom: 0.5cm;
+  }
+  .overview-step:last-child { padding-bottom: 0; }
+  .overview-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 19px;
+    top: 42px;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--primary), var(--secondary));
+    opacity: 0.3;
+  }
+  .step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .step-icon.blue { background: var(--primary); color: #fff; }
+  .step-icon.teal { background: var(--secondary); color: #fff; }
+  .step-icon.amber { background: var(--accent); color: #fff; }
+  .step-icon.green { background: var(--success); color: #fff; }
+  .step-icon.purple { background: var(--purple); color: #fff; }
+  .step-icon.orange { background: var(--warning); color: #fff; }
+  .step-content { flex: 1; padding-top: 2px; }
+  .step-label {
+    font-weight: 700;
+    font-size: 11pt;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .step-label .en {
+    font-family: var(--font-en);
+    direction: ltr;
+    unicode-bidi: embed;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 10.5pt;
+  }
+  .step-desc {
+    font-size: 9.5pt;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ── Section Headings ── */
+  .section-heading {
+    font-size: 20pt;
+    font-weight: 800;
+    color: var(--primary);
+    margin: 1cm 0 0.5cm;
+    padding-bottom: 0.3cm;
+    border-bottom: 3px solid var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-heading .sec-num {
+    font-family: var(--font-en);
+    direction: ltr;
+    unicode-bidi: embed;
+    background: var(--primary);
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14pt;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .subsection-heading {
+    font-size: 17pt;
+    font-weight: 700;
+    color: var(--primary-light);
+    margin: 0.8cm 0 0.4cm;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .sub-subsection-heading {
+    font-size: 14pt;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0.6cm 0 0.3cm;
+    padding-right: 0.5cm;
+    border-right: 3px solid var(--secondary);
+  }
+
+  /* ── Body Text ── */
+  .body-text {
+    font-size: 12.5pt;
+    line-height: 1.75;
+    color: var(--text);
+    text-align: justify;
+    margin-bottom: 0.4cm;
+  }
+  .body-text .en-term {
+    font-family: var(--font-en);
+    direction: ltr;
+    unicode-bidi: embed;
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 11.5pt;
+    background: var(--primary-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+  .body-text .code-inline {
+    font-family: var(--font-code);
+    direction: ltr;
+    unicode-bidi: embed;
+    background: #f1f5f9;
+    color: #c7254e;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11pt;
+    font-weight: 500;
+  }
+
+  /* ── Bullet & Numbered Lists ── */
+  .styled-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.3cm 0 0.5cm;
+  }
+  .styled-list li {
+    position: relative;
+    padding-right: 1.2cm;
+    padding-bottom: 0.25cm;
+    font-size: 12pt;
+    line-height: 1.7;
+  }
+  .styled-list li::before {
+    content: '';
+    position: absolute;
+    right: 0.4cm;
+    top: 0.55em;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--secondary);
+  }
+  .styled-list.numbered { counter-reset: ar-list; }
+  .styled-list.numbered li { counter-increment: ar-list; }
+  .styled-list.numbered li::before {
+    content: counter(ar-list);
+    background: var(--primary);
+    color: #fff;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9pt;
+    font-weight: 700;
+    font-family: var(--font-en);
+    direction: ltr;
+    top: 0.35em;
+    right: 0.15cm;
+  }
+
+  /* ── Callout Boxes ── */
+  .callout {
+    border-radius: 12px;
+    margin: 0.6cm 0;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .callout-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.4cm 0.6cm;
+    font-weight: 700;
+    font-size: 11pt;
+  }
+  .callout-header .icon { font-size: 16px; flex-shrink: 0; }
+  .callout-body {
+    padding: 0.4cm 0.6cm 0.5cm;
+    font-size: 11.5pt;
+    line-height: 1.7;
+  }
+  .callout-body p { margin-bottom: 0.2cm; }
+  .callout-body p:last-child { margin-bottom: 0; }
+
+  /* Blue - Concept */
+  .callout.concept { border-color: #bfdbfe; }
+  .callout.concept .callout-header { background: var(--primary); color: #fff; }
+  .callout.concept .callout-body { background: var(--primary-bg); color: var(--text); }
+
+  /* Green - Key Takeaway */
+  .callout.takeaway { border-color: #bbf7d0; }
+  .callout.takeaway .callout-header { background: var(--success); color: #fff; }
+  .callout.takeaway .callout-body { background: var(--success-bg); }
+
+  /* Orange - Tip */
+  .callout.tip { border-color: #fed7aa; }
+  .callout.tip .callout-header { background: var(--accent); color: #fff; }
+  .callout.tip .callout-body { background: var(--accent-bg); }
+
+  /* Red - Important / Warning */
+  .callout.warning { border-color: #fecaca; }
+  .callout.warning .callout-header { background: var(--danger); color: #fff; }
+  .callout.warning .callout-body { background: var(--danger-bg); }
+
+  /* Gray - Definition */
+  .callout.definition { border-color: var(--border); }
+  .callout.definition .callout-header { background: #475569; color: #fff; }
+  .callout.definition .callout-body { background: #f8fafc; }
+
+  /* Purple - Deep Understanding */
+  .callout.deep { border-color: #ddd6fe; }
+  .callout.deep .callout-header { background: var(--purple); color: #fff; }
+  .callout.deep .callout-body { background: var(--purple-bg); }
+
+  /* Dark - Practical Example */
+  .callout.practical { border-color: #334155; }
+  .callout.practical .callout-header { background: var(--dark-card); color: #f1f5f9; }
+  .callout.practical .callout-body { background: var(--dark-card); color: var(--dark-card-text); }
+
+  /* ── Remember Box (special style) ── */
+  .remember-box {
+    background: linear-gradient(135deg, var(--success-bg), #e6f9f7);
+    border: 1.5px solid #86efac;
+    border-radius: 12px;
+    padding: 0.5cm 0.7cm;
+    margin: 0.5cm 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .remember-box .rem-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .remember-box .rem-content {
+    font-size: 11.5pt;
+    line-height: 1.7;
+    color: var(--text);
+  }
+
+  /* ── Quick Review Box ── */
+  .quick-review {
+    background: linear-gradient(135deg, #f0f7ff, #f5f3ff);
+    border: 2px solid var(--primary);
+    border-radius: 16px;
+    margin: 1cm 0 0.5cm;
+    overflow: hidden;
+  }
+  .qr-header {
+    background: var(--primary);
+    color: #fff;
+    padding: 0.5cm 0.7cm;
+    font-size: 16pt;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .qr-section {
+    padding: 0.5cm 0.7cm;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .qr-section:last-child { border-bottom: none; }
+  .qr-section-title {
+    font-size: 12pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.3cm;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .qr-section-title .qr-icon { font-size: 15px; }
+  .qr-list {
+    list-style: none;
+    padding: 0;
+  }
+  .qr-list li {
+    padding-right: 1cm;
+    padding-bottom: 0.15cm;
+    font-size: 11pt;
+    line-height: 1.6;
+    position: relative;
+  }
+  .qr-list li::before {
+    content: '◆';
+    position: absolute;
+    right: 0;
+    color: var(--secondary);
+    font-size: 8px;
+    top: 0.45em;
+  }
+  .qr-checklist li::before {
+    content: '☐';
+    font-size: 13px;
+    top: 0.15em;
+    color: var(--primary);
+  }
+
+  /* ── Tables ── */
+  .pro-table-wrap {
+    margin: 0.6cm 0;
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  .pro-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11pt;
+  }
+  .pro-table thead th {
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    padding: 0.35cm 0.5cm;
+    text-align: right;
+    font-size: 11pt;
+    white-space: nowrap;
+  }
+  .pro-table thead th:first-child { border-radius: 0 11px 0 0; }
+  .pro-table thead th:last-child { border-radius: 11px 0 0 0; }
+  .pro-table tbody td {
+    padding: 0.3cm 0.5cm;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+  .pro-table tbody tr:nth-child(even) { background: #f8fafc; }
+  .pro-table tbody tr:last-child td { border-bottom: none; }
+  .pro-table tbody tr:last-child td:first-child { border-radius: 0 0 0 11px; }
+  .pro-table tbody tr:last-child td:last-child { border-radius: 0 0 11px 0; }
+  .pro-table .en-cell {
+    font-family: var(--font-en);
+    direction: ltr;
+    unicode-bidi: embed;
+    text-align: left;
+  }
+  .pro-table .center-cell { text-align: center; }
+
+  /* ── Code Blocks ── */
+  .code-block {
+    background: var(--code-bg);
+    border-radius: 12px;
+    margin: 0.5cm 0;
+    overflow: hidden;
+    border: 1px solid #334155;
+    direction: ltr;
+    text-align: left;
+  }
+  .code-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25cm 0.5cm;
+    background: #0f172a;
+    border-bottom: 1px solid #334155;
+  }
+  .code-lang {
+    font-family: var(--font-en);
+    font-size: 9pt;
+    font-weight: 600;
+    color: var(--secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .code-dots {
+    display: flex;
+    gap: 5px;
+  }
+  .code-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .code-dots span:nth-child(1) { background: #ef4444; }
+  .code-dots span:nth-child(2) { background: #f59e0b; }
+  .code-dots span:nth-child(3) { background: #22c55e; }
+  .code-body {
+    padding: 0.5cm;
+    overflow-x: auto;
+    font-family: var(--font-code);
+    font-size: 10.5pt;
+    line-height: 1.7;
+    color: var(--code-text);
+    white-space: pre;
+    tab-size: 4;
+  }
+  .code-body .comment { color: #6b7280; font-style: italic; }
+  .code-body .keyword { color: #c084fc; }
+  .code-body .string { color: #34d399; }
+  .code-body .function { color: #60a5fa; }
+  .code-body .flag { color: #fbbf24; }
+  .code-body .file { color: #f472b6; }
+  .code-body .output { color: #94a3b8; }
+
+  /* ── Technical Diagrams ── */
+  .diagram-wrap {
+    margin: 0.6cm 0;
+    padding: 0.8cm;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    direction: ltr;
+    text-align: center;
+  }
+  .diagram-title {
+    font-family: var(--font-en);
+    font-size: 11pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.6cm;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .diagram-flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .diagram-box {
+    padding: 0.4cm 1cm;
+    border-radius: 10px;
+    font-family: var(--font-en);
+    font-size: 11pt;
+    font-weight: 600;
+    min-width: 200px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    position: relative;
+  }
+  .diagram-box.primary { background: var(--primary); color: #fff; }
+  .diagram-box.secondary { background: var(--secondary); color: #fff; }
+  .diagram-box.accent { background: var(--accent); color: #fff; }
+  .diagram-box.success { background: var(--success); color: #fff; }
+  .diagram-box.purple { background: var(--purple); color: #fff; }
+  .diagram-box.light { background: var(--primary-bg); color: var(--primary); border: 1.5px solid #bfdbfe; }
+  .diagram-box.light-teal { background: var(--secondary-bg); color: #0f766e; border: 1.5px solid #99f6e4; }
+  .diagram-box.light-amber { background: var(--accent-bg); color: #92400e; border: 1.5px solid #fde68a; }
+  .diagram-arrow {
+    width: 2px;
+    height: 24px;
+    background: var(--text-muted);
+    position: relative;
+  }
+  .diagram-arrow::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid var(--text-muted);
+  }
+  .diagram-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .diagram-plus {
+    font-family: var(--font-en);
+    font-size: 18pt;
+    font-weight: 800;
+    color: var(--text-muted);
+  }
+
+  /* ── Comparison Diagram (side by side) ── */
+  .comparison-diagram {
+    display: flex;
+    gap: 16px;
+    margin: 0.6cm 0;
+    direction: ltr;
+  }
+  .comp-col {
+    flex: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1.5px solid var(--border);
+  }
+  .comp-col-header {
+    padding: 0.35cm;
+    text-align: center;
+    font-family: var(--font-en);
+    font-weight: 700;
+    font-size: 11pt;
+    color: #fff;
+  }
+  .comp-col-header.blue { background: var(--primary); }
+  .comp-col-header.teal { background: var(--secondary); }
+  .comp-col-body {
+    padding: 0.4cm;
+    font-size: 10.5pt;
+    line-height: 1.6;
+    text-align: left;
+  }
+  .comp-col-body .comp-item {
+    padding: 0.2cm 0;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    gap: 6px;
+    align-items: flex-start;
+  }
+  .comp-col-body .comp-item:last-child { border-bottom: none; }
+  .comp-col-body .comp-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 70px;
+    font-size: 9.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .comp-col-body .comp-value { color: var(--text); }
+
+  /* ── Sections Diagram (ELF) ── */
+  .elf-sections-diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 0.5cm 0;
+    direction: ltr;
+  }
+  .elf-sec-row {
+    display: flex;
+    align-items: stretch;
+    border: 1px solid var(--border);
+    border-bottom: none;
+  }
+  .elf-sec-row:last-child { border-bottom: 1px solid var(--border); }
+  .elf-sec-name {
+    font-family: var(--font-code);
+    font-size: 10.5pt;
+    font-weight: 700;
+    padding: 0.3cm 0.5cm;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+  }
+  .elf-sec-name.blue { background: var(--primary); }
+  .elf-sec-name.teal { background: var(--secondary); }
+  .elf-sec-name.amber { background: var(--accent); }
+  .elf-sec-name.purple { background: var(--purple); }
+  .elf-sec-desc {
+    padding: 0.3cm 0.5cm;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    flex: 1;
+    background: #fff;
+    display: flex;
+    align-items: center;
+  }
+
+  /* ── Quick Review Flash ── */
+  .flash-review {
+    background: var(--primary-bg);
+    border: 1.5px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 0.4cm 0.6cm;
+    margin: 0.5cm 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .flash-review .flash-icon { font-size: 20px; flex-shrink: 0; }
+  .flash-review .flash-content {
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+  .flash-review .flash-content .en {
+    font-family: var(--font-en);
+    direction: ltr;
+    unicode-bidi: embed;
+    font-weight: 600;
+    color: var(--primary);
+  }
+
+  /* ── Page Break ── */
+  .page-break { page-break-before: always; }
+
+  /* ── Smooth entrance animation ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-in {
+    animation: fadeUp 0.5s ease-out both;
+  }
+  .delay-1 { animation-delay: 0.08s; }
+  .delay-2 { animation-delay: 0.16s; }
+  .delay-3 { animation-delay: 0.24s; }
+  .delay-4 { animation-delay: 0.32s; }
+  .delay-5 { animation-delay: 0.4s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-in { animation: none; opacity: 1; }
+  }
+
+  /* ── Utility ── */
+  .mt-sm { margin-top: 0.3cm; }
+  .mt-md { margin-top: 0.6cm; }
+  .mt-lg { margin-top: 1cm; }
+  .mb-sm { margin-bottom: 0.3cm; }
+  .mb-md { margin-bottom: 0.6cm; }
+  .text-center { text-align: center; }
+  .en { font-family: var(--font-en); direction: ltr; unicode-bidi: embed; }
+  .fw-600 { font-weight: 600; }
+  .text-muted { color: var(--text-secondary); }
+  .text-primary { color: var(--primary); }
+
+  /* ── Native vs Cross Diagram ── */
+  .build-diagram {
+    display: flex;
+    gap: 20px;
+    margin: 0.5cm 0;
+    direction: ltr;
+  }
+  .build-card {
+    flex: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1.5px solid var(--border);
+    background: #fff;
+  }
+  .build-card-head {
+    padding: 0.35cm;
+    text-align: center;
+    font-weight: 700;
+    font-size: 10.5pt;
+    color: #fff;
+  }
+  .build-card-head.nat { background: var(--primary); }
+  .build-card-head.cross { background: var(--secondary); }
+  .build-card-body {
+    padding: 0.4cm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .build-box {
+    padding: 0.25cm 0.6cm;
+    border-radius: 8px;
+    font-size: 9.5pt;
+    font-weight: 600;
+    text-align: center;
+    width: 100%;
+  }
+  .build-box.host { background: var(--primary-bg); color: var(--primary); border: 1px solid #bfdbfe; }
+  .build-box.target { background: var(--secondary-bg); color: #0f766e; border: 1px solid #99f6e4; }
+  .build-box.tool { background: var(--accent-bg); color: #92400e; border: 1px solid #fde68a; }
+  .build-box.output { background: var(--success-bg); color: #166534; border: 1px solid #bbf7d0; }
+  .build-eq {
+    font-size: 10pt;
+    color: var(--text-muted);
+    font-weight: 700;
+    padding: 2px 0;
+  }
+  .build-arr {
+    width: 2px;
+    height: 16px;
+    background: var(--text-muted);
+    position: relative;
+  }
+  .build-arr::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 6px solid var(--text-muted);
+  }
+  .build-note {
+    font-size: 8.5pt;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 0.2cm 0.3cm;
+    border-top: 1px solid var(--border-light);
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 1: TABLE OF CONTENTS                  -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page toc-page">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">ملخص الدرس الثامن</span>
+  </div>
+
+  <div class="toc-title animate-in">الفهرس</div>
+  <div class="toc-subtitle animate-in delay-1">Compilation Process — GNU Toolchain (الجزء الأول)</div>
+  <div class="toc-divider animate-in delay-2"></div>
+
+  <ul class="toc-list">
+    <li>
+      <a class="toc-item" href="#ch-1">
+        <span class="toc-label">فلسفة الترجمة <span class="en">The Compilation Philosophy</span></span>
+        <span class="toc-number">1</span>
+        <span class="toc-page-num">2</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item toc-sub" href="#s1-1">
+        <span class="toc-label">لماذا نحتاج لعملية الترجمة؟</span>
+        <span class="toc-number">1.1</span>
+        <span class="toc-page-num">2</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item toc-sub" href="#s1-2">
+        <span class="toc-label">مقارنة: اللغات المترجمة مقابل اللغات المفسرة</span>
+        <span class="toc-number">1.2</span>
+        <span class="toc-page-num">2</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item toc-sub" href="#s1-3">
+        <span class="toc-label">الأداة السحرية gcc ليست مترجماً واحداً!</span>
+        <span class="toc-number">1.3</span>
+        <span class="toc-page-num">3</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item" href="#ch-2">
+        <span class="toc-label">مراحل الترجمة الأربعة <span class="en">The 4 Stages of Compilation</span></span>
+        <span class="toc-number">2</span>
+        <span class="toc-page-num">3</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item toc-sub" href="#s2-1">
+        <span class="toc-label">المرحلة الأولى: المعالجة المسبقة <span class="en">Preprocessing</span></span>
+        <span class="toc-number">2.1</span>
+        <span class="toc-page-num">4</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item toc-sub" href="#s2-2">
+        <span class="toc-label">المرحلة الثانية: الترجمة الفعلية <span class="en">Compilation / Translation</span></span>
+        <span class="toc-number">2.2</span>
+        <span class="toc-page-num">4</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item toc-sub" href="#s2-3">
+        <span class="toc-label">المرحلة الثالثة: التجميع <span class="en">Assembly</span></span>
+        <span class="toc-number">2.3</span>
+        <span class="toc-page-num">5</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item toc-sub" href="#s2-4">
+        <span class="toc-label">المرحلة الرابعة: الربط <span class="en">Linking</span></span>
+        <span class="toc-number">2.4</span>
+        <span class="toc-page-num">5</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item" href="#ch-3">
+        <span class="toc-label">التحكم اليدوي بمراحل البناء باستخدام <span class="en">GCC Flags</span></span>
+        <span class="toc-number">3</span>
+        <span class="toc-page-num">6</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item" href="#ch-4">
+        <span class="toc-label">الهيكل الداخلي للملفات الثنائية <span class="en">ELF Format &amp; Sections</span></span>
+        <span class="toc-number">4</span>
+        <span class="toc-page-num">7</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item toc-sub" href="#s4-1">
+        <span class="toc-label">كيف يتم تنظيم الملف من الداخل؟ <span class="en">The Sections</span></span>
+        <span class="toc-number">4.1</span>
+        <span class="toc-page-num">7</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item" href="#ch-5">
+        <span class="toc-label">الرموز وأدوات الفحص <span class="en">Symbols &amp; Binutils</span></span>
+        <span class="toc-number">5</span>
+        <span class="toc-page-num">9</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item toc-sub" href="#s5-1">
+        <span class="toc-label">أنواع الرموز <span class="en">Symbols</span></span>
+        <span class="toc-number">5.1</span>
+        <span class="toc-page-num">9</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item toc-sub" href="#s5-2">
+        <span class="toc-label">أدوات الفحص والتحليل <span class="en">Binutils</span></span>
+        <span class="toc-number">5.2</span>
+        <span class="toc-page-num">9</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item" href="#ch-6">
+        <span class="toc-label">الفرق بين <span class="en">Native Compilation</span> و<span class="en">Cross-Compilation</span></span>
+        <span class="toc-number">6</span>
+        <span class="toc-page-num">11</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item toc-sub" href="#s6-1">
+        <span class="toc-label">كيف نعمل في بيئة Embedded Linux؟</span>
+        <span class="toc-number">6.1</span>
+        <span class="toc-page-num">11</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item toc-sub" href="#s6-2">
+        <span class="toc-label">لماذا نستخدم Cross-Compilation؟</span>
+        <span class="toc-number">6.2</span>
+        <span class="toc-page-num">12</span>
+      </a>
+    </li>
+    <li>
+      <a class="toc-item" href="#qr">
+        <span class="toc-label">مراجعة سريعة <span class="en">Quick Review</span></span>
+        <span class="toc-number">—</span>
+        <span class="toc-page-num">13</span>
+      </a>
+    </li>
+  </ul>
+
+  <div class="running-footer">
+    <span>Embedded Linux & Yocto — Lesson 8 Summary</span>
+    <span class="version">الإصدار 1.0</span>
+    <span>1</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 2: CHAPTER OPENING + SECTION 1       -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page page-break" id="ch-1">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">Compilation Process</span>
+  </div>
+
+  <!-- Chapter Opening -->
+  <div class="chapter-opening animate-in">
+    <div class="chapter-icon-wrap">
+      <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+    </div>
+    <div class="chapter-num-label">LESSON 8 — PART 1</div>
+    <h1 class="chapter-title">Compilation Process</h1>
+    <div class="chapter-subtitle">GNU Toolchain — دورة حياة الترجمة وبناء البرنامج</div>
+    <div class="chapter-divider"></div>
+    <p class="chapter-intro">
+      موضوع الدرس: مراحل بناء البرنامج، أداة gcc كسائق، Compilation Process، الهيكل الداخلي للملفات الثنائية ELF Format، وأدوات الفحص Binutils
+    </p>
+    <p class="chapter-instructor">
+      المدرب: <strong>سالم بالحاج طلال</strong> — <span class="en" style="font-size:10pt;color:var(--secondary);">Embedded Linux Architect</span>
+    </p>
+  </div>
+
+  <!-- Animated Chapter Overview -->
+  <div class="overview-section animate-in delay-1">
+    <div class="overview-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      خريطة الدرس — مسار التعلم
+    </div>
+    <div class="overview-flow">
+      <div class="overview-step">
+        <div class="step-icon blue">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        </div>
+        <div class="step-content">
+          <div class="step-label">فلسفة الترجمة <span class="en">The Compilation Philosophy</span></div>
+          <div class="step-desc">لماذا نحتاج الترجمة؟ مقارنة اللغات المترجمة والمفسرة، وحقيقة أداة gcc</div>
+        </div>
+      </div>
+      <div class="overview-step">
+        <div class="step-icon teal">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM6 20V4h7v5h5v11H6z"/></svg>
+        </div>
+        <div class="step-content">
+          <div class="step-label">مراحل الترجمة الأربعة <span class="en">The 4 Stages</span></div>
+          <div class="step-desc">Preprocessing → Compilation → Assembly → Linking</div>
+        </div>
+      </div>
+      <div class="overview-step">
+        <div class="step-icon amber">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        </div>
+        <div class="step-content">
+          <div class="step-label">التحكم اليدوي بالبناء <span class="en">GCC Flags</span></div>
+          <div class="step-desc">استخدام -E و -S و -c للتحكم بكل مرحلة على حدة</div>
+        </div>
+      </div>
+      <div class="overview-step">
+        <div class="step-icon purple">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M20 6h-8l-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-2 10h-2v2h-2v-2h-2v-2h2v-2h2v2h2v2z"/></svg>
+        </div>
+        <div class="step-content">
+          <div class="step-label">الهيكل الداخلي للملفات الثنائية <span class="en">ELF Format &amp; Sections</span></div>
+          <div class="step-desc">أقسام .text و .data و .bss و .rodata داخل ملف ELF</div>
+        </div>
+      </div>
+      <div class="overview-step">
+        <div class="step-icon green">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M9.16 16.51l-1.42-1.42 3.54-3.54 1.42 1.42-3.54 3.54zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm4 8h-2v-2h2v2z"/></svg>
+        </div>
+        <div class="step-content">
+          <div class="step-label">الرموز وأدوات الفحص <span class="en">Symbols &amp; Binutils</span></div>
+          <div class="step-desc">أنواع الرموز، وأدوات file و nm و readelf و objdump</div>
+        </div>
+      </div>
+      <div class="overview-step">
+        <div class="step-icon orange">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+        </div>
+        <div class="step-content">
+          <div class="step-label">الفرق بين <span class="en">Native</span> و<span class="en">Cross-Compilation</span></div>
+          <div class="step-desc">مفهوم Host و Target، ولماذا نحتاج Cross-Compiler في الأنظمة المدمجة</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="running-footer">
+    <span>Embedded Linux & Yocto — Lesson 8 Summary</span>
+    <span class="version">الإصدار 1.0</span>
+    <span>2</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 3: SECTION 1 — فلسفة الترجمة          -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">Compilation Process</span>
+  </div>
+
+  <!-- Section 1: فلسفة الترجمة -->
+  <h2 class="section-heading animate-in" id="ch-1">
+    <span class="sec-num">1</span>
+    فلسفة الترجمة <span class="en">The Compilation Philosophy</span>
+  </h2>
+
+  <!-- 1.1 لماذا نحتاج لعملية الترجمة؟ -->
+  <h3 class="subsection-heading" id="s1-1">لماذا نحتاج لعملية الترجمة <span class="en">Compilation</span>؟</h3>
+
+  <p class="body-text">
+    المعالج <span class="en-term">CPU</span> الموجود في أي حاسوب أو لوحة <span class="en-term">Board</span> لا يفهم لغات البرمجة عالية المستوى مثل <span class="en-term">C</span> أو <span class="en-term">C++</span>، فهو مصمم هندسياً <span class="en-term">Architecture</span> لفهم لغة الآلة فقط <span class="en-term">Machine Code - Binary 0s and 1s</span>.
+  </p>
+
+  <p class="body-text">
+    عملية الترجمة هي تحويل الكود المصدري المقروء للبشر إلى لغة يفهمها العتاد لتنفيذها.
+  </p>
+
+  <!-- 1.2 مقارنة اللغات المترجمة مقابل المفسرة -->
+  <h3 class="subsection-heading" id="s1-2">جدول مقارنة: اللغات المترجمة مقابل اللغات المفسرة</h3>
+
+  <div class="pro-table-wrap animate-in">
+    <table class="pro-table">
+      <thead>
+        <tr>
+          <th>وجه المقارنة</th>
+          <th class="en-cell">Compiled Languages</th>
+          <th class="en-cell">Interpreted Languages</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>الآلية</td>
+          <td>يتم تحويل الكود بالكامل إلى ملف تنفيذي <span class="en-term">Binary</span> قبل التشغيل</td>
+          <td>يتم قراءة الكود سطراً بسطراً وتنفيذه في وقت التشغيل</td>
+        </tr>
+        <tr>
+          <td>الأداء</td>
+          <td>سريعة جداً</td>
+          <td>أبطأ جداً لأنها تحتاج إلى مترجم/مفسر <span class="en-term">Interpreter</span> يترجم في نفس اللحظة</td>
+        </tr>
+        <tr>
+          <td>أمثلة</td>
+          <td class="en-cell" style="font-weight:600;">C, C++, Rust</td>
+          <td class="en-cell" style="font-weight:600;">Shell, Python, JavaScript</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 1.3 gcc ليست مترجماً واحداً -->
+  <h3 class="subsection-heading mt-lg" id="s1-3">الأداة السحرية <span class="en-term">gcc</span> ليست مترجماً واحداً!</h3>
+
+  <p class="body-text">
+    أغلب المهندسين يعتقدون أن أمر <span class="code-inline">gcc</span> هو المترجم، وهذا غير دقيق. <span class="en-term">gcc</span> <span class="en-term">(GNU Compiler Collection)</span> عبارة عن سائق أو مدير <span class="en-term">Driver</span>، وظيفته استدعاء 4 برامج أخرى تعمل في الخفاء بالتسلسل لتتم عملية البناء بشكل آلي.
+  </p>
+
+  <div class="remember-box animate-in">
+    <span class="rem-icon">✅</span>
+    <div class="rem-content">
+      <strong>ماذا يجب أن تتذكر؟</strong> — أداة <span class="en-term">gcc</span> مجرد غلاف <span class="en-term">Wrapper</span> ينظم استدعاء أدوات أصغر للقيام بالمهمة. المعالج لا ينفذ لغة <span class="en-term">C</span>، بل ينفذ تعليمات ثنائية <span class="en-term">Binary</span>.
+    </div>
+  </div>
+
+  <div class="callout warning animate-in">
+    <div class="callout-header">
+      <span class="icon">⚠️</span>
+      أخطاء شائعة
+    </div>
+    <div class="callout-body">
+      <p>الخلط بين اللغات المترجمة <span class="en-term">Compiled</span> ولغات المفسرة <span class="en-term">Interpreted</span> كالشل <span class="en-term">Shell</span> الذي درسناه سابقاً. اللغات المفسرة لا تمر بهذه المراحل، بل الكود ينفذ مباشرة عبر <span class="en-term">Interpreter</span>.</p>
+    </div>
+  </div>
+
+  <div class="running-footer">
+    <span>Embedded Linux & Yocto — Lesson 8 Summary</span>
+    <span class="version">الإصدار 1.0</span>
+    <span>3</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 4: SECTION 2 — مراحل الترجمة الأربعة  -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">Compilation Process</span>
+  </div>
+
+  <h2 class="section-heading animate-in" id="ch-2">
+    <span class="sec-num">2</span>
+    مراحل الترجمة الأربعة <span class="en">The 4 Stages of Compilation</span>
+  </h2>
+
+  <p class="body-text">
+    عملية البناء لا تتم بخطوة واحدة، بل تمر بـ 4 مراحل دقيقة ومتتالية <span class="en-term">Workflow</span>:
+  </p>
+
+  <!-- Compilation Pipeline Diagram -->
+  <div class="diagram-wrap animate-in">
+    <div class="diagram-title">Compilation Pipeline — خط أنابيب الترجمة</div>
+    <div class="diagram-flow">
+      <div class="diagram-box light">
+        <span class="en">Source Code</span> <span style="font-size:9pt;color:var(--text-muted);">.c</span>
+      </div>
+      <div class="diagram-arrow"></div>
+      <div class="diagram-box primary">
+        <span class="en">1. Preprocessor</span> <span style="font-size:9pt;opacity:0.8;">(cpp)</span>
+      </div>
+      <div class="diagram-arrow"></div>
+      <div class="diagram-box light">
+        <span class="en">Expanded Code</span> <span style="font-size:9pt;color:var(--text-muted);">.i</span>
+      </div>
+      <div class="diagram-arrow"></div>
+      <div class="diagram-box secondary">
+        <span class="en">2. Compiler</span> <span style="font-size:9pt;opacity:0.8;">(cc1)</span>
+      </div>
+      <div class="diagram-arrow"></div>
+      <div class="diagram-box light-teal">
+        <span class="en">Assembly Code</span> <span style="font-size:9pt;color:var(--text-muted);">.s</span>
+      </div>
+      <div class="diagram-arrow"></div>
+      <div class="diagram-box accent">
+        <span class="en">3. Assembler</span> <span style="font-size:9pt;opacity:0.8;">(as)</span>
+      </div>
+      <div class="diagram-arrow"></div>
+      <div class="diagram-box light-amber">
+        <span class="en">Object File</span> <span style="font-size:9pt;color:var(--text-muted);">.o</span>
+      </div>
+      <div class="diagram-arrow"></div>
+      <div class="diagram-box success">
+        <span class="en">4. Linker</span> <span style="font-size:9pt;opacity:0.8;">(ld)</span>
+      </div>
+      <div class="diagram-arrow"></div>
+      <div class="diagram-box purple">
+        <span class="en">Executable Binary</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage 1: Preprocessing -->
+  <h3 class="subsection-heading mt-lg" id="s2-1">
+    المرحلة الأولى: المعالجة المسبقة <span class="en">Preprocessing</span>
+  </h3>
+
+  <p class="body-text">
+    <strong>الأداة المستخدمة:</strong> <span class="en-term">cpp</span> <span class="en-term">(C Preprocessor)</span>
+  </p>
+  <p class="body-text">
+    <strong>الوظيفة:</strong> تجهيز ملف <span class="en-term">C</span> قبل الترجمة الفعلية. يقوم البرنامج بـ:
+  </p>
+
+  <ul class="styled-list">
+    <li>مسح جميع التعليقات <span class="en-term">Comments</span> لأن المعالج لا يحتاجها وهي فقط تستهلك مساحة</li>
+    <li>توسيع الماكرو <span class="en-term">Macro Expansion</span>: تعويض كل <span class="code-inline">#define</span> بقيمته الحقيقية في الكود</li>
+    <li>إدراج الملفات <span class="en-term">File Inclusion</span>: نسخ محتوى ملفات الـ <span class="en-term">Header</span> (مثل <span class="code-inline">#include &lt;stdio.h&gt;</span>) بالكامل ولصقه داخل الكود</li>
+  </ul>
+
+  <p class="body-text">
+    <strong>الملف الناتج:</strong> ملف كود <span class="en-term">C</span> نقي وضخم جداً، امتداده الافتراضي <span class="code-inline">.i</span>
+  </p>
+
+  <!-- Stage 2: Compilation -->
+  <h3 class="subsection-heading mt-lg" id="s2-2">
+    المرحلة الثانية: الترجمة الفعلية <span class="en">Compilation / Translation</span>
+  </h3>
+
+  <p class="body-text">
+    <strong>الأداة المستخدمة:</strong> <span class="en-term">cc1</span> (لبرامج <span class="en-term">C</span>) أو <span class="en-term">cc1plus</span> (لبرامج <span class="en-term">C++</span>)
+  </p>
+  <p class="body-text">
+    <strong>الوظيفة:</strong> أخذ الملف الناتج من المرحلة الأولى وتحويله من لغة <span class="en-term">C</span> إلى لغة التجميع <span class="en-term">Assembly Language</span>.
+  </p>
+
+  <div class="callout deep animate-in">
+    <div class="callout-header">
+      <span class="icon">🧠</span>
+      فهم عميق
+    </div>
+    <div class="callout-body">
+      <p><strong>ملاحظة هامة:</strong> لغة <span class="en-term">Assembly</span> مرتبطة جداً بالهاردوير، فهي تختلف باختلاف معمارية المعالج (<span class="en-term">x86</span> تختلف عن <span class="en-term">ARM</span>).</p>
+    </div>
+  </div>
+
+  <p class="body-text">
+    <strong>الملف الناتج:</strong> ملف نصي يحتوي على أوامر <span class="en-term">Assembly</span>، امتداده <span class="code-inline">.s</span>
+  </p>
+
+  <div class="running-footer">
+    <span>Embedded Linux & Yocto — Lesson 8 Summary</span>
+    <span class="version">الإصدار 1.0</span>
+    <span>4</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 5: Stages 3 & 4                        -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">Compilation Process</span>
+  </div>
+
+  <!-- Stage 3: Assembly -->
+  <h3 class="subsection-heading animate-in" id="s2-3">
+    المرحلة الثالثة: التجميع <span class="en">Assembly</span>
+  </h3>
+
+  <p class="body-text">
+    <strong>الأداة المستخدمة:</strong> <span class="en-term">as</span> <span class="en-term">(Assembler)</span>
+  </p>
+  <p class="body-text">
+    <strong>الوظيفة:</strong> تحويل ملف <span class="en-term">Assembly</span> النصي إلى لغة الآلة <span class="en-term">Machine Code</span> (أصفار وآحاد).
+  </p>
+  <p class="body-text">
+    <strong>الملف الناتج:</strong> ملف يُسمى <span class="en-term">Object File</span> بامتداد <span class="code-inline">.o</span>. لم يعد هذا الملف قابلاً للقراءة كنص، ولكنه يعد قابلاً للتشغيل لاحقاً.
+  </p>
+
+  <!-- Stage 4: Linking -->
+  <h3 class="subsection-heading mt-lg" id="s2-4">
+    المرحلة الرابعة: الربط <span class="en">Linking</span>
+  </h3>
+
+  <p class="body-text">
+    <strong>الأداة المستخدمة:</strong> <span class="en-term">ld</span> <span class="en-term">(Linker)</span>
+  </p>
+  <p class="body-text">
+    <strong>الوظيفة:</strong> دمج ملف <span class="en-term">Object File</span> الخاص بك مع ملفات <span class="en-term">Object Files</span> أخرى ضمن نفس المشروع، ومع المكتبات (مثل <span class="en-term">libc</span> التي تحتوي على تعريف دالة <span class="code-inline">printf</span>) لإنتاج الملف النهائي.
+  </p>
+  <p class="body-text">
+    <strong>الملف الناتج:</strong> الملف التنفيذي النهائي <span class="en-term">Executable Binary</span>.
+  </p>
+
+  <div class="remember-box animate-in">
+    <span class="rem-icon">✅</span>
+    <div class="rem-content">
+      <strong>ماذا يجب أن تتذكر؟</strong> — أي خطأ في كتابة الكود مثل نسيان فاصلة منقوطة <span class="en-term">Syntax Error</span> يتم اكتشافه في المرحلة الثانية <span class="en-term">Compilation</span>. أما أخطاء إيجاد دوال (مثل إضافة دالة غير موجودة أو لم تتم إضافتها) فتظهر في المرحلة الرابعة <span class="en-term">Linking</span>.
+    </div>
+  </div>
+
+  <!-- Quick Flash Review -->
+  <div class="flash-review animate-in">
+    <span class="flash-icon">⚡</span>
+    <div class="flash-content">
+      مراجعة سريعة: <span class="en">Preprocessor</span> ➡ <span class="en">Compiler</span> ➡ <span class="en">Assembler</span> ➡ <span class="en">Linker</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 3: GCC Flags                     -->
+  <!-- ═══════════════════════════════════════ -->
+  <h2 class="section-heading mt-lg animate-in" id="ch-3">
+    <span class="sec-num">3</span>
+    التحكم اليدوي بمراحل البناء باستخدام <span class="en">GCC Flags</span>
+  </h2>
+
+  <p class="body-text">
+    كمس engineer أنظمة، يجب أن تعرف دائماً كيف توقف العملية في كل مرحلة للتحقق من الكود وتحليله <span class="en-term">Debug</span>. لا يجب أن تستخدم <span class="code-inline">gcc main.c</span> فقط وتقفز للنتيجة النهائية مباشرة.
+  </p>
+
+  <h3 class="subsection-heading">أوامر <span class="en">GCC</span> للتحكم بالمراحل</h3>
+
+  <!-- Flag 1: -E -->
+  <div class="code-block animate-in">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Terminal</span>
+    </div>
+    <div class="code-body"><span class="flag">gcc</span> <span class="flag">-E</span> <span class="file">main.c</span> <span class="flag">-o</span> <span class="file">main.i</span></div>
+  </div>
+
+  <ul class="styled-list">
+    <li><strong>الوظيفة:</strong> إيقاف العملية بعد مرحلة <span class="en-term">Preprocessing</span> فقط (المرحلة 1)</li>
+    <li><strong>الاستخدام بشدة:</strong> يُستخدم <span class="en-term">Best Practice</span> لاكتشاف أخطاء <span class="en-term">Macros</span> إذا كان الماكرو الخاص بك لا يعطي النتيجة المطلوبة، استخدم <span class="code-inline">-E</span> لترى كيف قام المترجم بتوسيعه وفهمه</li>
+  </ul>
+
+  <!-- Flag 2: -S -->
+  <div class="code-block animate-in">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Terminal</span>
+    </div>
+    <div class="code-body"><span class="flag">gcc</span> <span class="flag">-S</span> <span class="file">main.c</span> <span class="flag">-o</span> <span class="file">main.s</span></div>
+  </div>
+
+  <ul class="styled-list">
+    <li><strong>الوظيفة:</strong> الترجمة حتى مرحلة <span class="en-term">Assembly</span> والتوقف (المرحلة 2)</li>
+    <li><strong>الاستخدام:</strong> لرؤية كود <span class="en-term">Assembly</span> والتأكد من كيفية قيام المترجم بعمل <span class="en-term">Optimization</span> أو تحسين الكود الذي كتبته</li>
+  </ul>
+
+  <!-- Flag 3: -c -->
+  <div class="code-block animate-in">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Terminal</span>
+    </div>
+    <div class="code-body"><span class="flag">gcc</span> <span class="flag">-c</span> <span class="file">main.c</span> <span class="flag">-o</span> <span class="file">main.o</span></div>
+  </div>
+
+  <ul class="styled-list">
+    <li><strong>الوظيفة:</strong> بناء <span class="en-term">Object File</span> بدون تشغيل <span class="en-term">Linker</span> (المرحلة 3)</li>
+    <li><strong>الاستخدام:</strong> هذا الخيار بالغ الأهمية وسنستخدمه دائماً لاحقاً في أنظمة البناء <span class="en-term">Makefiles</span>. نقوم بعمل <span class="code-inline">-c</span> لكل ملف <span class="en-term">.c</span> بحيث لو عدلنا ملفاً واحداً نترجمه لوحده دون إعادة ترجمة المشروع كاملة</li>
+  </ul>
+
+  <!-- Flag 4: Linking -->
+  <div class="code-block animate-in">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <span class="code-lang">Terminal</span>
+    </div>
+    <div class="code-body"><span class="flag">gcc</span> <span class="file">main.o</span> <span class="file">utils.o</span> <span class="flag">-o</span> <span class="file">my_app</span></div>
+  </div>
+
+  <ul class="styled-list">
+    <li><strong>الوظيفة:</strong> مرحلة <span class="en-term">Linking</span> (المرحلة 4). يأخذ ملفات الأوبجكت ويدمجها ليصنع التطبيق التنفيذي <span class="en-term">my_app</span></li>
+  </ul>
+
+  <div class="callout warning animate-in">
+    <div class="callout-header">
+      <span class="icon">⚠️</span>
+      أخطاء شائعة
+    </div>
+    <div class="callout-body">
+      <p>محاولة قراءة الملف التنفيذي أو ملف <span class="en-term">.o</span> باستخدام أوامر نصية مثل <span class="code-inline">cat</span> أو <span class="code-inline">nano</span> ستظل لك رموز مشوهة لأنه ملف ثنائي <span class="en-term">Binary</span>. يجب استخدام أدوات <span class="en-term">Binutils</span> لقراءته.</p>
+    </div>
+  </div>
+
+  <div class="running-footer">
+    <span>Embedded Linux & Yocto — Lesson 8 Summary</span>
+    <span class="version">الإصدار 1.0</span>
+    <span>5</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 6: SECTION 4 — ELF Format              -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">Compilation Process</span>
+  </div>
+
+  <h2 class="section-heading animate-in" id="ch-4">
+    <span class="sec-num">4</span>
+    الهيكل الداخلي للملفات الثنائية <span class="en">ELF Format &amp; Sections</span>
+  </h2>
+
+  <h3 class="subsection-heading" id="s4-1">ما هو بالضبط ملف <span class="en-term">Object file</span> أو الملف التنفيذي في لينكس؟</h3>
+
+  <p class="body-text">
+    في وندوز، الامتداد التنفيذي هو <span class="code-inline">.exe</span>، أما في لينكس، فالمعيار المقدس للملفات التنفيذية وملفات <span class="en-term">Object</span> يسمى <span class="en-term">ELF</span>.
+  </p>
+
+  <div class="callout definition animate-in">
+    <div class="callout-header">
+      <span class="icon">📌</span>
+      تعريف
+    </div>
+    <div class="callout-body">
+      <p><span class="en-term">ELF</span> <span class="en-term">(Executable and Linkable Format)</span>: هو التنسيق القياسي والهيكلي لتنظيم البيانات والكود داخل الملفات الثنائية في أنظمة لينكس.</p>
+    </div>
+  </div>
+
+  <h3 class="subsection-heading mt-lg">كيف يتم تنظيم الملف من الداخل؟ <span class="en">The Sections</span> ⚙</h3>
+
+  <p class="body-text">
+    ملف <span class="en-term">ELF</span> ليس مجرد "كتلة عشوائية" من الأصفار والآحاد، بل هو مقسم إلى أقسام أو "غرف" <span class="en-term">Sections</span> منظمة جداً، أهمها:
+  </p>
+
+  <!-- ELF Sections Diagram -->
+  <div class="elf-sections-diagram animate-in">
+    <div class="elf-sec-row">
+      <div class="elf-sec-name blue">.text</div>
+      <div class="elf-sec-desc">
+        <strong>قسم الكود البرمجي:</strong> يحتوي على الأوامر والتعلیمات الفعلیة <span class="en-term">Instructions/Machine Code</span> التي سینفذھا المعالج. یمتلك صلاحية <span class="en-term">Read &amp; Execute</span>.
+      </div>
+    </div>
+    <div class="elf-sec-row">
+      <div class="elf-sec-name teal">.data</div>
+      <div class="elf-sec-desc">
+        <strong>قسم البيانات المُهيأة:</strong> يحتوي على المتغيرات العالمية <span class="en-term">Global Variables</span> التي تم إعطاؤها قيمة ابتدائية <span class="en-term">Initialized</span> (مثال: <span class="code-inline">int x = 5;</span>). هذا القسم يأخذ مساحة فعلية داخل الملف في الديسك الهارد لأن القيمة يجب أن تُحفظ.
+      </div>
+    </div>
+    <div class="elf-sec-row">
+      <div class="elf-sec-name amber">.bss</div>
+      <div class="elf-sec-desc">
+        <strong>قسم <span class="en-term">Block Started by Symbol</span>:</strong> يحتوي على المتغيرات العالمية التي لم تُعطَ قيمة ابتدائية <span class="en-term">Uninitialized</span> (مثال: <span class="code-inline">int y;</span> التي قیمتھا صفر). <strong>ميزة عبقرية:</strong> هذا القسم لا يأخذ مساحة فعلية في الديسك الهارد! بل يحتفظ فقط بمعلومة "تخبر" الكيرنل <span class="en-term">Kernel</span> بحجز مساحة فارغة من <span class="en-term">RAM</span> عند تشغيل البرنامج. القسم هذا "وهمي" في الملف.
+      </div>
+    </div>
+    <div class="elf-sec-row">
+      <div class="elf-sec-name purple">.rodata</div>
+      <div class="elf-sec-desc">
+        <strong>قسم البيانات للقراءة فقط:</strong> يحتوي على الثوابت <span class="en-term">Constants</span> مثل المتغيرات من نوع <span class="code-inline">const</span> والنصوص الحرفية المطبوعة (مثل جملة <span class="code-inline">"Hello World"</span> في دالة <span class="code-inline">printf</span>).
+      </div>
+    </div>
+  </div>
+
+  <div class="remember-box animate-in">
+    <span class="rem-icon">✅</span>
+    <div class="rem-content">
+      <strong>ماذا يجب أن تتذكر؟</strong> — المعرفة العميقة بهذه الأقسام <span class="en-term">Sections</span> تميز المهندس المحترف في عالم الأنظمة المدمجة <span class="en-term">Embedded Systems</span>، أحياناً نحتاج للتحكم الدقيق بوضع قسم <span class="en-term">.data</span> في ذاكرة <span class="en-term">RAM</span> وقسم <span class="en-term">.text</span> في ذاكرة <span class="en-term">Flash</span> وذلك بواسطة ما يسمى <span class="en-term">Linker Script</span>.
+    </div>
+  </div>
+
+  <div class="flash-review animate-in">
+    <span class="flash-icon">⚡</span>
+    <div class="flash-content">
+      مراجعة سريعة:<br>
+      ● <span class="en">.text</span>: الكود البرمجي<br>
+      ● <span class="en">.data</span>: متغيرات مُهيأة بقيمة<br>
+      ● <span class="en">.bss</span>: متغيرات غير مُهيأة (لتوفير المساحة)<br>
+      ● <span class="en">.rodata</span>: الثوابت والقراءة فقط
+    </div>
+  </div>
+
+  <div class="running-footer">
+    <span>Embedded Linux & Yocto — Lesson 8 Summary</span>
+    <span class="version">الإصدار 1.0</span>
+    <span>6</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 7: SECTION 5 — Symbols & Binutils     -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">Compilation Process</span>
+  </div>
+
+  <h2 class="section-heading animate-in" id="ch-5">
+    <span class="sec-num">5</span>
+    الرموز وأدوات الفحص <span class="en">Symbols &amp; Binutils</span>
+  </h2>
+
+  <p class="body-text">
+    المترجم يمسح كل ما هو "بشري" من الكود، ولكنه يترك أسماء الدوال والمتغيرات كعلامات تُسمى <span class="en-term">Symbols</span> ليتمكن <span class="en-term">Linker</span> من ربطها ببعضها لاحقاً.
+  </p>
+
+  <!-- 5.1 أنواع الرموز -->
+  <h3 class="subsection-heading" id="s5-1">أنواع الرموز <span class="en">Symbols</span></h3>
+
+  <div class="pro-table-wrap animate-in">
+    <table class="pro-table">
+      <thead>
+        <tr>
+          <th>نوع الرمز</th>
+          <th>الوصف</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="en-term">Defined Symbol</span> (رمز معرّف)</td>
+          <td>دالة أو متغير قمت بكتابة كودها الخاص داخل الملف نفسه (لها مكان في الذاكرة)</td>
+        </tr>
+        <tr>
+          <td><span class="en-term">Undefined Symbol</span> (رمز غير معرّف)</td>
+          <td>دالة استخدمتھا ولكن الكود الفعلي بها غير موجود في ملفك، بل في مكتبة أو ملف أخرى. <span class="en-term">Linker</span> هو المسؤول عن البحث عن هذا الرمز وجلبھ وتوصیلھ</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 5.2 أدوات Binutils -->
+  <h3 class="subsection-heading mt-lg" id="s5-2">أدوات الفحص والتحليل <span class="en">Binutils</span></h3>
+
+  <p class="body-text">
+    بما أننا لا نستطيع قراءة الملفات الثنائية بالنصوص، فقد وفر لنا مشروع <span class="en-term">GNU</span> حزمة أدوات للتحليل والفحص الهندسي:
+  </p>
+
+  <!-- Tool 1: file -->
+  <div class="callout practical animate-in">
+    <div class="callout-header">
+      <span class="icon">🚀</span>
+      <span class="en">file</span> — تحليل نوع الملف
+    </div>
+    <div class="callout-body">
+      <div class="code-block" style="margin:0.3cm 0;border:none;">
+        <div class="code-body"><span class="flag">file</span> <span class="file">my_app</span></div>
+      </div>
+      <p><strong>الوظيفة:</strong> يحلل نوع الملف المعطى ويعطيك معلوماته (هل هو <span class="en-term">ELF</span>؟ هل هو <span class="en-term">bit-64</span> أم <span class="en-term">bit-32</span>؟ مبني لأي معمارية مثل <span class="en-term">x86_64</span> أم <span class="en-term">ARM</span>؟).</p>
+    </div>
+  </div>
+
+  <!-- Tool 2: nm -->
+  <div class="callout practical animate-in">
+    <div class="callout-header">
+      <span class="icon">🚀</span>
+      <span class="en">nm</span> — عرض الرموز
+    </div>
+    <div class="callout-body">
+      <div class="code-block" style="margin:0.3cm 0;border:none;">
+        <div class="code-body"><span class="flag">nm</span> <span class="file">main.o</span></div>
+      </div>
+      <p><strong>الوظيفة:</strong> يطبع قائمة بكل الرموز <span class="en-term">Symbols</span> الموجودة في ملف <span class="en-term">Object</span> أو الملف التنفيذي، ويوضح القسم <span class="en-term">Section</span> الذي ينتسب إليه الرمز.</p>
+      <p><strong>علامات هامة في المخرجات:</strong></p>
+      <ul class="styled-list" style="margin-top:0.2cm;">
+        <li><span class="code-inline">T</span>: الرمز موجود في قسم <span class="en-term">.text</span> (غالباً دالة مكتوبة ومعروفة)</li>
+        <li><span class="code-inline">U</span>: الرمز غير معرف <span class="en-term">Undefined</span> وينتظر <span class="en-term">Linker</span> لجلب مشكلته من مكتبة أخرى بربطه</li>
+        <li><span class="code-inline">D</span>: الرمز في قسم <span class="en-term">.data</span> (متغير عالمي)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="remember-box animate-in">
+    <span class="rem-icon">✅</span>
+    <div class="rem-content">
+      <strong>ماذا يجب أن تتذكر؟</strong> — أداة <span class="en-term">nm</span> هي أسرع وأقوى وسيلة لمعرفة سبب أخطاء <span class="en-term">Linker</span> عندما تظهر لك رسالة <span class="en-term">undefined reference</span>. استخدمها للتأكد هل الرمز موجود أم مفقود داخل الملف أو المكتبة التي تقوم بربطه.
+    </div>
+  </div>
+
+  <!-- Tool 3: readelf -->
+  <div class="callout practical animate-in">
+    <div class="callout-header">
+      <span class="icon">🚀</span>
+      <span class="en">readelf</span> — قراءة هيكل ELF
+    </div>
+    <div class="callout-body">
+      <div class="code-block" style="margin:0.3cm 0;border:none;">
+        <div class="code-body"><span class="flag">readelf</span> <span class="flag">-S</span> <span class="file">main.o</span></div>
+      </div>
+      <p><strong>الوظيفة:</strong> أداة قوية جداً تقرأ وتطبع الهيكل الداخلي لملف <span class="en-term">ELF</span> بالكامل. خيار <span class="code-inline">-S</span> يعرض جميع الأقسام <span class="en-term">Sections</span> مع أحجامها ومكانها الدقيق داخل الملف.</p>
+    </div>
+  </div>
+
+  <!-- Tool 4: objdump -->
+  <div class="callout practical animate-in">
+    <div class="callout-header">
+      <span class="icon">🚀</span>
+      <span class="en">objdump</span> — التفكيك العكسي
+    </div>
+    <div class="callout-body">
+      <div class="code-block" style="margin:0.3cm 0;border:none;">
+        <div class="code-body"><span class="flag">objdump</span> <span class="flag">-d</span> <span class="file">main.o</span></div>
+      </div>
+      <p><strong>الوظيفة:</strong> أداة الهندسة العكسية <span class="en-term">Disassembler</span> تأخذ كود الآلة الثنائي <span class="en-term">Machine code</span> من قسم <span class="en-term">text</span> وتعيده إلى كود <span class="en-term">Assembly</span> لتتمكن من قراءته ومعرفة كيف تمت الترجمة الفعلية.</p>
+    </div>
+  </div>
+
+  <!-- Binutils Summary Table -->
+  <div class="pro-table-wrap animate-in mt-md">
+    <table class="pro-table">
+      <thead>
+        <tr>
+          <th>الأداة</th>
+          <th>الوظيفة</th>
+          <th>مثال الاستخدام</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="en-cell" style="font-weight:700;">file</td>
+          <td>تحليل نوع الملف والمعمارية</td>
+          <td class="en-cell"><span class="code-inline">file my_app</span></td>
+        </tr>
+        <tr>
+          <td class="en-cell" style="font-weight:700;">nm</td>
+          <td>عرض الرموز <span class="en-term">Symbols</span> وأقسامها</td>
+          <td class="en-cell"><span class="code-inline">nm main.o</span></td>
+        </tr>
+        <tr>
+          <td class="en-cell" style="font-weight:700;">readelf -S</td>
+          <td>عرض الأقسام <span class="en-term">Sections</span> الداخلية</td>
+          <td class="en-cell"><span class="code-inline">readelf -S main.o</span></td>
+        </tr>
+        <tr>
+          <td class="en-cell" style="font-weight:700;">objdump -d</td>
+          <td>التفكيك العكسي <span class="en-term">Disassembly</span></td>
+          <td class="en-cell"><span class="code-inline">objdump -d main.o</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="running-footer">
+    <span>Embedded Linux & Yocto — Lesson 8 Summary</span>
+    <span class="version">الإصدار 1.0</span>
+    <span>7</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 8: SECTION 6 — Native vs Cross        -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page page-break">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">Compilation Process</span>
+  </div>
+
+  <h2 class="section-heading animate-in" id="ch-6">
+    <span class="sec-num">6</span>
+    الفرق بين <span class="en">Native Compilation</span> و<span class="en">Cross-Compilation</span>
+  </h2>
+
+  <p class="body-text">
+    هذا المفهوم هو الذي سيرافقك طوال مسيرتك المهنية كمهندس أنظمة مدمجة، وهو سبب وجود أداة <span class="en-term">Yocto</span>.
+  </p>
+
+  <!-- 6.1 كيف نعمل في بيئة Embedded Linux؟ -->
+  <h3 class="subsection-heading" id="s6-1">كيف نعمل في بيئة <span class="en">Embedded Linux</span>؟</h3>
+
+  <!-- Native vs Cross Diagram -->
+  <div class="build-diagram animate-in">
+    <!-- Native -->
+    <div class="build-card">
+      <div class="build-card-head nat">
+        <span class="en">Native Compilation</span> — البناء المحلي
+      </div>
+      <div class="build-card-body">
+        <div class="build-box host">
+          <span class="en">Host</span> (جهازك — x86_64)
+        </div>
+        <div class="build-arr"></div>
+        <div class="build-box tool">
+          <span class="en">gcc</span> (مترجم عادي)
+        </div>
+        <div class="build-arr"></div>
+        <div class="build-box output">
+          <span class="en">Executable</span> (x86_64)
+        </div>
+      </div>
+      <div class="build-note">
+        <span class="en">Host = Target</span> — نفس المعمارية ونفس الجهاز
+      </div>
+    </div>
+    <!-- Cross -->
+    <div class="build-card">
+      <div class="build-card-head cross">
+        <span class="en">Cross-Compilation</span> — البناء المتقاطع
+      </div>
+      <div class="build-card-body">
+        <div class="build-box host">
+          <span class="en">Host</span> (جهازك — x86_64)
+        </div>
+        <div class="build-arr"></div>
+        <div class="build-box tool" style="border-color:#99f6e4;background:var(--secondary-bg);color:#0f766e;">
+          <span class="en">Cross-Compiler</span>
+        </div>
+        <div class="build-arr"></div>
+        <div class="build-box target">
+          <span class="en">Target</span> (اللوحة — ARM)
+        </div>
+        <div class="build-arr"></div>
+        <div class="build-box output" style="border-color:#99f6e4;background:var(--secondary-bg);color:#0f766e;">
+          <span class="en">Executable</span> (ARM)
+        </div>
+      </div>
+      <div class="build-note">
+        <span class="en">Host ≠ Target</span> — معمارية مختلفة تماماً
+      </div>
+    </div>
+  </div>
+
+  <!-- 6.2 لماذا نستخدم Cross-Compilation؟ -->
+  <h3 class="subsection-heading mt-lg" id="s6-2">لماذا نستخدم <span class="en">Cross-Compilation</span>؟</h3>
+
+  <p class="body-text">
+    لوحات الأنظمة المدمجة (مثل <span class="en-term">Raspberry Pi</span> أو لوحات <span class="en-term">ST</span>) تمتلك موارد جداً ضعيفة مقارنة بالحواسيب (معالج أضعف، ذاكرة أقل، مساحة تخزين محدودة).
+  </p>
+  <p class="body-text">
+    إذا حاولنا تثبيت وتشغيل أداة المترجم الضخمة وعملية البناء الطويلة على اللوحة نفسها <span class="en-term">Native Compilation</span> فقد تستغرق العملية أسابيع!
+  </p>
+  <p class="body-text">
+    لذلك، الممارسة الأفضل هي استخدام سرعة وقوة الحواسيب الشخصية أو الخوادم لعملية البناء الثقيلة، ثم نقل الناتج النهائي (<span class="en-term">Binaries / ELF files</span>) فقط إلى اللوحة لتشغيله.
+  </p>
+
+  <div class="remember-box animate-in">
+    <span class="rem-icon">✅</span>
+    <div class="rem-content">
+      <strong>ماذا يجب أن تتذكر؟</strong> — في <span class="en-term">Cross-compilation</span>، جهازك القوي يسمى <span class="en-term">Host</span> والجهاز المدمج الذي سيشغل البرنامج يسمى <span class="en-term">Target</span>. الأداة التي نستخدمها للترجمة هي أداة مخصصة لمعمارية <span class="en-term">Target</span> (مثال: استخدام <span class="code-inline">arm-linux-gnueabihf-gcc</span> بدلاً من <span class="code-inline">gcc</span> العادي).
+    </div>
+  </div>
+
+  <!-- Comparison Table: Native vs Cross -->
+  <div class="pro-table-wrap animate-in mt-md">
+    <table class="pro-table">
+      <thead>
+        <tr>
+          <th>وجه المقارنة</th>
+          <th class="en-cell">Native Compilation</th>
+          <th class="en-cell">Cross-Compilation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>مكان الترجمة</td>
+          <td>على الجهاز نفسه</td>
+          <td>على جهاز قوي مختلف عن لوحة التطوير</td>
+        </tr>
+        <tr>
+          <td>المترجم</td>
+          <td class="en-cell"><span class="code-inline">gcc</span> العادي</td>
+          <td class="en-cell"><span class="code-inline">arm-linux-gnueabihf-gcc</span></td>
+        </tr>
+        <tr>
+          <td><span class="en-term">Host</span></td>
+          <td>جهازك (مثلاً x86_64)</td>
+          <td>جهازك (مثلاً x86_64)</td>
+        </tr>
+        <tr>
+          <td><span class="en-term">Target</span></td>
+          <td>نفس الجهاز <span class="en-term">Host = Target</span></td>
+          <td>لوحة التطوير (مثلاً ARM) <span class="en-term">Host ≠ Target</span></td>
+        </tr>
+        <tr>
+          <td>السرعة</td>
+          <td>تعتمد على موارد الجهاز</td>
+          <td>سريعة جداً (تستفيد من قوة الخادم)</td>
+        </tr>
+        <tr>
+          <td>الاستخدام</td>
+          <td>تطوير برامج سطح المكتب</td>
+          <td>تطوير الأنظمة المدمجة <span class="en-term">Embedded Systems</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="running-footer">
+    <span>Embedded Linux & Yocto — Lesson 8 Summary</span>
+    <span class="version">الإصدار 1.0</span>
+    <span>8</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 9: QUICK REVIEW                        -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page page-break" id="qr">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux &amp; Yocto</span>
+    <span class="chapter-name">Quick Review</span>
+  </div>
+
+  <div class="quick-review animate-in">
+    <div class="qr-header">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+      مراجعة سريعة — <span class="en">Quick Review</span>
+    </div>
+
+    <!-- Main Concepts -->
+    <div class="qr-section">
+      <div class="qr-section-title">
+        <span class="qr-icon">📚</span>
+        المفاهيم الرئيسية
+      </div>
+      <ul class="qr-list">
+        <li>المعالج <span class="en-term">CPU</span> لا يفهم إلا لغة الآلة <span class="en-term">Machine Code</span>، لذلك نحتاج لعملية الترجمة لتحويل الكود المصدري إلى تعليمات ثنائية</li>
+        <li>أداة <span class="en-term">gcc</span> ليست مترجماً واحداً، بل هي سائق <span class="en-term">Driver</span> ينظم استدعاء 4 أدوات أصغر بالتسلسل</li>
+        <li>مراحل الترجمة الأربعة هي: <span class="en-term">Preprocessing → Compilation → Assembly → Linking</span></li>
+        <li>ملفات <span class="en-term">ELF</span> في لينكس مقسمة إلى أقسام منظمة: <span class="en-term">.text</span> و<span class="en-term">.data</span> و<span class="en-term">.bss</span> و<span class="en-term">.rodata</span></li>
+        <li>الرموز <span class="en-term">Symbols</span> هي أسماء الدوال والمتغيرات التي يتركها المترجم لاستخدامها في الربط</li>
+        <li>في الأنظمة المدمجة نستخدم <span class="en-term">Cross-Compilation</span> لأن لوحات التطوير ضعيفة الموارد</li>
+      </ul>
+    </div>
+
+    <!-- Important Definitions -->
+    <div class="qr-section">
+      <div class="qr-section-title">
+        <span class="qr-icon">📌</span>
+        تعريفات مهمة
+      </div>
+      <ul class="qr-list">
+        <li><span class="en-term">Compilation</span>: تحويل الكود المصدري إلى لغة يفهمها العتاد لتنفيذها</li>
+        <li><span class="en-term">ELF</span> <span class="en-term">(Executable and Linkable Format)</span>: التنسيق القياسي لتنظيم البيانات والكود داخل الملفات الثنائية في أنظمة لينكس</li>
+        <li><span class="en-term">Object File</span>: ملف بامتداد <span class="code-inline">.o</span> ناتج عن مرحلة التجميع، يحتوي على كود آلة لكنه غير قابل للتنفيذ بمفرده</li>
+        <li><span class="en-term">Symbol</span>: علامة باسم دالة أو متغير يتركها المترجم لاستخدامها في الربط</li>
+        <li><span class="en-term">Host</span>: الجهاز القوي الذي تتم عليه عملية الترجمة</li>
+        <li><span class="en-term">Target</span>: الجهاز المدمج الذي سيشغل البرنامج النهائي</li>
+        <li><span class="en-term">Cross-Compiler</span>: أداة ترجمة مخصصة لبناء برامج لمعمارية مختلفة عن معمارية الجهاز الذي يعمل عليه</li>
+      </ul>
+    </div>
+
+    <!-- Common Mistakes -->
+    <div class="qr-section">
+      <div class="qr-section-title">
+        <span class="qr-icon">❌</span>
+        أخطاء شائعة
+      </div>
+      <ul class="qr-list">
+        <li>الخلط بين اللغات المترجمة <span class="en-term">Compiled</span> والمفسرة <span class="en-term">Interpreted</span>: اللغات المفسرة لا تمر بمراحل الترجمة الأربعة</li>
+        <li>الاعتقاد أن <span class="en-term">gcc</span> هو المترجم الفعلي بينما هو مجرد سائق <span class="en-term">Driver</span></li>
+        <li>محاولة قراءة الملفات الثنائية <span class="en-term">.o</span> أو التنفيذية بأدوات نصية مثل <span class="code-inline">cat</span> أو <span class="code-inline">nano</span></li>
+        <li>استخدام <span class="code-inline">gcc main.c</span> مباشرة دون فهم المراحل الوسيطة والتحكم بها</li>
+        <li>خلط أخطاء <span class="en-term">Syntax Error</span> (مرحلة 2) مع أخطاء <span class="en-term">undefined reference</span> (مرحلة 4)</li>
+      </ul>
+    </div>
+
+    <!-- Interview Notes -->
+    <div class="qr-section">
+      <div class="qr-section-title">
+        <span class="qr-icon">🎯</span>
+        ملاحظات المقابلات
+      </div>
+      <ul class="qr-list">
+        <li>ما هي مراحل بناء برنامج <span class="en-term">C</span> من الكود المصدري إلى الملف التنفيذي؟</li>
+        <li>ما الفرق بين <span class="en-term">Compiler</span> و<span class="en-term">Linker</span>؟ ومتى يظهر كل خطأ؟</li>
+        <li>ما هو الفرق بين أقسام <span class="en-term">.data</span> و<span class="en-term">.bss</span> في ملف <span class="en-term">ELF</span>؟ ولماذا <span class="en-term">.bss</span> لا يأخذ مساحة في الديسك؟</li>
+        <li>ما هو <span class="en-term">Cross-Compilation</span> ولماذا هو ضروري في الأنظمة المدمجة؟</li>
+        <li>ما هي أدوات <span class="en-term">Binutils</span> وما استخدام كل منها؟</li>
+        <li>ما الفرق بين <span class="en-term">Defined Symbol</span> و<span class="en-term">Undefined Symbol</span>؟</li>
+      </ul>
+    </div>
+
+    <!-- Memory Tips -->
+    <div class="qr-section">
+      <div class="qr-section-title">
+        <span class="qr-icon">💡</span>
+        نصائح للحفظ
+      </div>
+      <ul class="qr-list">
+        <li>احفظ ترتيب المراحل بالاختصار: <strong>P-C-A-L</strong> (<span class="en-term">Preprocessor, Compiler, Assembler, Linker</span>)</li>
+        <li>احفظ امتدادات الملفات بالترتيب: <strong>.c → .i → .s → .o → (executable)</strong></li>
+        <li>احفظ أقسام <span class="en-term">ELF</span> بالجملة: "<strong>Text</strong> للكود، <strong>Data</strong> للبيانات المُهيأة، <strong>BSS</strong> للفارغة (لا تأخذ مساحة)، <strong>Rodata</strong> للقراءة فقط"</li>
+        <li>احفظ علامات <span class="en-term">nm</span>: <strong>T</strong> = Text (دالة)، <strong>U</strong> = Undefined (مفقود)، <strong>D</strong> = Data (متغير)</li>
+        <li>احفظ أوامر <span class="en-term">GCC</span>: <strong>-E</strong> = إيقاف بعد Preprocessing، <strong>-S</strong> = إيقاف بعد Compilation، <strong>-c</strong> = إيقاف بعد Assembly</li>
+      </ul>
+    </div>
+
+    <!-- Exam Tips -->
+    <div class="qr-section">
+      <div class="qr-section-title">
+        <span class="qr-icon">📝</span>
+        نصائح الامتحانات
+      </div>
+      <ul class="qr-list">
+        <li>قد يُطلب منك تحديد المرحلة التي يحدث فيها خطأ معين (<span class="en-term">Syntax Error</span> = مرحلة 2، <span class="en-term">undefined reference</span> = مرحلة 4)</li>
+        <li>قد يُطلب منك مقارنة <span class="en-term">Native</span> مقابل <span class="en-term">Cross-Compilation</span> مع ذكر <span class="en-term">Host</span> و<span class="en-term">Target</span></li>
+        <li>قد يُطلب منك شرح لماذا قسم <span class="en-term">.bss</span> لا يأخذ مساحة في الملف على القرص</li>
+        <li>قد يُطلب منك كتابة الأمر الصحيح لكل مرحلة من مراحل <span class="en-term">GCC</span></li>
+        <li>قد يُطلب منك ذكر أقسام <span class="en-term">ELF</span> الأربعة وما يحتويه كل قسم</li>
+      </ul>
+    </div>
+
+    <!-- Revision Checklist -->
+    <div class="qr-section">
+      <div class="qr-section-title">
+        <span class="qr-icon">✅</span>
+        قائمة المراجعة
+      </div>
+      <ul class="qr-list qr-checklist">
+        <li>أفهم لماذا نحتاج عملية الترجمة</li>
+        <li>أعرف الفرق بين اللغات المترجمة والمفسرة</li>
+        <li>أعرف أن <span class="en-term">gcc</span> سائق وليس مترجماً واحداً</li>
+        <li>أستطيع ذكر مراحل الترجمة الأربعة بالترتيب</li>
+        <li>أعرف الأداة المستخدمة في كل مرحلة وامتداد الملف الناتج</li>
+        <li>أستطيع استخدام <span class="code-inline">-E</span> و<span class="code-inline">-S</span> و<span class="code-inline">-c</span> للتحكم بمراحل البناء</li>
+        <li>أعرف أقسام <span class="en-term">ELF</span> الأربعة ومحتوى كل قسم</li>
+        <li>أفهم لماذا <span class="en-term">.bss</span> لا يأخذ مساحة في الملف</li>
+        <li>أستطيع استخدام <span class="en-term">file</span> و<span class="en-term">nm</span> و<span class="en-term">readelf</span> و<span class="en-term">objdump</span></li>
+        <li>أفهم الفرق بين <span class="en-term">Defined Symbol</span> و<span class="en-term">Undefined Symbol</span></li>
+        <li>أعرف الفرق بين <span class="en-term">Native Compilation</span> و<span class="en-term">Cross-Compilation</span></li>
+        <li>أفهم مفهوم <span class="en-term">Host</span> و<span class="en-term">Target</span> في البناء المتقاطع</li>
+        <li>أعرف اسم <span class="en-term">Cross-Compiler</span> لمعمارية <span class="en-term">ARM</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- End of Lesson -->
+  <div style="text-align:center;margin-top:1cm;padding:0.5cm;background:var(--primary-bg);border-radius:12px;border:1.5px solid #bfdbfe;">
+    <div style="font-size:11pt;color:var(--primary);font-weight:700;">— نهاية ملخص الدرس الثامن —</div>
+    <div style="font-size:10pt;color:var(--text-muted);margin-top:4px;" class="en">Embedded Linux & Yocto — Compilation Process — GNU Toolchain (Part 1)</div>
+  </div>
+
+  <div class="running-footer">
+    <span>Embedded Linux & Yocto — Lesson 8 Summary</span>
+    <span class="version">الإصدار 1.0</span>
+    <span>9</span>
+  </div>
+</div>
+
+</body>
+</html>

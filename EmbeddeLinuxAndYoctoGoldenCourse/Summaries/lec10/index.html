@@ -1,0 +1,2065 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embedded Linux & Yocto — الدرس العاشر: Compilation Process (Part 3)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @page {
+    size: A4;
+    margin: 2cm;
+  }
+
+  :root {
+    --primary: #0F4C81;
+    --primary-light: #1a6bb5;
+    --primary-pale: #e8f0fa;
+    --secondary: #14B8A6;
+    --secondary-light: #2dd4bf;
+    --secondary-pale: #e6f7f5;
+    --accent: #F59E0B;
+    --accent-pale: #fef3c7;
+    --success: #16A34A;
+    --success-pale: #dcfce7;
+    --warning: #EA580C;
+    --warning-pale: #fff7ed;
+    --danger: #DC2626;
+    --danger-pale: #fef2f2;
+    --bg: #F8FAFC;
+    --white: #FFFFFF;
+    --text: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --border: #e2e8f0;
+    --code-bg: #1e293b;
+    --purple: #7c3aed;
+    --purple-pale: #f5f3ff;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: 'IBM Plex Sans Arabic', 'Cairo', 'Noto Sans Arabic', sans-serif;
+    font-size: 12.5pt;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+    direction: rtl;
+    text-align: justify;
+  }
+
+  /* ─── Page Container ─── */
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    background: var(--white);
+    padding: 2cm;
+    position: relative;
+    box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+    margin-bottom: 2px;
+  }
+
+  /* ─── Running Header ─── */
+  .running-header {
+    position: absolute;
+    top: 0;
+    right: 2cm;
+    left: 2cm;
+    height: 1.2cm;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1.5px solid var(--primary);
+    padding: 0 0.3cm;
+    font-size: 8.5pt;
+    color: var(--primary);
+    font-weight: 600;
+    direction: rtl;
+  }
+  .running-header .course-name {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+  }
+  .running-header .chapter-name {
+    font-weight: 500;
+  }
+
+  /* ─── Running Footer ─── */
+  .running-footer {
+    position: absolute;
+    bottom: 0;
+    right: 2cm;
+    left: 2cm;
+    height: 1cm;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 0.75px solid var(--border);
+    padding: 0 0.3cm;
+    font-size: 8pt;
+    color: var(--text-muted);
+    direction: rtl;
+  }
+  .running-footer .version {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+  }
+  .running-footer .page-num {
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    direction: ltr;
+    unicode-bidi: embed;
+  }
+
+  /* ─── Content Area ─── */
+  .content-area {
+    padding-top: 1.5cm;
+    padding-bottom: 1.2cm;
+  }
+
+  /* ─── TABLE OF CONTENTS ─── */
+  .toc-page {
+    padding-top: 2cm;
+  }
+  .toc-title {
+    font-size: 24pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.6cm;
+    text-align: right;
+  }
+  .toc-divider {
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary));
+    border-radius: 2px;
+    margin-bottom: 1.2cm;
+  }
+  .toc-list {
+    list-style: none;
+    padding: 0;
+  }
+  .toc-item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0.35cm 0;
+    border-bottom: 1px dotted var(--border);
+    text-decoration: none;
+    color: var(--text);
+    transition: color 0.2s;
+    cursor: pointer;
+  }
+  .toc-item:hover {
+    color: var(--primary);
+  }
+  .toc-item.level-1 {
+    font-weight: 700;
+    font-size: 12.5pt;
+    padding-right: 0;
+  }
+  .toc-item.level-2 {
+    font-weight: 500;
+    font-size: 11.5pt;
+    padding-right: 1cm;
+    color: var(--text-secondary);
+  }
+  .toc-item.level-3 {
+    font-weight: 400;
+    font-size: 10.5pt;
+    padding-right: 2cm;
+    color: var(--text-muted);
+  }
+  .toc-item .toc-num {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+    color: var(--primary);
+    margin-left: 0.5cm;
+    font-weight: 600;
+    min-width: 2cm;
+    text-align: left;
+  }
+  .toc-item.level-2 .toc-num,
+  .toc-item.level-3 .toc-num {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  /* ─── CHAPTER OPENING ─── */
+  .chapter-opening {
+    text-align: right;
+    padding-top: 0.5cm;
+    margin-bottom: 1cm;
+  }
+  .chapter-number {
+    font-family: 'Inter', sans-serif;
+    font-size: 14pt;
+    font-weight: 700;
+    color: var(--secondary);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    direction: ltr;
+    unicode-bidi: embed;
+    margin-bottom: 0.3cm;
+  }
+  .chapter-icon-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6cm;
+    margin-bottom: 0.4cm;
+  }
+  .chapter-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(15,76,129,0.25);
+  }
+  .chapter-icon svg {
+    width: 30px;
+    height: 30px;
+    fill: var(--white);
+  }
+  .chapter-title {
+    font-size: 24pt;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1.3;
+  }
+  .chapter-subtitle {
+    font-size: 13pt;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-top: 0.2cm;
+  }
+  .chapter-divider {
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary), var(--secondary), transparent);
+    border-radius: 2px;
+    margin: 0.6cm 0;
+  }
+  .chapter-intro {
+    font-size: 12pt;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    background: var(--primary-pale);
+    border-right: 4px solid var(--primary);
+    padding: 0.5cm 0.7cm;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 0.8cm;
+  }
+  .chapter-intro .instructor {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3cm;
+    font-weight: 600;
+    color: var(--primary);
+  }
+  .chapter-intro .instructor svg {
+    width: 18px;
+    height: 18px;
+    fill: var(--primary);
+  }
+
+  /* ─── ANIMATED CHAPTER OVERVIEW ─── */
+  .chapter-overview {
+    background: linear-gradient(135deg, #f0f4f8 0%, #e8f0fa 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.7cm;
+    margin-bottom: 1cm;
+    position: relative;
+    overflow: hidden;
+  }
+  .chapter-overview::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 6px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--primary), var(--secondary));
+    border-radius: 0 12px 12px 0;
+  }
+  .overview-title {
+    font-size: 13pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.5cm;
+    display: flex;
+    align-items: center;
+    gap: 0.4cm;
+  }
+  .overview-title svg {
+    width: 22px;
+    height: 22px;
+    fill: var(--primary);
+  }
+  .overview-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35cm;
+    position: relative;
+  }
+  .overview-step {
+    display: flex;
+    align-items: center;
+    gap: 0.5cm;
+    padding: 0.35cm 0.5cm;
+    background: var(--white);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .overview-step:hover {
+    transform: translateX(-3px);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  }
+  .step-num {
+    width: 30px;
+    height: 30px;
+    background: var(--primary);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 12pt;
+    font-weight: 700;
+    flex-shrink: 0;
+    direction: ltr;
+  }
+  .step-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--primary-pale);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+  .step-content {
+    flex: 1;
+  }
+  .step-label {
+    font-size: 11pt;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .step-desc {
+    font-size: 9.5pt;
+    color: var(--text-muted);
+    margin-top: 1px;
+  }
+  .step-en {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+    color: var(--secondary);
+    font-weight: 600;
+    font-size: 9.5pt;
+  }
+  .flow-arrow {
+    text-align: center;
+    color: var(--primary);
+    font-size: 16pt;
+    line-height: 1;
+    margin: -0.1cm 0;
+    padding-right: 0.8cm;
+  }
+
+  /* ─── SECTION HEADINGS ─── */
+  .section-number {
+    font-family: 'Inter', sans-serif;
+    font-size: 11pt;
+    font-weight: 700;
+    color: var(--secondary);
+    direction: ltr;
+    unicode-bidi: embed;
+    display: inline-block;
+    margin-bottom: 0.15cm;
+  }
+  .section-title {
+    font-size: 20pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-top: 0.8cm;
+    margin-bottom: 0.4cm;
+    line-height: 1.4;
+  }
+  .section-divider {
+    width: 50px;
+    height: 3px;
+    background: var(--secondary);
+    border-radius: 2px;
+    margin-bottom: 0.5cm;
+  }
+  .subsection-title {
+    font-size: 17pt;
+    font-weight: 700;
+    color: var(--primary-light);
+    margin-top: 0.6cm;
+    margin-bottom: 0.3cm;
+    line-height: 1.4;
+  }
+  .sub-subsection-title {
+    font-size: 14pt;
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 0.4cm;
+    margin-bottom: 0.2cm;
+    line-height: 1.4;
+  }
+
+  /* ─── PARAGRAPHS ─── */
+  p {
+    margin-bottom: 0.35cm;
+    text-align: justify;
+  }
+
+  /* ─── INLINE CODE ─── */
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    background: #f1f5f9;
+    color: var(--primary);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10.5pt;
+    direction: ltr;
+    unicode-bidi: embed;
+    border: 1px solid var(--border);
+  }
+
+  /* ─── CALLOUT BOXES ─── */
+  .callout {
+    border-radius: 10px;
+    padding: 0.45cm 0.6cm;
+    margin: 0.4cm 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .callout-header {
+    display: flex;
+    align-items: center;
+    gap: 0.35cm;
+    margin-bottom: 0.25cm;
+    font-weight: 700;
+    font-size: 11.5pt;
+  }
+  .callout-header .callout-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14pt;
+    flex-shrink: 0;
+  }
+  .callout-body {
+    font-size: 11.5pt;
+    line-height: 1.7;
+    padding-right: 0.2cm;
+  }
+
+  /* Blue - Concept */
+  .callout-concept {
+    background: var(--primary-pale);
+    border: 1px solid #bfdbfe;
+    border-right: 4px solid var(--primary);
+  }
+  .callout-concept .callout-header { color: var(--primary); }
+  .callout-concept .callout-icon { background: var(--primary); color: var(--white); }
+
+  /* Green - Key Takeaway */
+  .callout-takeaway {
+    background: var(--success-pale);
+    border: 1px solid #bbf7d0;
+    border-right: 4px solid var(--success);
+  }
+  .callout-takeaway .callout-header { color: var(--success); }
+  .callout-takeaway .callout-icon { background: var(--success); color: var(--white); }
+
+  /* Orange - Tip */
+  .callout-tip {
+    background: var(--accent-pale);
+    border: 1px solid #fde68a;
+    border-right: 4px solid var(--accent);
+  }
+  .callout-tip .callout-header { color: #b45309; }
+  .callout-tip .callout-icon { background: var(--accent); color: var(--white); }
+
+  /* Red - Important */
+  .callout-important {
+    background: var(--danger-pale);
+    border: 1px solid #fecaca;
+    border-right: 4px solid var(--danger);
+  }
+  .callout-important .callout-header { color: var(--danger); }
+  .callout-important .callout-icon { background: var(--danger); color: var(--white); }
+
+  /* Gray - Definition */
+  .callout-definition {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-right: 4px solid #64748b;
+  }
+  .callout-definition .callout-header { color: #475569; }
+  .callout-definition .callout-icon { background: #64748b; color: var(--white); }
+
+  /* Purple - Deep Understanding */
+  .callout-deep {
+    background: var(--purple-pale);
+    border: 1px solid #ddd6fe;
+    border-right: 4px solid var(--purple);
+  }
+  .callout-deep .callout-header { color: var(--purple); }
+  .callout-deep .callout-icon { background: var(--purple); color: var(--white); }
+
+  /* Dark - Practical Example */
+  .callout-practical {
+    background: var(--code-bg);
+    border: 1px solid #334155;
+    border-right: 4px solid var(--secondary);
+  }
+  .callout-practical .callout-header { color: var(--secondary); }
+  .callout-practical .callout-icon { background: var(--secondary); color: var(--white); }
+  .callout-practical .callout-body { color: #e2e8f0; }
+
+  /* ─── CODE BLOCKS ─── */
+  .code-block {
+    background: var(--code-bg);
+    border-radius: 10px;
+    margin: 0.4cm 0;
+    overflow: hidden;
+    direction: ltr;
+    text-align: left;
+    border: 1px solid #334155;
+  }
+  .code-header {
+    background: #0f172a;
+    padding: 0.25cm 0.5cm;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #334155;
+  }
+  .code-lang {
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    color: var(--secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .code-dots {
+    display: flex;
+    gap: 6px;
+  }
+  .code-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .code-dots span:nth-child(1) { background: #ef4444; }
+  .code-dots span:nth-child(2) { background: #f59e0b; }
+  .code-dots span:nth-child(3) { background: #22c55e; }
+  .code-body {
+    padding: 0.4cm 0.5cm;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10pt;
+    line-height: 1.8;
+    color: #e2e8f0;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .code-body .kw { color: #c084fc; }
+  .code-body .fn { color: #60a5fa; }
+  .code-body .str { color: #34d399; }
+  .code-body .cm { color: #64748b; font-style: italic; }
+  .code-body .num { color: #fbbf24; }
+  .code-body .opt { color: #f97316; }
+  .code-body .file { color: #38bdf8; }
+
+  /* ─── TABLES ─── */
+  .table-wrapper {
+    margin: 0.5cm 0;
+    overflow-x: auto;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11pt;
+  }
+  thead th {
+    background: var(--primary);
+    color: var(--white);
+    padding: 0.35cm 0.5cm;
+    font-weight: 600;
+    font-size: 11pt;
+    text-align: right;
+    white-space: nowrap;
+  }
+  thead th:first-child {
+    border-radius: 0 9px 0 0;
+  }
+  thead th:last-child {
+    border-radius: 9px 0 0 0;
+  }
+  tbody td {
+    padding: 0.3cm 0.5cm;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    text-align: right;
+  }
+  tbody tr:nth-child(even) {
+    background: #f8fafc;
+  }
+  tbody tr:nth-child(odd) {
+    background: var(--white);
+  }
+  tbody tr:last-child td:first-child {
+    border-radius: 0 0 9px 0;
+  }
+  tbody tr:last-child td:last-child {
+    border-radius: 0 0 0 9px;
+  }
+  td.en-cell {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+    text-align: left;
+  }
+  td.num-cell {
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+  }
+
+  /* ─── LISTS ─── */
+  ul, ol {
+    padding-right: 1cm;
+    margin: 0.25cm 0 0.4cm 0;
+  }
+  li {
+    margin-bottom: 0.15cm;
+  }
+  ul li::marker {
+    color: var(--secondary);
+  }
+  ol li::marker {
+    color: var(--primary);
+    font-weight: 600;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* ─── DIAGRAMS ─── */
+  .diagram-container {
+    margin: 0.5cm 0;
+    padding: 0.5cm;
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    direction: ltr;
+    text-align: center;
+  }
+  .diagram-title {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    direction: rtl;
+    text-align: right;
+    font-size: 11pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.4cm;
+    padding-bottom: 0.2cm;
+    border-bottom: 2px solid var(--primary-pale);
+  }
+  .arch-layer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3cm 0.8cm;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 11pt;
+    margin: 0 auto;
+    position: relative;
+  }
+  .arch-arrow {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 18pt;
+    line-height: 1;
+    margin: 2px 0;
+  }
+  .arch-layer.app { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; width: 85%; }
+  .arch-layer.syscall { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; width: 70%; }
+  .arch-layer.kernel { background: #dcfce7; color: #166534; border: 1px solid #86efac; width: 85%; }
+  .arch-layer.hw { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; width: 85%; }
+  .arch-layer.loader-layer { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; width: 75%; }
+  .arch-layer.lib { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; width: 75%; }
+  .arch-layer.exe { background: #fce7f3; color: #9d174d; border: 1px solid #f9a8d4; width: 75%; }
+
+  /* Flow diagram */
+  .flow-horizontal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3cm;
+    flex-wrap: nowrap;
+    direction: ltr;
+  }
+  .flow-box {
+    padding: 0.25cm 0.5cm;
+    border-radius: 8px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 10pt;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .flow-arrow-h {
+    color: var(--primary);
+    font-size: 16pt;
+    flex-shrink: 0;
+  }
+
+  /* ─── COMPARISON TABLE SPECIAL ─── */
+  .comparison-table thead th {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  }
+
+  /* ─── QUICK REVIEW ─── */
+  .quick-review {
+    background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+    border: 2px solid var(--success);
+    border-radius: 12px;
+    padding: 0.6cm;
+    margin-top: 0.8cm;
+    position: relative;
+  }
+  .quick-review-title {
+    font-size: 18pt;
+    font-weight: 700;
+    color: var(--success);
+    margin-bottom: 0.4cm;
+    display: flex;
+    align-items: center;
+    gap: 0.4cm;
+  }
+  .quick-review-title svg {
+    width: 26px;
+    height: 26px;
+    fill: var(--success);
+  }
+  .qr-section {
+    margin-bottom: 0.4cm;
+  }
+  .qr-section-title {
+    font-size: 13pt;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 0.2cm;
+    display: flex;
+    align-items: center;
+    gap: 0.3cm;
+  }
+  .qr-section-title svg {
+    width: 18px;
+    height: 18px;
+    fill: var(--primary);
+  }
+  .qr-list {
+    list-style: none;
+    padding: 0;
+  }
+  .qr-list li {
+    padding: 0.15cm 0;
+    padding-right: 0.6cm;
+    position: relative;
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+  .qr-list li::before {
+    content: '✦';
+    position: absolute;
+    right: 0;
+    color: var(--secondary);
+    font-size: 10pt;
+  }
+  .checklist {
+    list-style: none;
+    padding: 0;
+  }
+  .checklist li {
+    padding: 0.15cm 0;
+    padding-right: 1.2cm;
+    position: relative;
+    font-size: 11pt;
+    line-height: 1.6;
+  }
+  .checklist li::before {
+    content: '☐';
+    position: absolute;
+    right: 0;
+    font-size: 14pt;
+    color: var(--primary);
+    line-height: 1.4;
+  }
+
+  /* ─── WARNING STRIP ─── */
+  .warning-strip {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.4cm;
+    background: var(--warning-pale);
+    border: 1px solid #fed7aa;
+    border-right: 4px solid var(--warning);
+    border-radius: 8px;
+    padding: 0.35cm 0.5cm;
+    margin: 0.4cm 0;
+  }
+  .warning-strip .ws-icon {
+    font-size: 18pt;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .warning-strip .ws-body {
+    font-size: 11pt;
+    line-height: 1.7;
+  }
+
+  /* ─── BULLET STYLE ENHANCED ─── */
+  .enhanced-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.3cm 0;
+  }
+  .enhanced-list li {
+    padding: 0.2cm 0.5cm 0.2cm 0;
+    border-right: 3px solid var(--secondary);
+    background: var(--secondary-pale);
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 0.15cm;
+    font-size: 11.5pt;
+    transition: background 0.2s;
+  }
+  .enhanced-list li:hover {
+    background: #d5f5f0;
+  }
+  .enhanced-list li strong {
+    color: var(--primary);
+  }
+
+  /* ─── REMEMBER BOX ─── */
+  .remember-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5cm;
+    background: linear-gradient(135deg, #eff6ff, #e0f2fe);
+    border: 1px solid #93c5fd;
+    border-radius: 10px;
+    padding: 0.4cm 0.6cm;
+    margin: 0.4cm 0;
+  }
+  .remember-box .rb-icon {
+    font-size: 24pt;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .remember-box .rb-body {
+    flex: 1;
+  }
+  .remember-box .rb-title {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 12pt;
+    margin-bottom: 0.15cm;
+  }
+  .remember-box .rb-content {
+    font-size: 11pt;
+    line-height: 1.7;
+  }
+
+  /* ─── TIMELINE ─── */
+  .timeline {
+    position: relative;
+    padding-right: 1.5cm;
+    margin: 0.4cm 0;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    right: 0.5cm;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, var(--primary), var(--secondary));
+    border-radius: 2px;
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 0.35cm;
+    padding: 0.25cm 0.5cm;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    right: -1.15cm;
+    top: 0.45cm;
+    width: 12px;
+    height: 12px;
+    background: var(--primary);
+    border: 3px solid var(--white);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--primary);
+  }
+  .timeline-label {
+    font-family: 'Inter', sans-serif;
+    font-size: 9pt;
+    color: var(--secondary);
+    font-weight: 700;
+    direction: ltr;
+    unicode-bidi: embed;
+    text-transform: uppercase;
+  }
+  .timeline-text {
+    font-size: 11pt;
+    color: var(--text);
+    margin-top: 2px;
+  }
+
+  /* ─── PROCESS FLOW VERTICAL ─── */
+  .process-flow {
+    margin: 0.4cm 0;
+  }
+  .process-step {
+    display: flex;
+    align-items: stretch;
+    gap: 0.4cm;
+    margin-bottom: 0;
+  }
+  .process-step-num {
+    width: 36px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .process-step-num .psn-circle {
+    width: 36px;
+    height: 36px;
+    background: var(--primary);
+    color: var(--white);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 13pt;
+    flex-shrink: 0;
+  }
+  .process-step-num .psn-line {
+    flex: 1;
+    width: 2px;
+    background: var(--border);
+    margin-top: 4px;
+  }
+  .process-step:last-child .psn-line {
+    display: none;
+  }
+  .process-step-content {
+    flex: 1;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.3cm 0.5cm;
+    margin-bottom: 0.2cm;
+  }
+  .process-step-title {
+    font-weight: 700;
+    font-size: 11.5pt;
+    color: var(--primary);
+  }
+  .process-step-desc {
+    font-size: 11pt;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    line-height: 1.6;
+  }
+
+  /* ─── PAGE BREAK ─── */
+  .page-break {
+    page-break-before: always;
+    break-before: page;
+  }
+
+  /* ─── PRINT STYLES ─── */
+  @media print {
+    body { background: none; }
+    .page {
+      box-shadow: none;
+      margin: 0;
+      page-break-after: always;
+    }
+    .overview-step:hover {
+      transform: none;
+      box-shadow: none;
+    }
+    .enhanced-list li:hover {
+      background: var(--secondary-pale);
+    }
+  }
+
+  /* ─── EN TERM INLINE ─── */
+  .en {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .en-muted {
+    font-family: 'Inter', sans-serif;
+    direction: ltr;
+    unicode-bidi: embed;
+    color: var(--text-muted);
+    font-size: 10.5pt;
+  }
+
+  /* ─── DOUBLE ARROW SEPARATOR ─── */
+  .section-sep {
+    text-align: center;
+    color: var(--border);
+    font-size: 14pt;
+    margin: 0.6cm 0;
+    letter-spacing: 8px;
+  }
+
+  /* ─── ARCHITECTURE DIAGRAM ADVANCED ─── */
+  .arch-diagram-rtl {
+    direction: rtl;
+    text-align: center;
+  }
+  .arch-diagram-rtl .arch-layer {
+    margin: 0 auto;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 1: TABLE OF CONTENTS                   -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">ملخص الدرس العاشر</span>
+  </div>
+  <div class="running-footer">
+    <span class="version">v1.0 — TechLeef</span>
+    <span class="page-num">1</span>
+  </div>
+  <div class="content-area toc-page">
+    <div class="toc-title">فهرس المحتويات</div>
+    <div class="toc-divider"></div>
+    <ul class="toc-list">
+      <li class="toc-item level-1" onclick="scrollToId('ch1')">
+        <span>الدرس العاشر: Compilation Process — Linker/Loader (الجزء الثالث)</span>
+        <span class="toc-num">1</span>
+      </li>
+      <li class="toc-item level-2" onclick="scrollToId('s1')">
+        <span>مراجعة سريعة لبناء ELF</span>
+        <span class="toc-num">1</span>
+      </li>
+      <li class="toc-item level-2" onclick="scrollToId('s2')">
+        <span>ELF — الملفات من النوع الثالث (Shared Object)</span>
+        <span class="toc-num">2</span>
+      </li>
+      <li class="toc-item level-2" onclick="scrollToId('s3')">
+        <span>التفصيل المعماري: كيف يعمل اللينكر (Linker — ld)؟</span>
+        <span class="toc-num">2</span>
+      </li>
+      <li class="toc-item level-3" onclick="scrollToId('s3-1')">
+        <span>Section Merging — دمج الأقسام</span>
+        <span class="toc-num">2</span>
+      </li>
+      <li class="toc-item level-3" onclick="scrollToId('s3-2')">
+        <span>Address Binding — تحديد العناوين</span>
+        <span class="toc-num">3</span>
+      </li>
+      <li class="toc-item level-3" onclick="scrollToId('s3-3')">
+        <span>Symbol Resolution — حل الرموز</span>
+        <span class="toc-num">3</span>
+      </li>
+      <li class="toc-item level-2" onclick="scrollToId('s4')">
+        <span>المعركة الكبرى: الثابت الربط (Static) مقابل الدینامیكي (Dynamic)</span>
+        <span class="toc-num">3</span>
+      </li>
+      <li class="toc-item level-3" onclick="scrollToId('s4-1')">
+        <span>Static Linking — الثابت الربط</span>
+        <span class="toc-num">3</span>
+      </li>
+      <li class="toc-item level-3" onclick="scrollToId('s4-2')">
+        <span>Dynamic Linking — الدینامیكي الربط</span>
+        <span class="toc-num">4</span>
+      </li>
+      <li class="toc-item level-2" onclick="scrollToId('s5')">
+        <span>اللودر (The Loader / Dynamic Linker)</span>
+        <span class="toc-num">5</span>
+      </li>
+      <li class="toc-item level-3" onclick="scrollToId('s5-1')">
+        <span>كيف يعمل اللودر؟</span>
+        <span class="toc-num">5</span>
+      </li>
+      <li class="toc-item level-2" onclick="scrollToId('s6')">
+        <span>فلسفة وبيداغوجيا TechLeef</span>
+        <span class="toc-num">6</span>
+      </li>
+      <li class="toc-item level-2" onclick="scrollToId('qr')">
+        <span>مراجعة سريعة (Quick Review)</span>
+        <span class="toc-num">7</span>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 2: CHAPTER OPENING + OVERVIEW          -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page" id="ch1">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">Compilation Process — Part 3</span>
+  </div>
+  <div class="running-footer">
+    <span class="version">v1.0 — TechLeef</span>
+    <span class="page-num">2</span>
+  </div>
+  <div class="content-area">
+    <div class="chapter-opening">
+      <div class="chapter-number">LESSON 10 — PART 3</div>
+      <div class="chapter-icon-row">
+        <div class="chapter-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        </div>
+        <div>
+          <div class="chapter-title">Compilation Process — Linker/Loader</div>
+          <div class="chapter-subtitle">التعمق في مرحلة الربط (Linking) والفرق الجوهري بين اللینكر (Linker) واللودر (Loader/Dynamic)، وفلسفة وفهم Static vs Dynamic Linking</div>
+        </div>
+      </div>
+      <div class="chapter-divider"></div>
+      <div class="chapter-intro">
+        <div class="instructor">
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          المدرب: سالم بالحاج طلال <span class="en-muted">(Embedded Linux Architect)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── ANIMATED CHAPTER OVERVIEW ─── -->
+    <div class="chapter-overview">
+      <div class="overview-title">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        خريطة الدرس — Learning Roadmap
+      </div>
+      <div class="overview-flow">
+        <div class="overview-step">
+          <div class="step-num">1</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="var(--primary)"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-label">مراجعة سريعة لبناء <span class="step-en">ELF</span></div>
+            <div class="step-desc">الأربع مراحل: Preprocessing → Compilation → Assembly → Linking</div>
+          </div>
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="overview-step">
+          <div class="step-num">2</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="var(--secondary)"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-1 9h-4v4h-2v-4H9V9h4V5h2v4h4v2z"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-label">النوع الثالث من <span class="step-en">ELF</span>: <span class="step-en">Shared Object</span></div>
+            <div class="step-desc">ملفات .so — مكتبات مشتركة تُحمَّل في الذاكرة وقت التشغيل</div>
+          </div>
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="overview-step">
+          <div class="step-num">3</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="var(--primary)"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-label">كيف يعمل اللینكر <span class="step-en">(Linker — ld)</span> معماريًا؟</div>
+            <div class="step-desc">Section Merging → Address Binding → Symbol Resolution</div>
+          </div>
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="overview-step">
+          <div class="step-num">4</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="var(--warning)"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-label">المعركة الكبرى: <span class="step-en">Static vs Dynamic Linking</span></div>
+            <div class="step-desc">مقارنة معمارية بين النهجين وتأثيرهما على الأنظمة المدمجة</div>
+          </div>
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="overview-step">
+          <div class="step-num">5</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="var(--success)"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-label">اللودر <span class="step-en">(The Loader / Dynamic Linker)</span></div>
+            <div class="step-desc">البطل الخفي الذي يُنجز الربط الفعلي وقت التشغيل على اللوحة المدمجة</div>
+          </div>
+        </div>
+        <div class="flow-arrow">▼</div>
+        <div class="overview-step">
+          <div class="step-num">6</div>
+          <div class="step-icon">
+            <svg viewBox="0 0 24 24" fill="var(--purple)"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-label">فلسفة وبيداغوجيا <span class="step-en">TechLeef</span></div>
+            <div class="step-desc">لماذا الفهم العميق يمكّنك بينما التطبيق الأعمى يُعيقك</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 3: SECTION 1 — ELF REVIEW              -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">Compilation Process — Part 3</span>
+  </div>
+  <div class="running-footer">
+    <span class="version">v1.0 — TechLeef</span>
+    <span class="page-num">3</span>
+  </div>
+  <div class="content-area" id="s1">
+    <div class="section-number">SECTION 10.1</div>
+    <div class="section-title">مراجعة سريعة لبناء ELF</div>
+    <div class="section-divider"></div>
+
+    <p>بدأ الدرس بتذكير شامل بالمراحل الأربعة:</p>
+
+    <div class="code-block">
+      <div class="code-header">
+        <div class="code-dots"><span></span><span></span><span></span></div>
+        <div class="code-lang">Build Pipeline</div>
+      </div>
+      <div class="code-body"><span class="cm">// المرحلة 1: المعالجة المسبقة</span>
+<span class="file">source.c</span>  <span class="opt">-E</span>→  <span class="file">source.i</span>
+
+<span class="cm">// المرحلة 2: الترجمة</span>
+<span class="file">source.i</span>  <span class="opt">-S</span>→  <span class="file">source.s</span>
+
+<span class="cm">// المرحلة 3: التجميع</span>
+<span class="file">source.s</span>  <span class="opt">-c</span>→  <span class="file">source.o</span>
+
+<span class="cm">// المرحلة 4: الربط</span>
+<span class="file">source.o</span>  <span class="opt">ld</span>→  <span class="file">executable</span></div>
+    </div>
+
+    <div class="diagram-container">
+      <div class="diagram-title">مراحل البناء الكاملة — Compilation Pipeline</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div class="flow-box" style="background:#dbeafe;color:#1e40af;border:1px solid #93c5fd;min-width:180px;">Source Code <span class="en-muted">(.c)</span></div>
+        <div class="arch-arrow">▼</div>
+        <div class="flow-box" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;min-width:180px;">Preprocessor <span class="en-muted">(-E → .i)</span></div>
+        <div class="arch-arrow">▼</div>
+        <div class="flow-box" style="background:#dcfce7;color:#166534;border:1px solid #86efac;min-width:180px;">Compiler <span class="en-muted">(-S → .s)</span></div>
+        <div class="arch-arrow">▼</div>
+        <div class="flow-box" style="background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;min-width:180px;">Assembler <span class="en-muted">(-c → .o)</span></div>
+        <div class="arch-arrow">▼</div>
+        <div class="flow-box" style="background:#fce7f3;color:#9d174d;border:1px solid #f9a8d4;min-width:180px;font-weight:700;">Linker <span class="en-muted">(ld → Executable)</span></div>
+      </div>
+    </div>
+
+    <p>الآن عرفنا أنواع ملفات ELF التي:</p>
+
+    <ul class="enhanced-list">
+      <li><strong>النوع الأول — <span class="en">Relocatable</span>:</strong> ملفات <code>.o</code> قابلة للدمج لكنها غير قابلة للتشغيل مباشرة لأنها تحتوي على رموز غير معرفة <span class="en">(Undefined Symbols)</span> وعناوين ناقصة.</li>
+      <li><strong>النوع الثاني — <span class="en">Executable</span>:</strong> الملف النهائي القابل للتشغيل مباشرة.</li>
+    </ul>
+
+    <div class="callout callout-concept">
+      <div class="callout-header">
+        <div class="callout-icon">📘</div>
+        أنواع ELF المعروفة
+      </div>
+      <div class="callout-body">
+        معيار ELF يمتلك 4 أنواع، لكن في هذا الدرس تم الكشف عن النوع الثالث الأساسي من ملفات ELF (مع التنويه بأن النوع الرابع غالبا Core Dump — كأنظمة مهدرة — وجهلها كمهندس لن يعيقك ويقع خارج نطاق الدورة).
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 2: SHARED OBJECT ─── -->
+  <div id="s2">
+    <div class="section-number">SECTION 10.2</div>
+    <div class="section-title">ELF — الملفات من النوع الثالث (Shared Object)</div>
+    <div class="section-divider"></div>
+
+    <div class="callout callout-definition">
+      <div class="callout-header">
+        <div class="callout-icon">📌</div>
+        ما هو النوع الثالث؟
+      </div>
+      <div class="callout-body">
+        <p><strong>الاسم:</strong> ملف الكائن المشترك <span class="en">(Shared Object / Shared Library)</span></p>
+        <p><strong>الامتداد:</strong> <code>.so</code> (في لينكس) ويقابله <code>.dll</code> في ویندوز.</p>
+        <p><strong>الوظيفة:</strong> ملف ELF يحتوي على كود برمجي مجمع ومبني (مثل دالة printf داخل مكتبة C) ومصمم ليتم تحميله في الذاكرة ليتم استخدامه قبل عدة برامج في نفس الوقت <span class="en">(Runtime)</span>.</p>
+      </div>
+    </div>
+
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>الوصف</th>
+            <th>المقابل</th>
+            <th>القيمة</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>اسم النوع</td>
+            <td class="en-cell">Shared Object / Shared Library</td>
+            <td class="num-cell">—</td>
+          </tr>
+          <tr>
+            <td>امتداد الملف في لينكس</td>
+            <td class="en-cell">.so</td>
+            <td class="num-cell">—</td>
+          </tr>
+          <tr>
+            <td>المقابل في ویندوز</td>
+            <td class="en-cell">.dll</td>
+            <td class="num-cell">—</td>
+          </tr>
+          <tr>
+            <td>المحتوى</td>
+            <td>كود برمجي مجمع ومبني (مثل دالة <code>printf</code> داخل مكتبة C)</td>
+            <td class="num-cell">—</td>
+          </tr>
+          <tr>
+            <td>طريقة الاستخدام</td>
+            <td>يُحمَّل في الذاكرة ويُستخدم قبل عدة برامج في نفس الوقت</td>
+            <td class="en-cell">Runtime</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 4: SECTION 3 — LINKER ARCHITECTURE     -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">Compilation Process — Part 3</span>
+  </div>
+  <div class="running-footer">
+    <span class="version">v1.0 — TechLeef</span>
+    <span class="page-num">4</span>
+  </div>
+  <div class="content-area" id="s3">
+    <div class="section-number">SECTION 10.3</div>
+    <div class="section-title">التفصيل المعماري: كيف يعمل اللينكر (Linker — ld)؟</div>
+    <div class="section-divider"></div>
+
+    <p>سابقا عرفنا أن اللينكر يحل مشكلة الرموز المفقودة، لكن كيف يفعل ذلك هندسيًا؟</p>
+
+    <div class="process-flow">
+      <div class="process-step" id="s3-1">
+        <div class="process-step-num">
+          <div class="psn-circle">1</div>
+          <div class="psn-line"></div>
+        </div>
+        <div class="process-step-content">
+          <div class="process-step-title">Section Merging — دمج الأقسام</div>
+          <div class="process-step-desc">اللينكر يأخذ عدة ملفات <code>.o</code> ويفتح كل ملف ويجمع كل أقسام (text) مع بعضها، ويقوم بنفس الشيء مع <code>data</code> و <code>.bss</code> لعمل قسم <code>text</code> واحد كبير للملف النهائي.</div>
+        </div>
+      </div>
+      <div class="process-step" id="s3-2">
+        <div class="process-step-num">
+          <div class="psn-circle">2</div>
+          <div class="psn-line"></div>
+        </div>
+        <div class="process-step-content">
+          <div class="process-step-title">Address Binding — تحديد العناوين</div>
+          <div class="process-step-desc">اللينكر يعطي لكل دالة وكل متير عنوانا ثابتا افتراضيا وحقيقيا في الملف النهائي، بينما تكون العناوين في ملف <code>.o</code> نسبية أو وهمية.</div>
+        </div>
+      </div>
+      <div class="process-step" id="s3-3">
+        <div class="process-step-num">
+          <div class="psn-circle">3</div>
+          <div class="psn-line"></div>
+        </div>
+        <div class="process-step-content">
+          <div class="process-step-title">Symbol Resolution — حل الرموز</div>
+          <div class="process-step-desc">اللينكر يربط النداءات <span class="en">(Calls)</span> في الكود بالعناوين الحقيقية التي تم حسابها توًا.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="diagram-container">
+      <div class="diagram-title">مخطط عمل اللینكر — Linker Architecture</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <div style="display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;">
+          <div class="flow-box" style="background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;min-width:100px;">main.o</div>
+          <div class="flow-box" style="background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;min-width:100px;">utils.o</div>
+          <div class="flow-box" style="background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;min-width:100px;">io.o</div>
+        </div>
+        <div class="arch-arrow">▼</div>
+        <div class="flow-box" style="background:#fef3c7;color:#92400e;border:2px solid #f59e0b;min-width:300px;font-weight:700;">① Section Merging — دمج الأقسام</div>
+        <div class="arch-arrow">▼</div>
+        <div class="flow-box" style="background:#dcfce7;color:#166534;border:2px solid #16a34a;min-width:300px;font-weight:700;">② Address Binding — تحديد العناوين</div>
+        <div class="arch-arrow">▼</div>
+        <div class="flow-box" style="background:#ede9fe;color:#5b21b6;border:2px solid #7c3aed;min-width:300px;font-weight:700;">③ Symbol Resolution — حل الرموز</div>
+        <div class="arch-arrow">▼</div>
+        <div class="flow-box" style="background:#fce7f3;color:#9d174d;border:2px solid #dc2626;min-width:200px;font-weight:800;font-size:12pt;">Executable</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── SECTION 4: STATIC VS DYNAMIC ─── -->
+  <div id="s4">
+    <div class="section-number">SECTION 10.4</div>
+    <div class="section-title">المعركة الكبرى: الثابت الربط (Static) مقابل الدینامیكي (Dynamic)</div>
+    <div class="section-divider"></div>
+
+    <p>هنا تكمن زبدة الدرس — الفرق بين المبرمج العادي ومهندس الأنظمة المدمجة <span class="en">(Embedded Systems Engineer)</span> الذي يُحاسب على كل ميجابایت من الذاكرة.</p>
+
+    <div id="s4-1">
+      <div class="subsection-title">Static Linking — الثابت الربط</div>
+
+      <div class="callout callout-definition">
+        <div class="callout-header">
+          <div class="callout-icon">📌</div>
+          ما هو Static Linking؟
+        </div>
+        <div class="callout-body">
+          <p><strong>الآلية:</strong> اللينكر <code>ld</code> يقوم بنسخ الكود البرمجي الخاص بالدالة من مكتبة ثابتة (مثلاً <code>.a</code>) ولصقه فعلیا وحرفیا داخل الملف التنفيذي النهائي.</p>
+          <p><strong>الميزة <span class="en">(Portability)</span>:</strong> يعمل البرنامج بشكل مستقل تماماً لا يحتاج لأي مكتبات خارجية على نظام العمیل لتشغیلھ.</p>
+          <p><strong>العیب:</strong> يصبح حجم الملف جداً ضخماً — من الأھم ذلك: إذا قمنا بتشغیل 5 برامج تستخدم نفس المكتبة سيكون هناك إھارا جداً يسبب تكرار تحمیل نفس الكود 5 مرات في الذاكرة العشوائیة <span class="en">(RAM)</span> — كارثیا لموارد النظام المدمج!</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="s4-2">
+      <div class="subsection-title">Dynamic Linking — الدینامیكي الربط</div>
+
+      <div class="callout callout-definition">
+        <div class="callout-header">
+          <div class="callout-icon">📌</div>
+          ما هو Dynamic Linking؟
+        </div>
+        <div class="callout-body">
+          <p><strong>الآلية:</strong> اللينكر <code>ld</code> لا ينسخ الكود بل يترك رابطا <span class="en">(Reference)</span> في الملف التنفيذي يخبر النظام: "هذا البرنامج يحتاج الفلانیة الدالة من الفلانیة المشتركة المكتبة للعمل".</p>
+          <p><strong>الميزة:</strong> يصبح حجم التنفيذي الملف جداً صغیراً — تستضیف الذاكرة <span class="en">(RAM)</span> نسخة واحدة فقط من المكتبة (مثل <code>libc.so</code>) وتتشاركھا كل البرامج <span class="en">(Shared Memory)</span>.</p>
+          <p><strong>العیب:</strong> إذا تم حذف المكتبة من النظام أو تغیر مسارها سيتعطل البرنامج ولن یشتغل.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── COMPARISON TABLE ─── -->
+    <div class="table-wrapper" style="margin-top:0.5cm;">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>المعيار</th>
+            <th>Static Linking</th>
+            <th>Dynamic Linking</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>الآلية</strong></td>
+            <td>اللينكر <code>ld</code> ينسخ الكود ويصقه فعلیا داخل الملف التنفيذي</td>
+            <td>اللينكر <code>ld</code> يترك رابطا <span class="en">(Reference)</span> فقط في الملف التنفيذي</td>
+          </tr>
+          <tr>
+            <td><strong>حجم الملف التنفيذي</strong></td>
+            <td>ضخم جداً</td>
+            <td>صغیر جداً</td>
+          </tr>
+          <tr>
+            <td><strong>الاستقلالية <span class="en">(Portability)</span></strong></td>
+            <td>يعمل بشكل مستقل تماماً بدون مكتبات خارجية</td>
+            <td>يعتمد على وجود المكتبات المشتركة في النظام</td>
+          </tr>
+          <tr>
+            <td><strong>استهلاك RAM</strong></td>
+            <td>إھارا — تكرار تحمیل نفس الكود عدة مرات</td>
+            <td>نسخة واحدة من المكتبة تتشاركها كل البرامج <span class="en">(Shared Memory)</span></td>
+          </tr>
+          <tr>
+            <td><strong>ملف المكتبة</strong></td>
+            <td class="en-cell">.a (Static Library)</td>
+            <td class="en-cell">.so (Shared Object)</td>
+          </tr>
+          <tr>
+            <td><strong>ملاءمة الأنظمة المدمجة</strong></td>
+            <td>كارثیا لموارد النظام المدمج</td>
+            <td>مثالي للأنظمة المدمجة ذات الموارد المحدودة</td>
+          </tr>
+          <tr>
+            <td><strong>نقطة الضعف</strong></td>
+            <td>استھلاك مساحة وتخزین</td>
+            <td>إذا حُذفت المكتبة أو تغیر مسارها سيتعطل البرنامج</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 5: STATIC VS DYNAMIC DIAGRAM + LOADER  -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">Compilation Process — Part 3</span>
+  </div>
+  <div class="running-footer">
+    <span class="version">v1.0 — TechLeef</span>
+    <span class="page-num">5</span>
+  </div>
+  <div class="content-area">
+    <!-- ─── VISUAL COMPARISON DIAGRAM ─── -->
+    <div class="diagram-container" style="margin-bottom:0.7cm;">
+      <div class="diagram-title">مقارنة بصرية: Static vs Dynamic Linking</div>
+      <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;direction:ltr;">
+        <!-- Static Side -->
+        <div style="flex:1;min-width:240px;">
+          <div style="text-align:center;font-family:'Inter',sans-serif;font-weight:700;color:#dc2626;font-size:13pt;margin-bottom:10px;">Static Linking</div>
+          <div style="background:#fef2f2;border:2px solid #fca5a5;border-radius:8px;padding:12px;text-align:center;">
+            <div style="background:#fca5a5;color:#7f1d1d;padding:6px 12px;border-radius:6px;font-family:'Inter',sans-serif;font-weight:600;font-size:10pt;margin-bottom:6px;">Executable A (50MB)</div>
+            <div style="font-size:9pt;color:#991b1b;margin:4px 0;">├─ main() code</div>
+            <div style="font-size:9pt;color:#991b1b;margin:4px 0;">├─ printf() copy</div>
+            <div style="font-size:9pt;color:#991b1b;margin:4px 0;">└─ malloc() copy</div>
+          </div>
+          <div style="background:#fef2f2;border:2px solid #fca5a5;border-radius:8px;padding:12px;text-align:center;margin-top:8px;">
+            <div style="background:#fca5a5;color:#7f1d1d;padding:6px 12px;border-radius:6px;font-family:'Inter',sans-serif;font-weight:600;font-size:10pt;margin-bottom:6px;">Executable B (50MB)</div>
+            <div style="font-size:9pt;color:#991b1b;margin:4px 0;">├─ main() code</div>
+            <div style="font-size:9pt;color:#991b1b;margin:4px 0;">├─ printf() copy</div>
+            <div style="font-size:9pt;color:#991b1b;margin:4px 0;">└─ malloc() copy</div>
+          </div>
+          <div style="text-align:center;margin-top:8px;font-family:'Inter',sans-serif;font-size:10pt;color:#dc2626;font-weight:700;">Total RAM: 100MB ⚠</div>
+        </div>
+        <!-- Dynamic Side -->
+        <div style="flex:1;min-width:240px;">
+          <div style="text-align:center;font-family:'Inter',sans-serif;font-weight:700;color:#16a34a;font-size:13pt;margin-bottom:10px;">Dynamic Linking</div>
+          <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:8px;padding:12px;text-align:center;">
+            <div style="background:#86efac;color:#14532d;padding:6px 12px;border-radius:6px;font-family:'Inter',sans-serif;font-weight:600;font-size:10pt;margin-bottom:6px;">Executable A (5KB)</div>
+            <div style="font-size:9pt;color:#166534;margin:4px 0;">├─ main() code</div>
+            <div style="font-size:9pt;color:#166534;margin:4px 0;">└─ → ref to libc.so</div>
+          </div>
+          <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:8px;padding:12px;text-align:center;margin-top:8px;">
+            <div style="background:#86efac;color:#14532d;padding:6px 12px;border-radius:6px;font-family:'Inter',sans-serif;font-weight:600;font-size:10pt;margin-bottom:6px;">Executable B (5KB)</div>
+            <div style="font-size:9pt;color:#166534;margin:4px 0;">├─ main() code</div>
+            <div style="font-size:9pt;color:#166534;margin:4px 0;">└─ → ref to libc.so</div>
+          </div>
+          <div style="background:#dcfce7;border:2px solid #22c55e;border-radius:8px;padding:10px;text-align:center;margin-top:8px;">
+            <div style="font-family:'Inter',sans-serif;font-size:10pt;color:#14532d;font-weight:700;">libc.so (Shared) — 1 copy</div>
+            <div style="font-size:9pt;color:#166534;margin-top:4px;">printf() • malloc() • ...</div>
+          </div>
+          <div style="text-align:center;margin-top:8px;font-family:'Inter',sans-serif;font-size:10pt;color:#16a34a;font-weight:700;">Total RAM: ~10KB + lib ✅</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-sep">◆ ◆ ◆</div>
+
+    <!-- ─── SECTION 5: THE LOADER ─── -->
+    <div id="s5">
+      <div class="section-number">SECTION 10.5</div>
+      <div class="section-title">اللودر (The Loader / Dynamic Linker)</div>
+      <div class="section-divider"></div>
+
+      <p>إذا كان اللینكر العادي <code>ld</code> يترك "علامة" فقط للربط الدینامیكي ولا يجلب الكود، فمن يقوم بالربط الفعلي عند تشغیل البرنامج؟</p>
+
+      <div class="callout callout-deep">
+        <div class="callout-header">
+          <div class="callout-icon">🧠</div>
+          البطل الخفي: اللودر
+        </div>
+        <div class="callout-body">
+          يتدخل هنا اللودر الخفي — وهو المكون الذي يُنجز الربط الفعلي وقت التشغيل على اللوحة المدمجة <span class="en">(Target)</span> وليس على جهازك القوي <span class="en">(Host)</span>.
+        </div>
+      </div>
+
+      <div id="s5-1">
+        <div class="subsection-title">كيف يعمل اللودر؟ ⚙</div>
+
+        <div class="process-flow">
+          <div class="process-step">
+            <div class="process-step-num">
+              <div class="psn-circle">1</div>
+              <div class="psn-line"></div>
+            </div>
+            <div class="process-step-content">
+              <div class="process-step-title">قراءة ترویسة ELF</div>
+              <div class="process-step-desc">عندما تطلب تشغیل برنامج من الشل، الكیرنل <span class="en">(Kernel)</span> يقرأ ترویسة الملف ELF الخاص بھ.</div>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">
+              <div class="psn-circle">2</div>
+              <div class="psn-line"></div>
+            </div>
+            <div class="process-step-content">
+              <div class="process-step-title">اكتشاف الاعتماديات الدینامیكیة</div>
+              <div class="process-step-desc">الكیرنل يكتشف أن ھذا البرنامج يحتاج كلیا لربط دینامیكي بالمكتبات.</div>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">
+              <div class="psn-circle">3</div>
+              <div class="psn-line"></div>
+            </div>
+            <div class="process-step-content">
+              <div class="process-step-title">مناداة اللودر</div>
+              <div class="process-step-desc">الكیرنل يقوم بمناداة اللودر (وھو تطبيق/مكتبة خاصة عادة اسمھ <code>ld-linux.so</code> في أنظمة أوبونتو أو <code>ld-uClibc.so</code> في الأنظمة المدمجة).</div>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">
+              <div class="psn-circle">4</div>
+              <div class="psn-line"></div>
+            </div>
+            <div class="process-step-content">
+              <div class="process-step-title">البحث عن المكتبات المشتركة</div>
+              <div class="process-step-desc">اللودر يبحث في مجلدات النظام القیاسیة (مثل <code>lib/</code> و <code>usr/lib/</code>) عن المكتبات المشتركة المطلوبة.</div>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">
+              <div class="psn-circle">5</div>
+              <div class="psn-line"></div>
+            </div>
+            <div class="process-step-content">
+              <div class="process-step-title">تحميل المكتبات في RAM و Resolve</div>
+              <div class="process-step-desc">يضع المكتبات في الذاكرة العشوائیة <span class="en">(RAM)</span> ثم يقوم بعملیة Resolve أخیرة (في وقت التشغیل) ليربط البرنامج بعناوین الدوال داخل المكتبة.</div>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="process-step-num">
+              <div class="psn-circle">6</div>
+              <div class="psn-line"></div>
+            </div>
+            <div class="process-step-content">
+              <div class="process-step-title">تسیم التحكم للبرنامج</div>
+              <div class="process-step-desc">أخیراً، اللودر يسلم التحكم للبرنامج لیبدأ العمل.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 6: LOADER DIAGRAM + REMEMBER + ERRORS  -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">Compilation Process — Part 3</span>
+  </div>
+  <div class="running-footer">
+    <span class="version">v1.0 — TechLeef</span>
+    <span class="page-num">6</span>
+  </div>
+  <div class="content-area">
+    <!-- ─── LOADER ARCHITECTURE DIAGRAM ─── -->
+    <div class="diagram-container">
+      <div class="diagram-title">مخطط عمل اللودر — Loader Workflow</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <div class="flow-box" style="background:#dbeafe;color:#1e40af;border:1px solid #93c5fd;min-width:250px;">Shell: ./my_program</div>
+        <div class="arch-arrow">▼</div>
+        <div class="flow-box" style="background:#dcfce7;color:#166534;border:1px solid #86efac;min-width:250px;">Kernel يقرأ ELF Header</div>
+        <div class="arch-arrow">▼</div>
+        <div class="flow-box" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;min-width:250px;">Kernel يكتشف Dynamic Dependencies</div>
+        <div class="arch-arrow">▼</div>
+        <div class="flow-box" style="background:#ede9fe;color:#5b21b6;border:1px solid #c4b5fd;min-width:300px;">Kernel ينادي اللودر<br><span style="font-family:'JetBrains Mono',monospace;font-size:9pt;">ld-linux.so / ld-uClibc.so</span></div>
+        <div class="arch-arrow">▼</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;">
+          <div class="flow-box" style="background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;min-width:120px;font-size:9pt;">lib/</div>
+          <div class="flow-box" style="background:#e0f2fe;color:#0369a1;border:1px solid #7dd3fc;min-width:120px;font-size:9pt;">usr/lib/</div>
+          <div style="font-size:9pt;color:#64748b;">← البحث عن .so</div>
+        </div>
+        <div class="arch-arrow">▼</div>
+        <div class="flow-box" style="background:#fce7f3;color:#9d174d;border:1px solid #f9a8d4;min-width:280px;">تحميل المكتبات في RAM + Resolve Symbols</div>
+        <div class="arch-arrow">▼</div>
+        <div class="flow-box" style="background:#dcfce7;color:#166534;border:2px solid #16a34a;min-width:250px;font-weight:800;font-size:12pt;">🚀 البرنامج يبدأ العمل</div>
+      </div>
+    </div>
+
+    <!-- ─── REMEMBER BOX ─── -->
+    <div class="remember-box" style="margin-top:0.6cm;">
+      <div class="rb-icon">✅</div>
+      <div class="rb-body">
+        <div class="rb-title">تتذكر؟ يجب ماذا</div>
+        <div class="rb-content">
+          <ul style="padding-right:1cm;margin:0.15cm 0;">
+            <li>اللینكر <code>ld</code>: أداة تعمل في وقت الترجمة <span class="en">(Compile-time)</span> على جهازك القوي <span class="en">(Host)</span>.</li>
+            <li>اللودر <code>ld-linux.so</code>: أداة تعمل في وقت التشغيل <span class="en">(Run-time)</span> على اللوحة المدمجة <span class="en">(Target)</span>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── ERRORS ─── -->
+    <div class="warning-strip" style="margin-top:0.5cm;">
+      <div class="ws-icon">⚠</div>
+      <div class="ws-body">
+        <strong style="color:var(--warning);">أخطاء شائعة:</strong> الخلط بين <code>ld</code> (الذي يصنع الملف) واللودر (الذي يقرأ الملف ويربطه في الذاكرة). هذا سیؤدي لخطأ عند محاولة تشغیل البرنامج وليس أثناء عملیة البناء. غیاب ملف المكتبة <code>.so</code> على المستھدفة اللوحة هو السبب الأكثر شیوعاً.
+      </div>
+    </div>
+
+    <!-- ─── HOST vs TARGET TABLE ─── -->
+    <div class="table-wrapper" style="margin-top:0.5cm;">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>المعيار</th>
+            <th>اللینكر <span class="en">ld</span></th>
+            <th>اللودر <span class="en">ld-linux.so</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>وقت العمل</strong></td>
+            <td class="en-cell">Compile-time</td>
+            <td class="en-cell">Run-time</td>
+          </tr>
+          <tr>
+            <td><strong>مكان التنفيذ</strong></td>
+            <td>جهازك القوي <span class="en">(Host)</span></td>
+            <td>اللوحة المدمجة <span class="en">(Target)</span></td>
+          </tr>
+          <tr>
+            <td><strong>الوظیفة</strong></td>
+            <td>يصنع الملف التنفيذي (يترك Reference)</td>
+            <td>يقرأ الملف ويربطه في الذاكرة فعلیاً</td>
+          </tr>
+          <tr>
+            <td><strong>نوع الربط</strong></td>
+            <td>Static أو يُعد Dynamic Reference</td>
+            <td>Dynamic فقط — Resolve فعلي</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-sep">◆ ◆ ◆</div>
+
+    <!-- ─── SECTION 6: TECHLEEF PHILOSOPHY ─── -->
+    <div id="s6">
+      <div class="section-number">SECTION 10.6</div>
+      <div class="section-title">فلسفة وبيداغوجيا TechLeef</div>
+      <div class="section-divider"></div>
+
+      <p>اختتم المدرب الدرس بلمسة توجیھیة ھامة حول طرق التعلم للمھندسین:</p>
+
+      <div class="callout callout-important">
+        <div class="callout-header">
+          <div class="callout-icon">⚠️</div>
+          التطبیق ضد العمیق الفھم
+        </div>
+        <div class="callout-body">
+          <p>الكثیر من الدورات المدفوعة ذات الثمن الباھظ (مثل دورات Linux Foundation أو Bootcamps) تعطي المھندس التطبیق المباشر <span class="en">(Labs)</span> — الأشیاء التي تعمل تحت الغطاء وتفاصیل الھندسیة الفلسفة وتتخطى — مفترضین أنك تكون مسبقاً بھا ملما. الدورات ھذه تركز فقط على أن تنجز المھمة المھمة.</p>
+        </div>
+      </div>
+
+      <div class="callout callout-takeaway">
+        <div class="callout-header">
+          <div class="callout-icon">✅</div>
+          البناء النظري: قوة
+        </div>
+        <div class="callout-body">
+          <p>ما يمیز دورة <span class="en">TechLeef</span> ھو تفكیك ھذه المفاھیم المعقدة خطوة بخطوة. الفھم العميق ھذا یجعلك قادرا على حل المشاكل المستعصیة أثناء العمل الفعلي، لیس فقط على اجتیاز المقابلات الوظیفیة أصعب بل یفتح لك آفاقا كمهندس معماري <span class="en">(Architect)</span>. وحتى القدرة على تدریس ھذه المادة بثقة في الأكادیمیات ومراكز التکوین یمنحك.</p>
+        </div>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-header">
+          <div class="callout-icon">💡</div>
+          Under the Hood
+        </div>
+        <div class="callout-body">
+          التركیز على فهم ما یحدث "تحت الغطاء" <span class="en">(Under the hood)</span> هو الفرق بین من یستخدم الأدوات ومن یفھمها. المھندس الذي یفھم Architecture یبنى أنظمة، والذي یحفظ أوامر فقط یُصبح عالة على التوثیق.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- PAGE 7: QUICK REVIEW                         -->
+<!-- ═══════════════════════════════════════════ -->
+<div class="page">
+  <div class="running-header">
+    <span class="course-name">Embedded Linux & Yocto</span>
+    <span class="chapter-name">Quick Review</span>
+  </div>
+  <div class="running-footer">
+    <span class="version">v1.0 — TechLeef</span>
+    <span class="page-num">7</span>
+  </div>
+  <div class="content-area" id="qr">
+    <div class="quick-review">
+      <div class="quick-review-title">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+        مراجعة سريعة — Quick Review
+      </div>
+
+      <!-- Main Concepts -->
+      <div class="qr-section">
+        <div class="qr-section-title">
+          <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          Main Concepts — المفاهیم الأساسیة
+        </div>
+        <ul class="qr-list">
+          <li>مراحل البناء الأربع: <span class="en">Preprocessing → Compilation → Assembly → Linking</span></li>
+          <li>أنواع ملفات ELF: <span class="en">Relocatable (.o)</span>، <span class="en">Executable</span>، <span class="en">Shared Object (.so)</span>، <span class="en">Core Dump</span></li>
+          <li>النوع الثالث من ELF هو <span class="en">Shared Object</span> — مكتبة مشتركة تُحمَّل في RAM وقت التشغیل</li>
+          <li>اللینكر <code>ld</code> يعمل بثلاث خطوات: <span class="en">Section Merging</span>، <span class="en">Address Binding</span>، <span class="en">Symbol Resolution</span></li>
+          <li><span class="en">Static Linking</span> ينسخ الكود حرفیاً داخل الملف التنفيذي — حجم ضخم واستھلاك مفرط لـ RAM</li>
+          <li><span class="en">Dynamic Linking</span> يترك رابطاً <span class="en">(Reference)</span> فقط — حجم صغیر ومشاركة مكتبة واحدة في RAM</li>
+          <li>اللودر <code>ld-linux.so</code> / <code>ld-uClibc.so</code> یُنجز الربط الفعلي وقت التشغیل على Target</li>
+          <li>اللینكر يعمل على Host في Compile-time، واللودر يعمل على Target في Run-time</li>
+        </ul>
+      </div>
+
+      <!-- Important Definitions -->
+      <div class="qr-section">
+        <div class="qr-section-title">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
+          Important Definitions — تعریفات مهمة
+        </div>
+        <ul class="qr-list">
+          <li><strong><span class="en">Shared Object (.so)</span>:</strong> ملف ELF يحتوي على كود برمجي مجمع مصمم ليتم تحميله في الذاكرة ومشاركته بين عدة برامج</li>
+          <li><strong><span class="en">Static Linking</span>:</strong> نسخ الكود من مكتبة <code>.a</code> ولصقه فعلیاً داخل الملف التنفيذي</li>
+          <li><strong><span class="en">Dynamic Linking</span>:</strong> ترك رابط <span class="en">(Reference)</span> في الملف التنفيذي يشیر إلى مكتبة <code>.so</code> خارجية</li>
+          <li><strong><span class="en">Section Merging</span>:</strong> جمع أقسام <code>text</code> و <code>data</code> و <code>.bss</code> من عدة ملفات <code>.o</code> في قسم واحد</li>
+          <li><strong><span class="en">Address Binding</span>:</strong> تحويل العناوين النسبية في <code>.o</code> إلى عناوين ثابتة افتراضية وحقيقية</li>
+          <li><strong><span class="en">Symbol Resolution</span>:</strong> ربط النداءات <span class="en">(Calls)</span> بالعناوين الحقيقية المحسوبة</li>
+          <li><strong><span class="en">The Loader</span>:</strong> مكتبة خاصة يُناديها الكیرنل لتحميل <code>.so</code> وربط الرموز فعلیاً في RAM</li>
+          <li><strong><span class="en">Resolve</span>:</strong> العملية الأخيرة التي يُنجزها اللودر — ربط عناوین الدوال داخل المكتبة بالبرنامج</li>
+        </ul>
+      </div>
+
+      <!-- Common Mistakes -->
+      <div class="qr-section">
+        <div class="qr-section-title">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          Common Mistakes — أخطاء شائعة
+        </div>
+        <ul class="qr-list">
+          <li>الخلط بين <code>ld</code> (اللینكر الذي يصنع الملف) واللودر (الذي يقرأ الملف ويربطه في الذاكرة)</li>
+          <li>ظن أن غیاب ملف <code>.so</code> يُسبب خطأ أثناء البناء — في الحقيقة الخطأ یظهر عند تشغیل البرنامج على اللوحة</li>
+          <li>اعتبار <span class="en">Static Linking</span> دائماً أفضل لأنه "مستقل" — ناسياً أنه كارثي لموارد الأنظمة المدمجة</li>
+          <li>نسيان أن اللودر نفسه مكتبة <code>.so</code> يجب أن توجد على النظام المستهدف</li>
+        </ul>
+      </div>
+
+      <!-- Interview Notes -->
+      <div class="qr-section">
+        <div class="qr-section-title">
+          <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/></svg>
+          Interview Notes — ملاحظات المقابلات
+        </div>
+        <ul class="qr-list">
+          <li>"ما الفرق بين <span class="en">Static</span> و <span class="en">Dynamic Linking</span>؟" — أجب من منظور Embedded: RAM و Storage</li>
+          <li>"كيف يعمل اللینكر؟" — اشرح الثلاث خطوات: <span class="en">Merging → Binding → Resolution</span></li>
+          <li>"ماذا یحدث عند تنفیذ برنامج <span class="en">Dynamically Linked</span>؟" — اشرح سلسلة اللودر الست</li>
+          <li>"لماذا <span class="en">.so</span> وليس <code>.o</code> للمكتبات؟" — لأن <code>.o</code> غير قابل للتشغیل ويحتوي رموز غير معرفة</li>
+          <li>"ما الفرق بين <code>ld</code> و <code>ld-linux.so</code>؟" — Compile-time على Host مقابل Run-time على Target</li>
+        </ul>
+      </div>
+
+      <!-- Memory Tips -->
+      <div class="qr-section">
+        <div class="qr-section-title">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+          Memory Tips — حیل للحفظ
+        </div>
+        <ul class="qr-list">
+          <li><strong>ld = Linker = Compile-time = Host</strong> — الحرف الأول "L" يشیر للینكر الذي يعمل مبكراً على جهازك</li>
+          <li><strong>ld-linux.so = Loader = Run-time = Target</strong> وجود ".so" یذكرك أنه یعمل على اللوحة المدمجة</li>
+          <li><strong>Static = ضخم = كارثة RAM</strong> — تذكر: كل برنامج یحمل نسخته الخاصة = تضاعف</li>
+          <li><strong>Dynamic = صغیر = مشاركة = RAM واحدة</strong> — تذكر: <code>libc.so</code> نسخة واحدة تتشاركها الكل</li>
+          <li><strong>ELF Types:</strong> <code>.o</code> = ناقص، <span class="en">Executable</span> = كامل، <code>.so</code> = مشترك، <span class="en">Core Dump</span> = مهدر</li>
+        </ul>
+      </div>
+
+      <!-- Exam Tips -->
+      <div class="qr-section">
+        <div class="qr-section-title">
+          <svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg>
+          Exam Tips — نصائح الامتحان
+        </div>
+        <ul class="qr-list">
+          <li>ركز على الفرق بين أنواع ELF الأربعة وأمثلة كل نوع</li>
+          <li>احفظ خطوات اللینكر الثلاث بالترتیب: <span class="en">Section Merging → Address Binding → Symbol Resolution</span></li>
+          <li>كن مستعداً لمقارنة <span class="en">Static vs Dynamic</span> من عدة زوایا: الحجم، RAM، الاستقلالية، الأنظمة المدمجة</li>
+          <li>افهم تسلسل عمل اللودر بالترتیب — أي خطوة خاطئة تدل على عدم فهم العملية</li>
+          <li>تمييز <code>ld-linux.so</code> (أوبونتو) عن <code>ld-uClibc.so</code> (الأنظمة المدمجة) یظهر فهمك لبيئات Embedded</li>
+        </ul>
+      </div>
+
+      <!-- Revision Checklist -->
+      <div class="qr-section" style="margin-bottom:0;">
+        <div class="qr-section-title">
+          <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM17.99 9l-1.41-1.42-6.59 6.59-2.58-2.57-1.42 1.41 4 3.99z"/></svg>
+          Revision Checklist — قائمة المراجعة
+        </div>
+        <ul class="checklist">
+          <li>أستطيع تعداد مراحل البناء الأربع بالترتیب مع خیارات GCC المناسبة</li>
+          <li>أستطيع شرح الفرق بين أنواع ELF الأربعة</li>
+          <li>أفهم لماذا <code>.so</code> هو النوع الثالث وما الفرق بینه وبین <code>.o</code></li>
+          <li>أستطيع شرح الثلاث خطوات التي یقوم بھا اللینكر <code>ld</code> معماريًا</li>
+          <li>أستطيع مقارنة <span class="en">Static vs Dynamic Linking</span> من منظور Embedded Systems</li>
+          <li>أفهم تسلسل عمل اللودر الست خطوات بالتفصیل</li>
+          <li>أمیز بین <code>ld</code> و <code>ld-linux.so</code> من حیث الوقت والمكان والوظیفة</li>
+          <li>أستطيع تفسیر خطأ غیاب مكتبة <code>.so</code> على اللوحة المدمجة</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- END OF DOCUMENT                              -->
+<!-- ═══════════════════════════════════════════ -->
+
+<script>
+  // Smooth scroll for TOC links
+  function scrollToId(id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  // Add hover effects to overview steps
+  document.querySelectorAll('.overview-step').forEach((step, index) => {
+    step.style.opacity = '0';
+    step.style.transform = 'translateX(20px)';
+    step.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    setTimeout(() => {
+      step.style.opacity = '1';
+      step.style.transform = 'translateX(0)';
+    }, 150 + index * 120);
+  });
+
+  // Add hover effects to process steps
+  document.querySelectorAll('.process-step-content').forEach(content => {
+    content.addEventListener('mouseenter', function() {
+      this.style.borderColor = 'var(--primary)';
+      this.style.boxShadow = '0 2px 8px rgba(15,76,129,0.12)';
+    });
+    content.addEventListener('mouseleave', function() {
+      this.style.borderColor = 'var(--border)';
+      this.style.boxShadow = 'none';
+    });
+  });
+
+  // Add hover effects to flow boxes in diagrams
+  document.querySelectorAll('.flow-box').forEach(box => {
+    box.style.transition = 'transform 0.2s ease, box-shadow 0.2s ease';
+    box.addEventListener('mouseenter', function() {
+      this.style.transform = 'scale(1.03)';
+      this.style.boxShadow = '0 3px 10px rgba(0,0,0,0.1)';
+    });
+    box.addEventListener('mouseleave', function() {
+      this.style.transform = 'scale(1)';
+      this.style.boxShadow = 'none';
+    });
+  });
+
+  // Add entrance animation to callout boxes
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.callout, .warning-strip, .remember-box, .table-wrapper, .diagram-container').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(10px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+
+  // Checklist toggle
+  document.querySelectorAll('.checklist li').forEach(item => {
+    item.style.cursor = 'pointer';
+    item.addEventListener('click', function() {
+      const before = this.style.getPropertyValue('--checked');
+      if (before === 'true') {
+        this.style.setProperty('--checked', 'false');
+        this.style.opacity = '1';
+        this.querySelector('::before')
+      } else {
+        this.style.setProperty('--checked', 'true');
+        this.style.opacity = '0.5';
+        this.style.textDecoration = 'line-through';
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

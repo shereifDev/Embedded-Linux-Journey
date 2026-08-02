@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ملخص الدرس التاسع: Compilation Process — ELF Format (الجزء الثاني)</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{
+  --primary:#0F4C81;--secondary:#14B8A6;--accent:#F59E0B;--success:#16A34A;
+  --warning:#EA580C;--danger:#DC2626;--purple:#7C3AED;
+  --bg:#F8FAFC;--card:#FFFFFF;--text:#1E293B;--text-muted:#64748B;--border:#E2E8F0;
+  --code-bg:#0F172A;--code-surface:#1E293B;
+  --font-ar:'IBM Plex Sans Arabic','Cairo',sans-serif;
+  --font-en:'Inter',sans-serif;
+  --font-code:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;font-size:16px;}
+body{
+  font-family:var(--font-ar);background:var(--bg);color:var(--text);
+  line-height:1.7;direction:rtl;
+}
+.page{
+  max-width:210mm;margin:0 auto;background:var(--card);
+  box-shadow:0 0 60px rgba(0,0,0,.08);min-height:100vh;
+}
+/* ===== RUNNING HEADER ===== */
+.running-header{
+  position:sticky;top:0;z-index:100;
+  background:linear-gradient(135deg,var(--primary) 0%,#0a3558 100%);
+  color:#fff;padding:10px 2cm;display:flex;justify-content:space-between;align-items:center;
+  font-size:11px;font-family:var(--font-en);letter-spacing:.3px;
+  box-shadow:0 2px 12px rgba(15,76,129,.3);
+}
+.running-header .course{font-family:var(--font-ar);font-weight:500;font-size:12px;opacity:.9;}
+.running-header .chapter{opacity:.75;font-size:11px;}
+/* ===== RUNNING FOOTER ===== */
+.running-footer{
+  background:#f1f5f9;border-top:1px solid var(--border);
+  padding:8px 2cm;display:flex;justify-content:space-between;align-items:center;
+  font-size:10px;color:var(--text-muted);font-family:var(--font-en);
+}
+/* ===== CONTENT AREA ===== */
+.content{padding:1.5cm 2cm 2cm 2cm;}
+
+/* ===== TABLE OF CONTENTS ===== */
+.toc{padding:2cm 0;}
+.toc-title{
+  font-size:24pt;font-weight:700;color:var(--primary);margin-bottom:8px;
+  font-family:var(--font-ar);
+}
+.toc-subtitle{font-size:11pt;color:var(--text-muted);margin-bottom:30px;font-family:var(--font-en);}
+.toc-divider{width:80px;height:4px;background:var(--secondary);border-radius:2px;margin-bottom:30px;}
+.toc-list{list-style:none;}
+.toc-list li{margin-bottom:2px;}
+.toc-list a{
+  text-decoration:none;color:var(--text);display:flex;align-items:baseline;
+  padding:6px 12px;border-radius:6px;transition:all .2s;
+}
+.toc-list a:hover{background:#f0f7ff;color:var(--primary);}
+.toc-chapter{font-size:13pt;font-weight:600;color:var(--primary);padding:10px 12px!important;margin-top:12px;}
+.toc-section{font-size:11.5pt;font-weight:500;padding-right:32px!important;}
+.toc-subsection{font-size:10.5pt;font-weight:400;color:var(--text-muted);padding-right:56px!important;}
+.toc-dots{flex:1;border-bottom:1px dotted #cbd5e1;margin:0 8px;min-width:30px;position:relative;top:-4px;}
+.toc-page{font-family:var(--font-en);font-size:10.5pt;color:var(--primary);font-weight:600;min-width:20px;text-align:left;}
+
+/* ===== CHAPTER OPENING ===== */
+.chapter-opening{text-align:center;padding:60px 0 40px;position:relative;}
+.chapter-number{
+  font-size:100px;font-weight:800;color:var(--primary);opacity:.08;
+  position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  font-family:var(--font-en);line-height:1;
+}
+.chapter-icon{
+  width:72px;height:72px;border-radius:18px;
+  background:linear-gradient(135deg,var(--primary),var(--secondary));
+  display:inline-flex;align-items:center;justify-content:center;
+  margin-bottom:20px;box-shadow:0 8px 24px rgba(15,76,129,.25);
+}
+.chapter-icon i{font-size:32px;color:#fff;}
+.chapter-title{font-size:24pt;font-weight:700;color:var(--primary);margin-bottom:8px;line-height:1.4;}
+.chapter-subtitle{font-size:13pt;color:var(--text-muted);font-weight:400;margin-bottom:16px;}
+.chapter-en-title{font-family:var(--font-en);font-size:14pt;color:var(--secondary);font-weight:600;letter-spacing:.5px;}
+.chapter-divider{
+  width:120px;height:4px;margin:24px auto 0;
+  background:linear-gradient(90deg,var(--primary),var(--secondary));
+  border-radius:2px;
+}
+.chapter-intro{
+  margin-top:28px;padding:20px 28px;background:#f0f7ff;
+  border-right:4px solid var(--primary);border-radius:0 10px 10px 0;
+  font-size:12pt;line-height:1.8;text-align:right;
+}
+.chapter-meta{
+  margin-top:20px;display:flex;justify-content:center;gap:24px;
+  font-size:10.5pt;color:var(--text-muted);flex-wrap:wrap;
+}
+.chapter-meta span{display:flex;align-items:center;gap:6px;}
+.chapter-meta i{color:var(--secondary);font-size:12px;}
+
+/* ===== ANIMATED CHAPTER OVERVIEW ===== */
+.overview-section{margin:40px 0 50px;padding:28px;background:linear-gradient(135deg,#f8fafc 0%,#f0fdfa 100%);border-radius:16px;border:1px solid #e2e8f0;}
+.overview-label{
+  font-size:10pt;font-weight:600;color:var(--secondary);text-transform:uppercase;
+  letter-spacing:1.5px;margin-bottom:20px;display:flex;align-items:center;gap:8px;
+  font-family:var(--font-en);
+}
+.overview-label i{font-size:14px;}
+.overview-path{display:flex;flex-direction:column;gap:0;position:relative;}
+.overview-node{
+  display:flex;align-items:flex-start;gap:16px;position:relative;
+  padding:12px 0;cursor:default;
+}
+.overview-node:last-child .node-line{display:none;}
+.node-num{
+  width:36px;height:36px;min-width:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-en);font-size:13px;font-weight:700;color:#fff;
+  position:relative;z-index:2;
+}
+.node-num.n1{background:var(--primary);}
+.node-num.n2{background:#2563eb;}
+.node-num.n3{background:var(--secondary);}
+.node-num.n4{background:var(--purple);}
+.node-num.n5{background:var(--accent);}
+.node-num.n6{background:var(--warning);}
+.node-num.n7{background:var(--danger);}
+.node-line{
+  position:absolute;right:17px;top:48px;bottom:0;width:2px;
+  background:linear-gradient(to bottom,var(--border),var(--secondary));
+}
+.node-content{flex:1;padding-top:2px;}
+.node-title{font-size:12.5pt;font-weight:600;color:var(--text);margin-bottom:2px;}
+.node-en{font-family:var(--font-en);font-size:10pt;color:var(--secondary);font-weight:500;}
+.node-desc{font-size:10pt;color:var(--text-muted);margin-top:3px;line-height:1.6;}
+.node-icon{font-size:18px;margin-left:6px;opacity:.7;}
+
+/* ===== SECTION HEADINGS ===== */
+.section{margin-top:44px;}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.section-num{
+  width:36px;height:36px;min-width:36px;border-radius:10px;
+  background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-en);font-size:14px;font-weight:700;
+}
+.section-title{font-size:20pt;font-weight:700;color:var(--primary);line-height:1.4;}
+.section-en{font-family:var(--font-en);font-size:12pt;color:var(--secondary);font-weight:500;}
+.section-divider{width:60px;height:3px;background:var(--secondary);border-radius:2px;margin-bottom:20px;}
+
+.subsection{margin-top:28px;margin-bottom:16px;}
+.subsection-title{font-size:17pt;font-weight:600;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.subsection-title::before{content:'';width:4px;height:22px;background:var(--secondary);border-radius:2px;}
+
+h4{font-size:14pt;font-weight:600;color:var(--text);margin:18px 0 8px;}
+
+/* ===== PARAGRAPHS ===== */
+p{font-size:12.5pt;line-height:1.8;text-align:justify;margin-bottom:12px;}
+.en-term{font-family:var(--font-en);direction:ltr;unicode-bidi:embed;font-weight:500;color:var(--primary);}
+code.en-term{background:none;padding:0;font-size:inherit;}
+
+/* ===== LISTS ===== */
+ul,ol{margin:10px 0 14px 0;padding-right:24px;}
+li{font-size:12.5pt;line-height:1.8;margin-bottom:4px;}
+li::marker{color:var(--secondary);font-weight:700;}
+ol li::marker{font-family:var(--font-en);color:var(--primary);font-weight:600;}
+.sub-list{margin:6px 0 6px 0;padding-right:20px;}
+.sub-list li{font-size:11.5pt;color:var(--text-muted);}
+.sub-list li::marker{color:var(--accent);}
+
+/* ===== CALLOUT BOXES ===== */
+.callout{
+  margin:18px 0;padding:18px 22px;border-radius:12px;
+  border-right:5px solid;display:flex;gap:14px;
+  position:relative;overflow:hidden;
+}
+.callout-icon{font-size:22px;min-width:28px;text-align:center;margin-top:2px;}
+.callout-body{flex:1;}
+.callout-title{font-size:11.5pt;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.callout p{font-size:11.5pt;margin-bottom:6px;}
+.callout p:last-child{margin-bottom:0;}
+.callout-blue{background:#eff6ff;border-color:var(--primary);}
+.callout-blue .callout-title{color:var(--primary);}
+.callout-green{background:#f0fdf4;border-color:var(--success);}
+.callout-green .callout-title{color:var(--success);}
+.callout-orange{background:#fffbeb;border-color:var(--accent);}
+.callout-orange .callout-title{color:var(--accent);}
+.callout-red{background:#fef2f2;border-color:var(--danger);}
+.callout-red .callout-title{color:var(--danger);}
+.callout-gray{background:#f8fafc;border-color:#94a3b8;}
+.callout-gray .callout-title{color:#475569;}
+.callout-purple{background:#faf5ff;border-color:var(--purple);}
+.callout-purple .callout-title{color:var(--purple);}
+.callout-dark{background:var(--code-bg);border-color:#334155;color:#e2e8f0;}
+.callout-dark .callout-title{color:#f8fafc;}
+.callout-dark p{color:#cbd5e1;}
+.callout-dark .en-term{color:var(--secondary);}
+
+/* ===== CODE BLOCKS ===== */
+.code-block{
+  margin:16px 0;border-radius:10px;overflow:hidden;
+  border:1px solid #1e293b;direction:ltr;text-align:left;
+  font-family:var(--font-code);
+}
+.code-header{
+  background:#0f172a;padding:8px 16px;display:flex;justify-content:space-between;align-items:center;
+  border-bottom:1px solid #1e293b;
+}
+.code-lang{font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-family:var(--font-en);}
+.code-dots{display:flex;gap:6px;}
+.code-dots span{width:10px;height:10px;border-radius:50%;}
+.code-dots span:nth-child(1){background:#ef4444;}
+.code-dots span:nth-child(2){background:#f59e0b;}
+.code-dots span:nth-child(3){background:#22c55e;}
+.code-body{
+  background:var(--code-bg);padding:16px 20px;overflow-x:auto;
+  font-size:11.5pt;line-height:1.7;color:#e2e8f0;
+}
+.code-body .kw{color:#c084fc;}
+.code-body .fn{color:#67e8f9;}
+.code-body .str{color:#86efac;}
+.code-body .cmt{color:#64748b;font-style:italic;}
+.code-body .num{color:#fbbf24;}
+.code-body .flag{color:#f472b6;}
+.code-body .out{color:#94a3b8;}
+.code-inline{
+  font-family:var(--font-code);background:#f1f5f9;color:var(--primary);
+  padding:2px 8px;border-radius:5px;font-size:11pt;direction:ltr;unicode-bidi:embed;
+  border:1px solid var(--border);
+}
+
+/* ===== TABLES ===== */
+.table-wrap{margin:20px 0;overflow-x:auto;border-radius:10px;border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;font-size:11.5pt;}
+thead th{
+  background:var(--primary);color:#fff;padding:12px 16px;
+  font-weight:600;text-align:right;white-space:nowrap;
+  font-size:11pt;
+}
+thead th:first-child{border-radius:0 10px 0 0;}
+thead th:last-child{border-radius:10px 0 0 0;}
+tbody td{padding:10px 16px;border-bottom:1px solid var(--border);vertical-align:top;}
+tbody tr:nth-child(even){background:#f8fafc;}
+tbody tr:nth-child(odd){background:#fff;}
+tbody tr:hover{background:#f0f7ff;}
+td.num-cell{text-align:center;font-family:var(--font-en);font-weight:600;}
+td.en-cell{direction:ltr;text-align:left;font-family:var(--font-en);}
+
+/* ===== DIAGRAMS ===== */
+.diagram{margin:24px 0;padding:24px;background:#f8fafc;border-radius:14px;border:1px solid var(--border);}
+.diagram-title{font-size:11pt;font-weight:600;color:var(--text-muted);text-align:center;margin-bottom:20px;font-family:var(--font-en);}
+.diagram svg{display:block;margin:0 auto;}
+
+/* ===== COMPARISON CARDS ===== */
+.comparison{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;}
+.comp-card{
+  border-radius:12px;padding:20px;border:1px solid var(--border);position:relative;overflow:hidden;
+}
+.comp-card::before{content:'';position:absolute;top:0;right:0;width:4px;height:100%;}
+.comp-card.static::before{background:var(--primary);}
+.comp-card.dynamic::before{background:var(--secondary);}
+.comp-card-title{font-size:13pt;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.comp-card.static .comp-card-title{color:var(--primary);}
+.comp-card.dynamic .comp-card-title{color:var(--secondary);}
+.comp-card p{font-size:11pt;margin-bottom:8px;}
+.comp-card .en-term{font-size:10.5pt;}
+
+/* ===== QUICK REVIEW ===== */
+.quick-review{margin:50px 0 20px;}
+.qr-header{
+  background:linear-gradient(135deg,var(--primary),#0a3558);
+  color:#fff;padding:20px 28px;border-radius:14px 14px 0 0;
+  display:flex;align-items:center;gap:12px;
+}
+.qr-header i{font-size:24px;color:var(--accent);}
+.qr-header h2{font-size:18pt;font-weight:700;}
+.qr-body{border:1px solid var(--border);border-top:none;border-radius:0 0 14px 14px;padding:24px 28px;}
+.qr-section{margin-bottom:28px;}
+.qr-section:last-child{margin-bottom:0;}
+.qr-section-title{
+  font-size:13pt;font-weight:700;margin-bottom:12px;padding-bottom:8px;
+  border-bottom:2px solid var(--border);display:flex;align-items:center;gap:8px;
+}
+.qr-section-title i{font-size:16px;}
+.qr-section-title.blue{color:var(--primary);border-color:var(--primary);}
+.qr-section-title.green{color:var(--success);border-color:var(--success);}
+.qr-section-title.orange{color:var(--accent);border-color:var(--accent);}
+.qr-section-title.red{color:var(--danger);border-color:var(--danger);}
+.qr-section-title.purple{color:var(--purple);border-color:var(--purple);}
+.qr-section-title.teal{color:var(--secondary);border-color:var(--secondary);}
+
+.qr-list{padding-right:20px;}
+.qr-list li{font-size:11.5pt;margin-bottom:6px;line-height:1.7;}
+.qr-list li::marker{color:var(--secondary);}
+.checklist{list-style:none;padding-right:0;}
+.checklist li{
+  padding:6px 0;padding-right:28px;position:relative;font-size:11.5pt;
+  border-bottom:1px dashed var(--border);
+}
+.checklist li:last-child{border-bottom:none;}
+.checklist li::before{
+  content:'\f096';font-family:'Font Awesome 6 Free';font-weight:400;
+  position:absolute;right:0;top:7px;color:var(--border);font-size:14px;
+}
+.checklist li.checked::before{content:'\f046';color:var(--success);font-weight:900;}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+@keyframes slideInRight{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(20,184,166,.3);}50%{box-shadow:0 0 0 8px rgba(20,184,166,0);}}
+.overview-node{animation:fadeInUp .5s ease both;}
+.overview-node:nth-child(1){animation-delay:.1s;}
+.overview-node:nth-child(2){animation-delay:.2s;}
+.overview-node:nth-child(3){animation-delay:.3s;}
+.overview-node:nth-child(4){animation-delay:.4s;}
+.overview-node:nth-child(5){animation-delay:.5s;}
+.overview-node:nth-child(6){animation-delay:.6s;}
+.overview-node:nth-child(7){animation-delay:.7s;}
+.node-num{animation:pulseGlow 2s ease infinite;}
+.section{animation:slideInRight .4s ease both;}
+
+@media (prefers-reduced-motion:reduce){
+  .overview-node,.section{animation:none!important;}
+  .node-num{animation:none!important;}
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+  .content{padding:1cm;}
+  .running-header,.running-footer{padding:8px 1cm;}
+  .chapter-number{font-size:60px;}
+  .chapter-title{font-size:18pt;}
+  .section-title{font-size:16pt;}
+  .comparison{grid-template-columns:1fr;}
+  .callout{flex-direction:column;gap:8px;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ===== RUNNING HEADER ===== -->
+<header class="running-header">
+  <span class="course"><i class="fa-solid fa-microchip" style="margin-left:6px;opacity:.7;"></i>Embedded Linux &amp; Yocto</span>
+  <span class="chapter">الدرس التاسع — ELF Format (الجزء الثاني)</span>
+</header>
+
+<!-- ===== CONTENT ===== -->
+<div class="content">
+
+<!-- ============================================================ -->
+<!-- TABLE OF CONTENTS -->
+<!-- ============================================================ -->
+<nav class="toc" id="toc">
+  <div class="toc-title">فهرس المحتويات</div>
+  <div class="toc-subtitle">Table of Contents</div>
+  <div class="toc-divider"></div>
+  <ul class="toc-list">
+    <li>
+      <a href="#ch9" class="toc-chapter">
+        <span>الفصل التاسع: Compilation Process — ELF Format (الجزء الثاني)</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">1</span>
+      </a>
+    </li>
+    <li>
+      <a href="#s1" class="toc-section">
+        <span>1. مراجعة سريعة لدورة البناء</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">2</span>
+      </a>
+    </li>
+    <li>
+      <a href="#s2" class="toc-section">
+        <span>2. مفاهيم لغة C: البناء على النطاق (Scope) وعمر المتغير (Lifetime) وتأثيرها</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">3</span>
+      </a>
+    </li>
+    <li>
+      <a href="#s3" class="toc-section">
+        <span>3. المعيار المقدس: ELF (Executable and Linkable Format)</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">5</span>
+      </a>
+    </li>
+    <li>
+      <a href="#s4" class="toc-section">
+        <span>4. جدول الرموز / .symtab ودور الـ Linker</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">7</span>
+      </a>
+    </li>
+    <li>
+      <a href="#s5" class="toc-section">
+        <span>5. أنواع ملفات الـ ELF (ELF Types)</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">9</span>
+      </a>
+    </li>
+    <li>
+      <a href="#s6" class="toc-section">
+        <span>6. أدوات الفحص العكسي (Binutils Inspection Commands)</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">10</span>
+      </a>
+    </li>
+    <li>
+      <a href="#s7" class="toc-section">
+        <span>7. الثابت الربط مقابل الدینامیكي الربط (Static vs Dynamic Linking)</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">11</span>
+      </a>
+    </li>
+    <li>
+      <a href="#qr" class="toc-section">
+        <span>مراجعة سريعة (Quick Review)</span>
+        <span class="toc-dots"></span>
+        <span class="toc-page">13</span>
+      </a>
+    </li>
+  </ul>
+</nav>
+
+<!-- ============================================================ -->
+<!-- CHAPTER 9 OPENING -->
+<!-- ============================================================ -->
+<div class="chapter-opening" id="ch9">
+  <div class="chapter-number">09</div>
+  <div class="chapter-icon">
+    <i class="fa-solid fa-gears"></i>
+  </div>
+  <h1 class="chapter-title">Compilation Process</h1>
+  <div class="chapter-subtitle">الجزء الثاني — ELF Format</div>
+  <div class="chapter-en-title">Executable and Linkable Format — Deep Dive</div>
+  <div class="chapter-divider"></div>
+  <div class="chapter-intro">
+    موضوع الدرس: مراجعة مراحل البناء، استخدام خیار المترجم <span class="en-term">c-</span> لتفكیك هیكل ملفات <span class="en-term">ELF</span>، الملفات القابلة للنقل بین الفرق، وأدوات الفحص <span class="en-term">file</span> و<span class="en-term">readelf</span>، بالإضافة إلى دور الـ <span class="en-term">Linker</span> ومفھوم <span class="en-term">Static vs Dynamic Linking</span>.
+  </div>
+  <div class="chapter-meta">
+    <span><i class="fa-solid fa-chalkboard-user"></i> طلال سالم بالحاج (<span class="en-term" style="font-size:10pt;">Embedded Linux Architect</span>)</span>
+    <span><i class="fa-solid fa-book-open"></i> ملخص الدرس التاسع</span>
+    <span><i class="fa-solid fa-layer-group"></i> المستوى: متقدم</span>
+  </div>
+</div>
+
+<p style="margin-top:24px;font-size:12.5pt;line-height:1.8;text-align:justify;">
+هذا الدرس هو امتداد للدرس الثامن، حیث نغوص أعمق داخل الملفات الثنائیة (<span class="en-term">Binaries</span>) لفھم كیف ینظم الـ <span class="en-term">Compiler</span> المترجم الكود والبیانات، حیث تكون إدارة الذاكرة دقیقة جداً، وهو أمر حاسم في الأنظمة المدمجة (<span class="en-term">Embedded Systems</span>).
+</p>
+
+<!-- ============================================================ -->
+<!-- ANIMATED CHAPTER OVERVIEW -->
+<!-- ============================================================ -->
+<div class="overview-section">
+  <div class="overview-label"><i class="fa-solid fa-route"></i> LEARNING ROADMAP — مسار التعلم</div>
+  <div class="overview-path">
+    <div class="overview-node">
+      <div class="node-num n1">1</div>
+      <div class="node-line"></div>
+      <div class="node-content">
+        <div class="node-title">مراجعة سريعة لدورة البناء <span class="node-icon">🔄</span></div>
+        <div class="node-en">Compilation Process Recap</div>
+        <div class="node-desc">استحضار المراحل الأربع: Preprocessing → Compilation → Assembly → Linking</div>
+      </div>
+    </div>
+    <div class="overview-node">
+      <div class="node-num n2">2</div>
+      <div class="node-line"></div>
+      <div class="node-content">
+        <div class="node-title">مفاهيم لغة C: النطاق والعمر <span class="node-icon">📐</span></div>
+        <div class="node-en">Scope &amp; Lifetime in C</div>
+        <div class="node-desc">Local / Global / Static — وكيف تؤثر على مكان المتغير في الملف الثنائي</div>
+      </div>
+    </div>
+    <div class="overview-node">
+      <div class="node-num n3">3</div>
+      <div class="node-line"></div>
+      <div class="node-content">
+        <div class="node-title">المعيار المقدس: ELF <span class="node-icon">📦</span></div>
+        <div class="node-en">Executable and Linkable Format</div>
+        <div class="node-desc">تنظيم الكود والبيانات داخل أقسام: .text / .data / .bss / .rodata</div>
+      </div>
+    </div>
+    <div class="overview-node">
+      <div class="node-num n4">4</div>
+      <div class="node-line"></div>
+      <div class="node-content">
+        <div class="node-title">جدول الرموز ودور اللينكر <span class="node-icon">🔗</span></div>
+        <div class="node-en">Symbol Table (.symtab) &amp; Linker Role</div>
+        <div class="node-desc">مشكلة Missing Symbols — كيف يحلها اللينكر عبر البحث والدمج</div>
+      </div>
+    </div>
+    <div class="overview-node">
+      <div class="node-num n5">5</div>
+      <div class="node-line"></div>
+      <div class="node-content">
+        <div class="node-title">أنواع ملفات ELF <span class="node-icon">📁</span></div>
+        <div class="node-en">ELF Types: Relocatable vs Executable</div>
+        <div class="node-desc">الفرق بين Object File والتنفيذي — القابلية للنقل والتشغيل</div>
+      </div>
+    </div>
+    <div class="overview-node">
+      <div class="node-num n6">6</div>
+      <div class="node-line"></div>
+      <div class="node-content">
+        <div class="node-title">أدوات الفحص العكسي <span class="node-icon">🔍</span></div>
+        <div class="node-en">Binutils: file &amp; readelf</div>
+        <div class="node-desc">قراءة وتحليل الملفات الثنائية — معرفة المعمارية والرموز</div>
+      </div>
+    </div>
+    <div class="overview-node">
+      <div class="node-num n7">7</div>
+      <div class="node-content">
+        <div class="node-title">الثابت مقابل الدینامیكي الربط <span class="node-icon">⚡</span></div>
+        <div class="node-en">Static vs Dynamic Linking</div>
+        <div class="node-desc">متى يُنسخ الكود فعلياً ومتى يُترك كـ Undefined حتى Runtime</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 1: Compilation Process Recap -->
+<!-- ============================================================ -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <div class="section-num">1</div>
+    <div>
+      <div class="section-title">مراجعة سريعة لدورة البناء</div>
+      <div class="section-en">Compilation Process Recap</div>
+    </div>
+  </div>
+  <div class="section-divider"></div>
+
+  <p>قبل الغوص في التفاصیل الجدیدة، یجب استحضار الأربع المراحل التي یمر بھا أي كود <span class="en-term">C</span> لیصبح ملفاً تنفیذیاً:</p>
+
+  <!-- Compilation Pipeline Diagram -->
+  <div class="diagram">
+    <div class="diagram-title">Compilation Pipeline — خط أنابيب البناء</div>
+    <svg width="700" height="320" viewBox="0 0 700 320" style="max-width:100%;">
+      <!-- Stage 1 -->
+      <rect x="200" y="10" width="300" height="52" rx="10" fill="#0F4C81" opacity=".95"/>
+      <text x="350" y="32" text-anchor="middle" fill="#fff" font-family="IBM Plex Sans Arabic" font-size="13" font-weight="600">المعالجة المسبقة</text>
+      <text x="350" y="50" text-anchor="middle" fill="#93c5fd" font-family="Inter" font-size="11">Preprocessing</text>
+      <text x="520" y="40" text-anchor="start" fill="#64748b" font-family="JetBrains Mono" font-size="10">.i</text>
+      <!-- Arrow 1 -->
+      <line x1="350" y1="62" x2="350" y2="82" stroke="#14B8A6" stroke-width="2.5" marker-end="url(#arr)"/>
+      <!-- Stage 2 -->
+      <rect x="200" y="82" width="300" height="52" rx="10" fill="#2563eb" opacity=".95"/>
+      <text x="350" y="104" text-anchor="middle" fill="#fff" font-family="IBM Plex Sans Arabic" font-size="13" font-weight="600">الترجمة</text>
+      <text x="350" y="122" text-anchor="middle" fill="#93c5fd" font-family="Inter" font-size="11">Compilation</text>
+      <text x="520" y="112" text-anchor="start" fill="#64748b" font-family="JetBrains Mono" font-size="10">.s</text>
+      <!-- Arrow 2 -->
+      <line x1="350" y1="134" x2="350" y2="154" stroke="#14B8A6" stroke-width="2.5" marker-end="url(#arr)"/>
+      <!-- Stage 3 -->
+      <rect x="200" y="154" width="300" height="52" rx="10" fill="#7C3AED" opacity=".95"/>
+      <text x="350" y="176" text-anchor="middle" fill="#fff" font-family="IBM Plex Sans Arabic" font-size="13" font-weight="600">التجميع</text>
+      <text x="350" y="194" text-anchor="middle" fill="#ddd6fe" font-family="Inter" font-size="11">Assembly</text>
+      <text x="520" y="184" text-anchor="start" fill="#64748b" font-family="JetBrains Mono" font-size="10">.o (ELF Relocatable)</text>
+      <!-- Arrow 3 -->
+      <line x1="350" y1="206" x2="350" y2="226" stroke="#14B8A6" stroke-width="2.5" marker-end="url(#arr)"/>
+      <!-- Stage 4 -->
+      <rect x="200" y="226" width="300" height="52" rx="10" fill="#14B8A6" opacity=".95"/>
+      <text x="350" y="248" text-anchor="middle" fill="#fff" font-family="IBM Plex Sans Arabic" font-size="13" font-weight="600">الربط</text>
+      <text x="350" y="266" text-anchor="middle" fill="#ccfbf1" font-family="Inter" font-size="11">Linking</text>
+      <text x="520" y="256" text-anchor="start" fill="#64748b" font-family="JetBrains Mono" font-size="10">Executable</text>
+      <!-- Side labels -->
+      <text x="170" y="40" text-anchor="end" fill="#94a3b8" font-family="JetBrains Mono" font-size="10">cpp</text>
+      <text x="170" y="112" text-anchor="end" fill="#94a3b8" font-family="JetBrains Mono" font-size="10">gcc -S</text>
+      <text x="170" y="184" text-anchor="end" fill="#94a3b8" font-family="JetBrains Mono" font-size="10">as / gcc -c</text>
+      <text x="170" y="256" text-anchor="end" fill="#94a3b8" font-family="JetBrains Mono" font-size="10">ld / gcc</text>
+      <!-- Arrow marker -->
+      <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#14B8A6"/></marker></defs>
+      <!-- Source label -->
+      <rect x="80" y="296" width="540" height="20" rx="4" fill="#f1f5f9" stroke="#e2e8f0"/>
+      <text x="350" y="310" text-anchor="middle" fill="#64748b" font-family="IBM Plex Sans Arabic" font-size="10">المدخلات: Source Code (.c)  ←→  المخرجات النهائية: Executable File</text>
+    </svg>
+  </div>
+
+  <ol>
+    <li style="margin-bottom:10px;">
+      <strong>المعالجة المسبقة (<span class="en-term">Preprocessing</span>):</strong> التعامل مع <span class="code-inline">#include</span> و<span class="code-inline">#define</span> وإنتاج ملف <span class="code-inline">.i</span> (مثلاً الأداة المستخدمة <span class="en-term">cpp</span> أو <span class="code-inline">gcc -E</span>).
+    </li>
+    <li style="margin-bottom:10px;">
+      <strong>الترجمة (<span class="en-term">Compilation</span>):</strong> تحویل الكود النقي إلى لغة التجمیع (<span class="en-term">Assembly</span>) وإنتاج ملف <span class="code-inline">.s</span> (مثلاً الأداة <span class="code-inline">gcc -S</span>).
+    </li>
+    <li style="margin-bottom:10px;">
+      <strong>التجمیع (<span class="en-term">Assembly</span>):</strong> تحویل أوامر <span class="en-term">Assembly</span> إلى لغة الآلة (<span class="en-term">Machine Code</span>) وإنتاج كائن ملف (<span class="en-term">Object file</span>) بامتداد <span class="code-inline">.o</span> (بصیغة <span class="en-term">ELF Relocatable</span>).
+    </li>
+    <li style="margin-bottom:10px;">
+      <strong>الربط (<span class="en-term">Linking</span>):</strong> دمج ملفات <span class="code-inline">.o</span> مع بعضها ومع المكتبات (<span class="en-term">Libraries</span>) لإنتاج الملف التنفیذي النهائي.
+    </li>
+  </ol>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2: Scope & Lifetime -->
+<!-- ============================================================ -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <div class="section-num">2</div>
+    <div>
+      <div class="section-title">مفاهيم لغة C: البناء على النطاق (Scope) وعمر المتغير (Lifetime) وتأثيرها</div>
+      <div class="section-en">C Language Concepts: Scope, Lifetime &amp; Their Effect on Build</div>
+    </div>
+  </div>
+  <div class="section-divider"></div>
+
+  <p>قبل تحویل الكود إلى <span class="en-term">Assembly</span>، یجب فھم كیف یتم تنظیم المتغیرات بناءً على خصائصھا في لغة <span class="en-term">C</span>، لأن ھذا سیحدد أین ستوضع في الملف الثنائي (<span class="en-term">Binary</span>).</p>
+
+  <div class="callout callout-blue">
+    <div class="callout-icon">📘</div>
+    <div class="callout-body">
+      <div class="callout-title">ما هي خاصیتا المتغیر في C؟</div>
+      <ul style="margin:6px 0 0 0;padding-right:20px;">
+        <li><strong>النطاق (<span class="en-term">Scope</span>):</strong> یمكن رؤیة واستخدام المتغیر أین فقط (داخل كل دالة).</li>
+        <li><strong>عمر المتغیر (<span class="en-term">Lifetime</span>):</strong> متى یُخلق المتغیر في الذاكرة ومتى یموت.</li>
+      </ul>
+    </div>
+  </div>
+
+  <h4>ما هي أنواع المتغیرات ومكان وجودھا؟</h4>
+
+  <!-- Variable Types Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>النوع</th>
+          <th>مثال</th>
+          <th>النطاق (<span class="en-term" style="color:#93c5fd;">Scope</span>)</th>
+          <th>العمر (<span class="en-term" style="color:#93c5fd;">Lifetime</span>)</th>
+          <th>المكان في الذاكرة</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>المتغیرات المحلیة</strong><br><span class="en-term" style="font-size:10pt;">Local Variables</span></td>
+          <td class="en-cell"><code style="font-family:var(--font-code);font-size:10.5pt;">int c = 5;</code><br><span style="font-size:9.5pt;color:var(--text-muted);">(داخل دالة <span class="en-term">main</span>)</span></td>
+          <td>محدود بالدالة</td>
+          <td>یُصنع عند استدعاء الدالة ویموت عند انتھائھا</td>
+          <td><span class="en-term">Stack</span></td>
+        </tr>
+        <tr>
+          <td><strong>المتغیرات العامة</strong><br><span class="en-term" style="font-size:10pt;">Global Variables</span></td>
+          <td class="en-cell"><code style="font-family:var(--font-code);font-size:10.5pt;">int a;</code><br><code style="font-family:var(--font-code);font-size:10.5pt;">int b = 6;</code><br><span style="font-size:9.5pt;color:var(--text-muted);">(خارج أي دالة)</span></td>
+          <td>الملف كامل (<span class="en-term">File Scope</span>)</td>
+          <td>یمتد طوال فترة عمل البرنامج (<span class="en-term">Static Lifetime</span>)</td>
+          <td><span class="en-term">.data / .bss</span></td>
+        </tr>
+        <tr>
+          <td><strong>المتغیرات المحلیة الثابتة</strong><br><span class="en-term" style="font-size:10pt;">Static Local Variables</span></td>
+          <td class="en-cell"><code style="font-family:var(--font-code);font-size:10.5pt;">static int c = 5;</code><br><span style="font-size:9.5pt;color:var(--text-muted);">(داخل دالة)</span></td>
+          <td>محدود بالدالة</td>
+          <td>یُمدد لیصبح بطول عمر البرنامج (<span class="en-term">Static Lifetime</span>)، لا یموت عند انتھاء الدالة بل یحتفظ بقیمتھا للاستدعاء القادم</td>
+          <td><span class="en-term">.data / .bss</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Code Examples -->
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <div class="code-lang">C — Variable Types</div>
+    </div>
+    <pre class="code-body"><span class="cmt">// Local Variable</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">int</span> c = <span class="num">5</span>;
+}
+
+<span class="cmt">// Global Variables</span>
+<span class="kw">int</span> a;
+<span class="kw">int</span> b = <span class="num">6</span>;
+
+<span class="cmt">// Static Local Variable</span>
+<span class="kw">int</span> <span class="fn">main</span>() {
+    <span class="kw">static</span> <span class="kw">int</span> c = <span class="num">5</span>;
+}</pre>
+  </div>
+
+  <h4>لماذا تهمّنا ھذه المفاھیم في البناء؟</h4>
+  <p>یجب أن یحتوي الملف الثنائي (<span class="en-term">Executable</span>) على تنظیم دقیق لأن الـ <span class="en-term">Kernel</span> (<span class="en-term">OS</span>) هو من سینظم الذاكرة من البرنامج، یفرق بین:</p>
+  <ul>
+    <li>المتغیرات التي لھا قیمة ابتدائیة (<span class="en-term">Initialized</span>).</li>
+    <li>المتغیرات التي لیس لھا قیمة (<span class="en-term">Uninitialized</span>).</li>
+    <li>المتغیرات الثابتة التي لا يمكن تعدیلھا (<span class="en-term">Constants/Read-Only</span>).</li>
+    <li>الكود نفسھ (<span class="en-term">Instructions/Functions</span>).</li>
+  </ul>
+
+  <div class="callout callout-green">
+    <div class="callout-icon">✅</div>
+    <div class="callout-body">
+      <div class="callout-title">Key Takeaway</div>
+      <p>نوع المتغیر في لغة <span class="en-term">C</span> یحدد القسم (<span class="en-term">Section</span>) الذي سیوضع فیھ داخل ملف الـ <span class="en-term">ELF</span>.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3: ELF Format -->
+<!-- ============================================================ -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <div class="section-num">3</div>
+    <div>
+      <div class="section-title">المعيار المقدس: ELF</div>
+      <div class="section-en">Executable and Linkable Format — The Sacred Standard</div>
+    </div>
+  </div>
+  <div class="section-divider"></div>
+
+  <p>یجب تنظیم الكود (<span class="en-term">Instructions</span>) والبیانات (<span class="en-term">Data</span>) داخل الملف الناتج لیمكنكن الـ <span class="en-term">Kernel</span> من قراءتھ بشكل صحیح وتشغیلھ، وله تخصیص الذاكرة (<span class="en-term">Memory Management</span>).</p>
+
+  <div class="callout callout-gray">
+    <div class="callout-icon">📌</div>
+    <div class="callout-body">
+      <div class="callout-title">Definition — تعریف</div>
+      <p><span class="en-term">ELF</span>: ھو التنسیق القیاسي (<span class="en-term">Format</span>) لكیفیة تنظیم الكود والبیانات والمعلومات الوصفیة (<span class="en-term">Metadata</span>) داخل الملفات الثنائیة لأنظمة لینكس.</p>
+    </div>
+  </div>
+
+  <h4>كیف يتم تنظیم الـ ELF؟ ⚙</h4>
+  <p>ملف الـ <span class="en-term">ELF</span> مقسم من الداخل إلى "أقسام" (<span class="en-term">Sections</span>) بناءً على أنواع البیانات التي حللناھا سابقاً:</p>
+
+  <!-- ELF Structure Diagram -->
+  <div class="diagram">
+    <div class="diagram-title">ELF File Internal Structure — الهيكل الداخلي لملف ELF</div>
+    <svg width="520" height="340" viewBox="0 0 520 340" style="max-width:100%;">
+      <!-- ELF Header -->
+      <rect x="60" y="10" width="400" height="36" rx="8" fill="#334155"/>
+      <text x="260" y="33" text-anchor="middle" fill="#f8fafc" font-family="Inter" font-size="12" font-weight="600">ELF Header</text>
+      <!-- .text -->
+      <rect x="60" y="56" width="400" height="52" rx="8" fill="#0F4C81"/>
+      <text x="260" y="78" text-anchor="middle" fill="#fff" font-family="IBM Plex Sans Arabic" font-size="12" font-weight="600">البرمجي الكود (Instructions)</text>
+      <text x="260" y="96" text-anchor="middle" fill="#93c5fd" font-family="JetBrains Mono" font-size="11">.text</text>
+      <!-- .rodata -->
+      <rect x="60" y="118" width="400" height="52" rx="8" fill="#7C3AED"/>
+      <text x="260" y="140" text-anchor="middle" fill="#fff" font-family="IBM Plex Sans Arabic" font-size="12" font-weight="600">الثوابت (Constants) — قراءة فقط</text>
+      <text x="260" y="158" text-anchor="middle" fill="#ddd6fe" font-family="JetBrains Mono" font-size="11">.rodata</text>
+      <!-- .data -->
+      <rect x="60" y="180" width="400" height="52" rx="8" fill="#16A34A"/>
+      <text x="260" y="202" text-anchor="middle" fill="#fff" font-family="IBM Plex Sans Arabic" font-size="12" font-weight="600">البیانات المھیئة (Initialized Data)</text>
+      <text x="260" y="220" text-anchor="middle" fill="#bbf7d0" font-family="JetBrains Mono" font-size="11">.data</text>
+      <!-- .bss -->
+      <rect x="60" y="242" width="400" height="52" rx="8" fill="#EA580C"/>
+      <text x="260" y="264" text-anchor="middle" fill="#fff" font-family="IBM Plex Sans Arabic" font-size="12" font-weight="600">البیانات غیر المھیئة (Uninitialized Data)</text>
+      <text x="260" y="282" text-anchor="middle" fill="#fed7aa" font-family="JetBrains Mono" font-size="11">.bss — لا يشغل حيزاً على القرص</text>
+      <!-- Side labels -->
+      <text x="40" y="86" text-anchor="end" fill="#64748b" font-family="IBM Plex Sans Arabic" font-size="9">قراءة+تنفیذ</text>
+      <text x="40" y="148" text-anchor="end" fill="#64748b" font-family="IBM Plex Sans Arabic" font-size="9">قراءة فقط</text>
+      <text x="40" y="210" text-anchor="end" fill="#64748b" font-family="IBM Plex Sans Arabic" font-size="9">قراءة+كتابة</text>
+      <text x="40" y="272" text-anchor="end" fill="#64748b" font-family="IBM Plex Sans Arabic" font-size="9">قراءة+كتابة</text>
+      <!-- Note -->
+      <text x="260" y="324" text-anchor="middle" fill="#94a3b8" font-family="IBM Plex Sans Arabic" font-size="10">.symtab وغيرها من أقسام Metadata توجد أيضاً</text>
+    </svg>
+  </div>
+
+  <ul>
+    <li style="margin-bottom:10px;">
+      <strong>البرمجي الكود (<span class="en-term">Instructions</span>):</strong> یوضع في قسم <span class="code-inline">.text</span>.
+    </li>
+    <li style="margin-bottom:10px;">
+      <strong>البیانات المھیئة (<span class="en-term">Initialized Data</span>):</strong> توضع في قسم <span class="code-inline">.data</span>.
+    </li>
+    <li style="margin-bottom:10px;">
+      <strong>البیانات غیر المھیئة (<span class="en-term">Uninitialized Data</span>):</strong> توضع في قسم <span class="code-inline">.bss</span> یحجز مساحة في الملف على القرص (لتوفیر مساحة) وفقط في الرام عند التشغیل.
+    </li>
+    <li style="margin-bottom:10px;">
+      <strong>الثوابت (<span class="en-term">Constants</span>):</strong> توضع في قسم <span class="code-inline">.rodata</span> (قراءة فقط).
+    </li>
+  </ul>
+
+  <div class="callout callout-red">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-title">Important — ملاحظة ھامة</div>
+      <p>المتغیرات المحلیة (<span class="en-term">Local variables</span>) والذاكرة الدینامیكیة (<span class="en-term">Dynamic Allocation</span>) لا توجد كبیانات ثابتة داخل الـ <span class="en-term">ELF</span> على القرص، بل یتم حجزھا عبر الـ <span class="en-term">Stack</span> والـ <span class="en-term">Heap</span> أثناء التشغیل فقط.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4: Symbol Table & Linker -->
+<!-- ============================================================ -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <div class="section-num">4</div>
+    <div>
+      <div class="section-title">جدول الرموز / .symtab ودور الـ Linker</div>
+      <div class="section-en">Symbol Table &amp; The Role of the Linker</div>
+    </div>
+  </div>
+  <div class="section-divider"></div>
+
+  <p>ھذا ھو أھم لغز في عملیة البناء.</p>
+
+  <div class="callout callout-red">
+    <div class="callout-icon">⚠️</div>
+    <div class="callout-body">
+      <div class="callout-title">ما هي مشكلة الـ Missing Symbols؟</div>
+      <p>تخیل برنامجاً یحتوي على <span class="code-inline">main.c</span> یقوم بمناداة دالة <span class="code-inline">techleef()</span> موجودة في ملف آخر.</p>
+      <ol style="margin:8px 0 0 0;padding-right:20px;">
+        <li>عندما یقرأ الـ <span class="en-term">Compiler</span> المترجم <span class="code-inline">main.c</span>، فإنھ یرى نداء <span class="code-inline">techleef()</span> ولكنه لا یرى الكود الخاص بھا.</li>
+        <li>الـ <span class="en-term">CPU</span> لا یفھم أسماء الدوال، بل یفھم قفزات لعناوین في الذاكرة (<span class="en-term">Memory Addresses</span>).</li>
+        <li>بما أن المترجم لا یملك عنوان <span class="code-inline">techleef()</span>، فإنھ یضع علامة وھمیة (مثل <span class="en-term">PLT</span> أو <span class="en-term">Undefined</span>).</li>
+        <li>الأداة المسؤولة عن الجمع (<span class="en-term">Assembler</span>) تصنع ملف <span class="code-inline">main.o</span> (وھو ملف <span class="en-term">ELF</span>).</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Symbol Resolution Flowchart -->
+  <div class="diagram">
+    <div class="diagram-title">Symbol Resolution Flow — تدفق حل الرموز</div>
+    <svg width="660" height="260" viewBox="0 0 660 260" style="max-width:100%;">
+      <!-- main.c box -->
+      <rect x="20" y="30" width="130" height="50" rx="8" fill="#0F4C81"/>
+      <text x="85" y="52" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-size="11">main.c</text>
+      <text x="85" y="68" text-anchor="middle" fill="#93c5fd" font-family="IBM Plex Sans Arabic" font-size="9">یستدعي techleef()</text>
+      <!-- Arrow -->
+      <line x1="150" y1="55" x2="190" y2="55" stroke="#14B8A6" stroke-width="2" marker-end="url(#arr2)"/>
+      <text x="170" y="48" text-anchor="middle" fill="#64748b" font-family="Inter" font-size="8">Compiler</text>
+      <!-- main.o box -->
+      <rect x="190" y="30" width="130" height="50" rx="8" fill="#2563eb"/>
+      <text x="255" y="52" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-size="11">main.o</text>
+      <text x="255" y="68" text-anchor="middle" fill="#bfdbfe" font-family="IBM Plex Sans Arabic" font-size="9">techleef = UNDEFINED</text>
+      <!-- Arrow -->
+      <line x1="320" y1="55" x2="370" y2="55" stroke="#F59E0B" stroke-width="2.5" marker-end="url(#arr3)"/>
+      <text x="345" y="48" text-anchor="middle" fill="#F59E0B" font-family="Inter" font-size="9" font-weight="600">Linker</text>
+      <!-- techleef.o box -->
+      <rect x="20" y="120" width="130" height="50" rx="8" fill="#7C3AED"/>
+      <text x="85" y="142" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-size="11">techleef.o</text>
+      <text x="85" y="158" text-anchor="middle" fill="#ddd6fe" font-family="IBM Plex Sans Arabic" font-size="9">techleef = DEFINED</text>
+      <!-- Arrow from techleef.o to linker -->
+      <line x1="150" y1="145" x2="370" y2="80" stroke="#14B8A6" stroke-width="2" marker-end="url(#arr2)"/>
+      <!-- Result box -->
+      <rect x="370" y="30" width="140" height="50" rx="8" fill="#16A34A"/>
+      <text x="440" y="52" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-size="11">Executable</text>
+      <text x="440" y="68" text-anchor="middle" fill="#bbf7d0" font-family="IBM Plex Sans Arabic" font-size="9">جميع الرموز محسومة</text>
+      <!-- Error box -->
+      <rect x="540" y="30" width="110" height="50" rx="8" fill="#DC2626"/>
+      <text x="595" y="52" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-size="10">Error!</text>
+      <text x="595" y="68" text-anchor="middle" fill="#fecaca" font-family="IBM Plex Sans Arabic" font-size="9">Undefined ref</text>
+      <line x1="510" y1="55" x2="540" y2="55" stroke="#DC2626" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arr4)"/>
+      <text x="525" y="48" text-anchor="middle" fill="#DC2626" font-family="Inter" font-size="8">إذا لم يجد</text>
+      <!-- Bottom note -->
+      <rect x="20" y="200" width="630" height="40" rx="8" fill="#f8fafc" stroke="#e2e8f0"/>
+      <text x="335" y="218" text-anchor="middle" fill="#64748b" font-family="IBM Plex Sans Arabic" font-size="10">اللینكر یبحث عن الرموز المفقودة في ملفات .o أخرى أو في المكتبات ثم یدمجھا لتكوین ملف تنفیذي سلیم خالٍ من الرموز المجھولة</text>
+      <text x="335" y="234" text-anchor="middle" fill="#14B8A6" font-family="Inter" font-size="9" font-weight="500">Resolve Missing Symbols → Merge → Clean Executable</text>
+      <defs>
+        <marker id="arr2" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#14B8A6"/></marker>
+        <marker id="arr3" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#F59E0B"/></marker>
+        <marker id="arr4" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#DC2626"/></marker>
+      </defs>
+    </svg>
+  </div>
+
+  <div class="callout callout-gray">
+    <div class="callout-icon">📌</div>
+    <div class="callout-body">
+      <div class="callout-title">ما هو الـ Symbol Table؟</div>
+      <p>كل ملف <span class="en-term">ELF</span> یحتوي على قسم یسمى <span class="code-inline">.symtab</span> وھو أشبھ بسجل حضور یسجل فیھ كل "الرموز" (أسماء الدوال والمتغیرات العامة) الموجودة في الملف.</p>
+      <p>في ملف <span class="code-inline">main.o</span> نجد الرمز <span class="en-term">main</span> معرّفاً (<span class="en-term">Defined</span>) والرمز <span class="en-term">techleef</span> غیر معرّف (<span class="en-term">Undefined</span>).</p>
+      <p>الملف الذي یحتوي على رموز غیر معرّفة (<span class="en-term">Undefined</span>) لا يمكن تشغیلھ أبداً — الـ <span class="en-term">CPU</span> لا یمكنھ القفز لعنوان مجھول.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-purple">
+    <div class="callout-icon">🧠</div>
+    <div class="callout-body">
+      <div class="callout-title">اللینكر المنقذ — The Linker (ld)</div>
+      <p><strong>التعریف الشائع الخاطئ:</strong> اللینكر یجمع ملفات <span class="code-inline">.o</span> لیصنع ملفاً تنفیذیاً (جواب سطحي).</p>
+      <p><strong>التعریف الدقیق العمیق:</strong> اللینكر ھو الأداة المسؤولة عن البحث عن الرموز المفقودة (<span class="en-term">Missing/Undefined Symbols</span>) في ملفات <span class="code-inline">.o</span> أخرى أو مكتبات، ثم دمجھا لحلھا (<span class="en-term">Resolve</span>) لتكوین ملف تنفیذي سلیم خالٍ من الرموز المجھولة.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-green">
+    <div class="callout-icon">✅</div>
+    <div class="callout-body">
+      <div class="callout-title">Key Takeaway</div>
+      <p>إذا رأیت خطأ من نوع <span class="code-inline">undefined reference to 'X'</span> فاعلم فوراً أنھ خطأ من الـ <span class="en-term">Linker</span> وینعني فشل في العثور على الكود الحقیقي الخاص بالدالة/الرمز <span class="en-term">X</span> في الملفات أو المكتبات التي أعطیتھا له.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5: ELF Types -->
+<!-- ============================================================ -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <div class="section-num">5</div>
+    <div>
+      <div class="section-title">أنواع ملفات الـ ELF</div>
+      <div class="section-en">ELF Types</div>
+    </div>
+  </div>
+  <div class="section-divider"></div>
+
+  <p>معیار الـ <span class="en-term">ELF</span> یحدد 4 أنواع للملفات، لكن یھمنا منھا اثنان أساسیان الآن:</p>
+
+  <!-- Comparison Cards -->
+  <div class="comparison">
+    <div class="comp-card static">
+      <div class="comp-card-title"><i class="fa-solid fa-file-code"></i> للنقل القابل الملف <span class="en-term" style="font-size:11pt;">Relocatable File</span></div>
+      <p><strong>الامتداد:</strong> <span class="code-inline">.o</span> (<span class="en-term">Object file</span>)</p>
+      <p><strong>المعنى:</strong> "قابل للنقل" یعني أن العناوین داخلھ لم تُثبت بشكل نھائي، ویحتوي عادة على رموز غیر معرّفة (<span class="en-term">Undefined Symbols</span>).</p>
+      <p><strong>قابلیة التشغیل:</strong> لا يمكن تشغیلھ.</p>
+    </div>
+    <div class="comp-card dynamic">
+      <div class="comp-card-title"><i class="fa-solid fa-rocket"></i> التنفیذي الملف <span class="en-term" style="font-size:11pt;">Executable File</span></div>
+      <p><strong>الامتداد:</strong> عادة بدون امتداد (مثل <span class="code-inline">main</span>)</p>
+      <p><strong>المعنى:</strong> الـ <span class="en-term">Linker</span> قام بحل جمیع الرموز المفقودة ودمج الأقسام وحدد العناوین الحقیقیة.</p>
+      <p><strong>قابلیة التشغیل:</strong> جاھز للتشغیل مباشرة.</p>
+    </div>
+  </div>
+
+  <!-- ELF Types Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>الخاصية</th>
+          <th><span class="en-term" style="color:#93c5fd;">Relocatable (.o)</span></th>
+          <th><span class="en-term" style="color:#93c5fd;">Executable</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>العناوین</td>
+          <td>غیر ثابتة (نسبية)</td>
+          <td>ثابتة (حقیقیة)</td>
+        </tr>
+        <tr>
+          <td>الرموز المفقودة</td>
+          <td>قد توجد (<span class="en-term">Undefined</span>)</td>
+          <td>لا توجد (كلها <span class="en-term">Resolved</span>)</td>
+        </tr>
+        <tr>
+          <td>قابلية التشغیل</td>
+          <td class="num-cell" style="color:var(--danger);">✗</td>
+          <td class="num-cell" style="color:var(--success);">✓</td>
+        </tr>
+        <tr>
+          <td>الإنتاج</td>
+          <td>من الـ <span class="en-term">Assembler</span></td>
+          <td>من الـ <span class="en-term">Linker</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6: Binutils Inspection Commands -->
+<!-- ============================================================ -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <div class="section-num">6</div>
+    <div>
+      <div class="section-title">أدوات الفحص العكسي</div>
+      <div class="section-en">Binutils Inspection Commands</div>
+    </div>
+  </div>
+  <div class="section-divider"></div>
+
+  <p>كمھندس أنظمة مدمجة، لا يمكنك قراءة ملفات <span class="en-term">ELF</span> لأنھا ملفات ثنائیة (ستظھر مشوھة كرموز) ببرنامج <span class="en-term">cat</span> أو <span class="en-term">nano</span>، نستخدم أدوات مخصصة للتحلیل:</p>
+
+  <!-- Command 1: file -->
+  <h4>الأمر الأول: <span class="en-term">file</span></h4>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <div class="code-lang">Terminal</div>
+    </div>
+    <pre class="code-body"><span class="fn">file</span> main.o
+<span class="fn">file</span> main</pre>
+  </div>
+
+  <div class="callout callout-blue">
+    <div class="callout-icon">📘</div>
+    <div class="callout-body">
+      <div class="callout-title">الوظیفة:</div>
+      <p>یقرأ ترویسة الملف (<span class="en-term">Header</span>) ویخبرك بنوعھ وھندستھ المعماریة (<span class="en-term">Architecture</span>).</p>
+      <p><strong>النتيجة لملف <span class="code-inline">.o</span>:</strong> <span class="code-inline">ELF 64-bit LSB relocatable</span></p>
+      <p><strong>النتيجة للملف التنفیذي:</strong> <span class="code-inline">ELF 64-bit LSB executable</span></p>
+    </div>
+  </div>
+
+  <!-- Command 2: readelf -->
+  <h4>الأمر الثاني: <span class="en-term">readelf</span></h4>
+
+  <div class="code-block">
+    <div class="code-header">
+      <div class="code-dots"><span></span><span></span><span></span></div>
+      <div class="code-lang">Terminal</div>
+    </div>
+    <pre class="code-body"><span class="fn">readelf</span> <span class="flag">-s</span> main.o</pre>
+  </div>
+
+  <div class="callout callout-blue">
+    <div class="callout-icon">📘</div>
+    <div class="callout-body">
+      <div class="callout-title">الوظیفة:</div>
+      <p>أداة جداً قویة لقراءة تفاصیل الـ <span class="en-term">ELF</span> كلھا.</p>
+      <p><strong>خیار ھامة:</strong> خیار <span class="code-inline">-s</span> (أو <span class="code-inline">--syms</span>) یعرض لك جدول الرموز (<span class="en-term">.symtab</span>) — یمكنك رؤية الرموز المعرّفة والرموز غیر المعرّفة (<span class="en-term">UND</span> — <span class="en-term">Undefined</span>).</p>
+    </div>
+  </div>
+
+  <div class="callout callout-orange">
+    <div class="callout-icon">💡</div>
+    <div class="callout-body">
+      <div class="callout-title">Tip</div>
+      <p>یمكنك استخدام <span class="code-inline">readelf -h</span> لعرض الـ <span class="en-term">ELF Header</span>، و<span class="code-inline">readelf -S</span> لعرض الأقسام (<span class="en-term">Section Headers</span>)، و<span class="code-inline">readelf -l</span> لعرض الـ <span class="en-term">Program Headers</span> (التي تھم الـ <span class="en-term">Kernel</span> عند التشغیل).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 7: Static vs Dynamic Linking -->
+<!-- ============================================================ -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <div class="section-num">7</div>
+    <div>
+      <div class="section-title">الثابت الربط مقابل الدینامیكي الربط</div>
+      <div class="section-en">Static vs Dynamic Linking</div>
+    </div>
+  </div>
+  <div class="section-divider"></div>
+
+  <p>في نھایة الدرس، ظھر سؤال منطقي جداً:</p>
+  <p>حین بناء البرنامج، قمنا بربط <span class="code-inline">main.o</span> مع <span class="code-inline">techleef.o</span> لإنتاج الملف التنفیذي <span class="code-inline">main</span>، حیث حلّ اللینكر مشكلة <span class="en-term">techleef</span> بنجاح. ولكن، دالة مثل <span class="code-inline">printf()</span> أو <span class="code-inline">puts()</span> ظلّت كرمز <span class="en-term">Undefined</span> حتى داخل الملف التنفیذي <span class="code-inline">main</span>! ومع ذلك اشتغل البرنامج بنجاح! كيف؟</p>
+
+  <p>یثبت ھذا أن الـ <span class="en-term">Linking</span> (الربط) یتم على نوعین أو مرحلتین:</p>
+
+  <!-- Static vs Dynamic Comparison -->
+  <div class="comparison">
+    <div class="comp-card static">
+      <div class="comp-card-title"><i class="fa-solid fa-link"></i> الثابت الربط <span class="en-term" style="font-size:11pt;">Static Linking</span></div>
+      <p>یتم أثناء عملیة الـ <span class="en-term">Compilation</span> (بواسطة اللینكر <span class="en-term">ld</span>).</p>
+      <p>یأخذ الكود المفقود فعلیاً وینسخھ داخل الملف التنفیذي (كما فعلنا مع <span class="en-term">techleef</span>).</p>
+    </div>
+    <div class="comp-card dynamic">
+      <div class="comp-card-title"><i class="fa-solid fa-arrows-spin"></i> الدینامیكي الربط <span class="en-term" style="font-size:11pt;">Dynamic Linking</span></div>
+      <p>یتم أثناء تشغیل البرنامج (<span class="en-term">Runtime</span>).</p>
+      <p>اللینكر العادي (<span class="en-term">Static Linker</span>) یترك بعض الرموز (مثل دوال <span class="en-term">libc</span>) كـ <span class="en-term">Undefined</span> متعمداً ویترك علامة تخبر النظام أین یجد ھذه الدوال.</p>
+      <p>عند تشغیل البرنامج، یتدخل برنامج آخر یسمى الـ <span class="en-term">Loader / Dynamic Linker</span> ویقوم بحل ھذه الرموز بربطھا بالمكتبات المشتركة (<span class="en-term">Shared Libraries</span>) الموجودة في النظام (مثل <span class="code-inline">libc.so</span>) أثناء التشغیل.</p>
+    </div>
+  </div>
+
+  <!-- Static vs Dynamic Diagram -->
+  <div class="diagram">
+    <div class="diagram-title">Static vs Dynamic Linking — مقارنة بصرية</div>
+    <svg width="680" height="300" viewBox="0 0 680 300" style="max-width:100%;">
+      <!-- Static Side -->
+      <text x="170" y="20" text-anchor="middle" fill="#0F4C81" font-family="IBM Plex Sans Arabic" font-size="13" font-weight="700">Static Linking</text>
+      <rect x="40" y="35" width="120" height="40" rx="8" fill="#2563eb"/>
+      <text x="100" y="60" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-size="10">main.o</text>
+      <rect x="180" y="35" width="120" height="40" rx="8" fill="#2563eb"/>
+      <text x="240" y="60" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-size="10">techleef.o</text>
+      <rect x="110" y="35" width="120" height="40" rx="8" fill="#7C3AED" opacity=".8"/>
+      <text x="170" y="53" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-size="9">printf code</text>
+      <text x="170" y="67" text-anchor="middle" fill="#ddd6fe" font-family="IBM Plex Sans Arabic" font-size="8">یُنسخ فعلیاً</text>
+      <!-- Arrows down -->
+      <line x1="100" y1="75" x2="150" y2="110" stroke="#0F4C81" stroke-width="2" marker-end="url(#arr5)"/>
+      <line x1="240" y1="75" x2="190" y2="110" stroke="#0F4C81" stroke-width="2" marker-end="url(#arr5)"/>
+      <line x1="170" y1="75" x2="170" y2="110" stroke="#7C3AED" stroke-width="2" marker-end="url(#arr6)"/>
+      <text x="170" y="102" text-anchor="middle" fill="#0F4C81" font-family="Inter" font-size="9" font-weight="600">ld (Compiler Time)</text>
+      <!-- Result -->
+      <rect x="80" y="110" width="180" height="50" rx="10" fill="#16A34A"/>
+      <text x="170" y="132" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-size="11">main (Executable)</text>
+      <text x="170" y="148" text-anchor="middle" fill="#bbf7d0" font-family="IBM Plex Sans Arabic" font-size="9">كل الرموز محسومة + كود مكتبات مدمج</text>
+      <!-- Size note -->
+      <rect x="80" y="170" width="180" height="28" rx="6" fill="#fef2f2" stroke="#fecaca"/>
+      <text x="170" y="189" text-anchor="middle" fill="#DC2626" font-family="IBM Plex Sans Arabic" font-size="9">حجم الملف: كبیر (یحتوي كل الكود)</text>
+
+      <!-- Dynamic Side -->
+      <text x="510" y="20" text-anchor="middle" fill="#14B8A6" font-family="IBM Plex Sans Arabic" font-size="13" font-weight="700">Dynamic Linking</text>
+      <rect x="420" y="35" width="120" height="40" rx="8" fill="#2563eb"/>
+      <text x="480" y="60" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-size="10">main.o</text>
+      <rect x="560" y="35" width="120" height="40" rx="8" fill="#2563eb"/>
+      <text x="620" y="60" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-size="10">techleef.o</text>
+      <!-- Arrows down -->
+      <line x1="480" y1="75" x2="490" y2="110" stroke="#0F4C81" stroke-width="2" marker-end="url(#arr5)"/>
+      <line x1="620" y1="75" x2="530" y2="110" stroke="#0F4C81" stroke-width="2" marker-end="url(#arr5)"/>
+      <text x="510" y="102" text-anchor="middle" fill="#0F4C81" font-family="Inter" font-size="9" font-weight="600">ld (Compiler Time)</text>
+      <!-- Result -->
+      <rect x="400" y="110" width="220" height="50" rx="10" fill="#F59E0B"/>
+      <text x="510" y="132" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-size="11">main (Executable)</text>
+      <text x="510" y="148" text-anchor="middle" fill="#fef3c7" font-family="IBM Plex Sans Arabic" font-size="9">printf = Undefined (یحل لاحقاً)</text>
+      <!-- Arrow to loader -->
+      <line x1="510" y1="160" x2="510" y2="200" stroke="#14B8A6" stroke-width="2.5" marker-end="url(#arr7)"/>
+      <text x="540" y="185" fill="#14B8A6" font-family="Inter" font-size="9" font-weight="600">Runtime</text>
+      <!-- Loader -->
+      <rect x="410" y="200" width="200" height="36" rx="8" fill="#14B8A6"/>
+      <text x="510" y="223" text-anchor="middle" fill="#fff" font-family="Inter" font-size="11" font-weight="600">Loader / Dynamic Linker</text>
+      <!-- libc -->
+      <rect x="430" y="248" width="160" height="36" rx="8" fill="#7C3AED"/>
+      <text x="510" y="270" text-anchor="middle" fill="#fff" font-family="JetBrains Mono" font-size="11">libc.so</text>
+      <line x1="510" y1="236" x2="510" y2="248" stroke="#7C3AED" stroke-width="2" marker-end="url(#arr6)"/>
+      <!-- Size note -->
+      <rect x="400" y="170" width="220" height="24" rx="6" fill="#f0fdf4" stroke="#bbf7d0" style="position:absolute;"/>
+      <text x="510" y="186" text-anchor="middle" fill="#16A34A" font-family="IBM Plex Sans Arabic" font-size="9">حجم الملف: صغیر (بدون كود المكتبات)</text>
+
+      <defs>
+        <marker id="arr5" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#0F4C81"/></marker>
+        <marker id="arr6" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#7C3AED"/></marker>
+        <marker id="arr7" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#14B8A6"/></marker>
+      </defs>
+    </svg>
+  </div>
+
+  <!-- Static vs Dynamic Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>المعيار</th>
+          <th><span class="en-term" style="color:#93c5fd;">Static Linking</span></th>
+          <th><span class="en-term" style="color:#93c5fd;">Dynamic Linking</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>وقت الحل</td>
+          <td>أثناء الترجمة (<span class="en-term">Compile Time</span>)</td>
+          <td>أثناء التشغیل (<span class="en-term">Runtime</span>)</td>
+        </tr>
+        <tr>
+          <td>الأداة المسؤولة</td>
+          <td>اللینكر (<span class="en-term">ld</span>)</td>
+          <td>اللودر (<span class="en-term">Loader / Dynamic Linker</span>)</td>
+        </tr>
+        <tr>
+          <td>نسخ الكود</td>
+          <td>یُنسخ فعلیاً داخل الملف التنفیذي</td>
+          <td>لا یُنسخ — یبقى مرجعاً خارجیاً</td>
+        </tr>
+        <tr>
+          <td>حجم الملف التنفیذي</td>
+          <td>كبیر</td>
+          <td>صغیر</td>
+        </tr>
+        <tr>
+          <td>الاعتمادیة</td>
+          <td>مستقل (لا یحتاج مكتبات خارجیة)</td>
+          <td>یحتاج المكتبات المشتركة موجودة على النظام</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-green">
+    <div class="callout-icon">✅</div>
+    <div class="callout-body">
+      <div class="callout-title">Key Takeaway</div>
+      <p>ھناك "اللینكر" یعمل وقت الترجمة لیحل الرموز الثابتة، وھناك "اللودر" أو "اللینكر الدینامیك" یعمل وقت التشغیل لیحل الرموز المرتبطة بمكتبات خارجیة. ھذا الموضوع سیتم تفصیلھ بالكامل في الدرس القادم.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- QUICK REVIEW -->
+<!-- ============================================================ -->
+<div class="quick-review" id="qr">
+  <div class="qr-header">
+    <i class="fa-solid fa-clipboard-check"></i>
+    <h2>مراجعة سريعة — Quick Review</h2>
+  </div>
+  <div class="qr-body">
+
+    <!-- Main Concepts -->
+    <div class="qr-section">
+      <div class="qr-section-title blue"><i class="fa-solid fa-lightbulb"></i> Main Concepts — المفاهیم الرئيسیة</div>
+      <ul class="qr-list">
+        <li>دورة البناء تتكون من أربع مراحل: <span class="en-term">Preprocessing → Compilation → Assembly → Linking</span>.</li>
+        <li>كل متغیر في لغة <span class="en-term">C</span> یملك خاصیتین: النطاق (<span class="en-term">Scope</span>) وعمر المتغیر (<span class="en-term">Lifetime</span>)، وھاتان الخاصیتان تحددان أین سیوضع المتغیر في الملف الثنائي.</li>
+        <li>معیار <span class="en-term">ELF</span> ینظم الكود والبیانات داخل أقسام: <span class="code-inline">.text</span> للكود، <span class="code-inline">.data</span> للبیانات المھیئة، <span class="code-inline">.bss</span> للبیانات غیر المھیئة، <span class="code-inline">.rodata</span> للثوابت.</li>
+        <li>جدول الرموز <span class="code-inline">.symtab</span> یسجل كل الدوال والمتغیرات العامة في الملف، ویصنّفھا كـ <span class="en-term">Defined</span> أو <span class="en-term">Undefined</span>.</li>
+        <li>اللینكر ھو الأداة المسؤولة عن حل الرموز المفقودة عبر البحث في ملفات <span class="code-inline">.o</span> أخرى والمكتبات ثم دمجھا.</li>
+        <li>ملفات <span class="en-term">ELF</span> نوعان رئیسیان: <span class="en-term">Relocatable</span> (غیر قابل للتشغیل) و<span class="en-term">Executable</span> (قاھز للتشغیل).</li>
+        <li>الربط نوعان: ثابت (<span class="en-term">Static</span>) یتم وقت الترجمة، ودینامیكي (<span class="en-term">Dynamic</span>) یتم وقت التشغیل عبر الـ <span class="en-term">Loader</span>.</li>
+      </ul>
+    </div>
+
+    <!-- Important Definitions -->
+    <div class="qr-section">
+      <div class="qr-section-title green"><i class="fa-solid fa-book"></i> Important Definitions — تعریفات ھامة</div>
+      <ul class="qr-list">
+        <li><strong><span class="en-term">ELF</span> (<span class="en-term">Executable and Linkable Format</span>):</strong> التنسیق القیاسي لتنظیم الكود والبیانات والمعلومات الوصفیة داخل الملفات الثنائیة لأنظمة لینكس.</li>
+        <li><strong><span class="en-term">Symbol Table</span> (<span class="code-inline">.symtab</span>):</strong> قسم داخل ملف <span class="en-term">ELF</span> یسجل أسماء الرموز (الدوال والمتغیرات العامة) وحالتھا (<span class="en-term">Defined</span> أو <span class="en-term">Undefined</span>).</li>
+        <li><strong><span class="en-term">Relocatable File</span>:</strong> ملف كائن (<span class="code-inline">.o</span>) عناوینه غیر ثابتة وقد یحتوي على رموز غیر معرّفة، لا يمكن تشغیلھ.</li>
+        <li><strong><span class="en-term">Executable File</span>:</strong> ملف تنفیذي عناوینه ثابتة وجمیع رموزه محسومة، جاھز للتشغیل مباشرة.</li>
+        <li><strong><span class="en-term">Static Linking</span>:</strong> نسخ الكود المفقود فعلیاً داخل الملف التنفیذي أثناء الترجمة.</li>
+        <li><strong><span class="en-term">Dynamic Linking</span>:</strong> ترك بعض الرموز كـ <span class="en-term">Undefined</span> وحلھا عند التشغیل عبر الـ <span class="en-term">Loader</span> والمكتبات المشتركة.</li>
+      </ul>
+    </div>
+
+    <!-- Common Mistakes -->
+    <div class="qr-section">
+      <div class="qr-section-title red"><i class="fa-solid fa-triangle-exclamation"></i> Common Mistakes — الأخطاء الشائعة</div>
+      <ul class="qr-list">
+        <li>الخلط بین تعریف اللینكر بأنه "یجمع الملفات فقط" — التعریف الدقیق ھو أنه "یحل الرموز المفقودة ثم یدمج".</li>
+        <li>الاعتقاد أن المتغیرات المحلیة توجد كبیانات في ملف <span class="en-term">ELF</span> — هی لا توجد على القرص، بل تُحجز في <span class="en-term">Stack</span> أثناء التشغیل فقط.</li>
+        <li>نسیان أن <span class="code-inline">.bss</span> لا یشغل مساحة على القرص — یحجز مساحة في الرام فقط عند التشغیل.</li>
+        <li>عدم التمیز بین <span class="en-term">Static Linking</span> (وقت الترجمة) و<span class="en-term">Dynamic Linking</span> (وقت التشغیل).</li>
+        <li>محاولة تشغیل ملف <span class="code-inline">.o</span> مباشرة — ھذا مستحیل لأنه یحتوي على رموز غیر معرّفة وعناوین غیر ثابتة.</li>
+      </ul>
+    </div>
+
+    <!-- Interview Notes -->
+    <div class="qr-section">
+      <div class="qr-section-title orange"><i class="fa-solid fa-user-tie"></i> Interview Notes — ملاحظات للمقابلات</div>
+      <ul class="qr-list">
+        <li>"ما الفرق بین <span class="en-term">Relocatable</span> و<span class="en-term">Executable</span> في <span class="en-term">ELF</span>؟" — أجب عن العناوین والرموز المفقودة وقابلیة التشغیل.</li>
+        <li>"ما ھو الـ <span class="en-term">Symbol Table</span> وما فائدتھ؟" — سجل الرموز، یساعد اللینكر في حل الرموز المفقودة.</li>
+        <li>"ما الفرق بین <span class="en-term">Static</span> و<span class="en-term">Dynamic Linking</span>؟" — وقت الحل، الأداة المسؤولة، حجم الملف، الاعتمادیة على مكتبات خارجیة.</li>
+        <li>"لماذا لا یمكن تشغیل ملف <span class="code-inline">.o</span>؟" — لأنه یحتوي على رموز <span class="en-term">Undefined</span> وعناوین غیر ثابتة.</li>
+        <li>"ما ھذا الخطأ: <span class="code-inline">undefined reference to 'X'</span>؟" — خطأ من الـ <span class="en-term">Linker</span> یعنی عدم العثور على تعریف الرمز <span class="en-term">X</span>.</li>
+        <li>"أین توضع المتغیرات الثابتة المحلیة (<span class="en-term">static local</span>) في الذاكرة؟" — في <span class="code-inline">.data</span> أو <span class="code-inline">.bss</span> (لیس في <span class="en-term">Stack</span>) لأن عمرھا <span class="en-term">Static Lifetime</span>.</li>
+      </ul>
+    </div>
+
+    <!-- Memory Tips -->
+    <div class="qr-section">
+      <div class="qr-section-title purple"><i class="fa-solid fa-brain"></i> Memory Tips — نصائح للحفظ</div>
+      <ul class="qr-list">
+        <li><strong>.text</strong> = تنفیذي (كود البرنامج) — فكر فیھ كـ "نص" البرنامج الذي یُنفذ.</li>
+        <li><strong>.data</strong> = بیانات لھا قیمة — "data" تعني بیانات مھیئة.</li>
+        <li><strong>.bss</strong> = "Block Started by Symbol" — بیانات بدون قیمة ابتدائیة، لا مكان لھا على القرص.</li>
+        <li><strong>.rodata</strong> = "Read-Only Data" — ثوابت لا تتغیر.</li>
+        <li><strong>اللینكر = المحلل:</strong> یحل المشاكل (الرموز المفقودة) ثم یجمع.</li>
+        <li><strong>Static = مبكر:</strong> یتم وقت الترجمة (مبكراً). <strong>Dynamic = متأخر:</strong> یتم وقت التشغیل (متأخراً).</li>
+      </ul>
+    </div>
+
+    <!-- Exam Tips -->
+    <div class="qr-section">
+      <div class="qr-section-title teal"><i class="fa-solid fa-pen-ruler"></i> Exam Tips — نصائح للامتحانات</div>
+      <ul class="qr-list">
+        <li>توقع سؤالاً عن مطابقة كل نوع متغیر بالقسم (<span class="en-term">Section</span>) المناسب في <span class="en-term">ELF</span>.</li>
+        <li>قد یُطلب منك كتابة أمر <span class="en-term">readelf</span> لعرض الرموز — الجواب: <span class="code-inline">readelf -s file.o</span>.</li>
+        <li>قد یُطلب منك تمییز نوع ملف <span class="en-term">ELF</span> من نتیجة أمر <span class="en-term">file</span> — ركز على كلمات <span class="en-term">relocatable</span> مقابل <span class="en-term">executable</span>.</li>
+        <li>الفرق بین <span class="en-term">Static</span> و<span class="en-term">Dynamic Linking</span> من أكثر المواضیع التي تُختبر.</li>
+        <li>توقع سؤالاً عن سبب عدم وجود المتغیرات المحلیة في أقسام <span class="en-term">ELF</span>.</li>
+      </ul>
+    </div>
+
+    <!-- Revision Checklist -->
+    <div class="qr-section">
+      <div class="qr-section-title blue"><i class="fa-solid fa-list-check"></i> Revision Checklist — قائمة المراجعة</div>
+      <ul class="checklist">
+        <li>أستطيع ذكر المراحل الأربع لدورة البناء بالترتیب.</li>
+        <li>أعرف الفرق بین النطاق (<span class="en-term">Scope</span>) وعمر المتغیر (<span class="en-term">Lifetime</span>).</li>
+        <li>أستطيع تصنیف أي متغیر إلى: محلي، عام، أو ثابت محلي.</li>
+        <li>أعرف أین یوضع كل نوع متغیر في أقسام <span class="en-term">ELF</span>.</li>
+        <li>أستطيع شرح ما ھو <span class="en-term">ELF</span> ولماذا ھو ضروري.</li>
+        <li>أعرف وظیفة كل قسم: <span class="code-inline">.text</span>، <span class="code-inline">.data</span>، <span class="code-inline">.bss</span>، <span class="code-inline">.rodata</span>.</li>
+        <li>أفھم ما ھو جدول الرموز <span class="code-inline">.symtab</span> وخیارات عرضھ بـ <span class="en-term">readelf</span>.</li>
+        <li>أستطیع شرح مشكلة <span class="en-term">Missing Symbols</span> وكیف یحلھا اللینكر.</li>
+        <li>أعرف الفرق بین <span class="en-term">Relocatable</span> و<span class="en-term">Executable</span>.</li>
+        <li>أستطیع استخدام <span class="code-inline">file</span> و<span class="code-inline">readelf -s</span> لفحص ملفات ثنائیة.</li>
+        <li>أفهم الفرق بین <span class="en-term">Static Linking</span> و<span class="en-term">Dynamic Linking</span>.</li>
+        <li>أعرف ما ھو الـ <span class="en-term">Loader / Dynamic Linker</span> ومتى یعمل.</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- end content -->
+
+<!-- ===== RUNNING FOOTER ===== -->
+<footer class="running-footer">
+  <span>Embedded Linux &amp; Yocto — Lesson 9 Summary</span>
+  <span>v1.0</span>
+</footer>
+
+</div><!-- end page -->
+
+<script>
+// Checkbox toggle for revision checklist
+document.querySelectorAll('.checklist li').forEach(item => {
+  item.addEventListener('click', () => {
+    item.classList.toggle('checked');
+  });
+  item.style.cursor = 'pointer';
+});
+
+// Smooth scroll offset for sticky header
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function(e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      const offset = 60;
+      const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  });
+});
+
+// Intersection Observer for section animations
+const sections = document.querySelectorAll('.section');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.style.opacity = '1';
+      entry.target.style.transform = 'translateX(0)';
+    }
+  });
+}, { threshold: 0.1 });
+sections.forEach(s => {
+  s.style.opacity = '0';
+  s.style.transform = 'translateX(30px)';
+  s.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+  observer.observe(s);
+});
+</script>
+</body>
+</html>

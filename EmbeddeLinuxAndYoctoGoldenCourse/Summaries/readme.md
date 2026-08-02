@@ -17,6 +17,8 @@ This repository serves as a comprehensive, well-structured, and visually appeali
 | **Lec 6** | Shell Scripting Advanced & Permissions | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec6/index.html) |
 | **Lec 7** | Shell Scripting & Debian Packages | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec7/index.html) |
 | **Lec 8** |  Compilation Process & GNU Toolchain Part1 | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec8/index.html) |
-
+| **Lec 9** |  Compilation Process & GNU Toolchain Part2 | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec9/index.html) |
+| **Lec 10** |  Compilation Process & GNU Toolchain Part3 | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec10/index.html) |
+| **Lec 11** |  Compilation Process & GNU Toolchain Part4 | 🟢 Completed | [Explore Summary 🌐](https://shereifdev.github.io/Embedded-Linux-Journey/EmbeddeLinuxAndYoctoGoldenCourse/Summaries/lec11/index.html) |
 
 ---
